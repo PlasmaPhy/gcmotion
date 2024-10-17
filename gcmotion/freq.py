@@ -132,9 +132,7 @@ class FreqAnalysis:
         self.theta_freq_event_NU = self.zeta_freq_event_NU = 2 * np.pi / self.theta_period_event_NU
 
         # Zeta period
-        # dz = abs(np.diff(np.interp(t_events, t_eval, z))[0])
-        print(f"dz: {dz}")
-        print(f"Wrong/Old dz: {abs(np.diff(np.interp(t_events, t_eval, z))[0])}")
+        # dz old = abs(np.diff(np.interp(t_events, t_eval, z))[0])
         zeta_period_event_NU = 2 * np.pi * self.theta_period_event_NU / dz
         self.zeta_0freq_event_NU = 2 * np.pi / zeta_period_event_NU
 
@@ -143,7 +141,6 @@ class FreqAnalysis:
         self.zeta_period_event = zeta_period_event_NU / self.w0
         self.theta_freq_event = self.zeta_freq_event = 2 * np.pi / self.theta_period_event
         self.zeta_0freq_event = self.zeta_0freq_event_NU * self.w0
-        print(self.zeta_0freq_event)
 
     def _trim_signal(self):
         """Recalculates an orbit with pre-defined number of periods and sample rate.

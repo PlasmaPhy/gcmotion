@@ -6,6 +6,7 @@ orbit type, and can draw several different plots
 import numpy as np
 from time import time
 from scipy.integrate import odeint, solve_ivp
+from scipy.optimize import fsolve, differential_evolution
 from math import sqrt, sin, cos
 from .plot import Plot
 from .parabolas import Construct
@@ -357,7 +358,6 @@ class Particle:
                 event_times = t_events[0]
                 z_at_events = sol.sol(event_times)[2]
                 Delta_z = np.diff(z_at_events)[0]
-                print(f"Δζ:{Delta_z}")
 
         elif self.method == "lsoda":
             sol = odeint(dSdt, y0=self.ode_init, t=self.t_eval, tfirst=True)
@@ -512,3 +512,86 @@ class Particle:
             # Plot Object needs to be re-initialized
             self.plot = Plot(self)
             self.plot._fft(self.obj)
+
+    def LAR_fixed_points(self, initial_guess=[0, 0.6]):  # , bounds=[(0, 2 * np.pi), (0, 1.5)]):
+
+        Pz = self.Pz0  # np.mean(self.Pzeta)
+
+        def dPhidpsi_p(P_theta):
+
+            phi_der_psip, _ = self.Efield.Phi_der(P_theta)
+
+            return phi_der_psip
+
+        def dPhidtheta(P_theta):
+
+            _, phi_der_theta = self.Efield.Phi_der(P_theta)
+
+            return phi_der_theta
+
+        def dBdpsi(theta, P_theta):
+
+            B_der_psi, _ = self.Bfield.B_der(P_theta, theta)
+
+            return B_der_psi
+
+        def dBdtheta(theta, P_theta):
+
+            _, B_der_theta = self.Bfield.B_der(P_theta, theta)
+
+            return B_der_theta
+
+        def B(theta, P_theta):
+
+            r = sqrt(2 * P_theta)
+            Bf = self.Bfield.B(r, theta)
+
+            return Bf
+
+        def D(P_theta):
+
+            q_value = self.q.q_of_psi(P_theta)
+            denominator = self.Bfield.g * q_value + self.Bfield.I
+
+            return denominator
+
+        def rho(P_theta):
+
+            rho_par = (Pz + self.q.psip_of_psi(P_theta)) / (self.Bfield.g)
+
+            return rho_par
+
+        def q_f(P_theta):
+
+            return self.q.q_of_psi(P_theta)
+
+        def system(vars):
+
+            theta, P_theta = vars
+
+            g = self.Bfield.g
+            mu = self.mu
+
+            parenthesis = mu + rho(P_theta) ** 2 * B(theta, P_theta)
+
+            theta_dot = (rho(P_theta) * B(theta, P_theta) ** 2) / (D(P_theta)) + g / D(P_theta) * (
+                parenthesis * dBdpsi(theta, P_theta) * q_f(P_theta) + dPhidpsi_p(P_theta)
+            )
+
+            P_theta_dot = (
+                -1
+                / D(P_theta)
+                * (parenthesis * dBdtheta(theta, P_theta) + dPhidtheta(P_theta))
+                * (q_f(P_theta) * g + 1)
+            )
+
+            return [theta_dot, P_theta_dot]  # theta_dot**2 + P_theta_dot**2
+
+        # Use differential evolution to find solutions
+        solution = fsolve(system, initial_guess)
+        print(solution)
+        # result = differential_evolution(system, bounds)
+        # theta_solution, P_theta_solution = result.x
+        # print(
+        #     f"Global Optimization Solution: theta = {theta_solution}, P_theta = {P_theta_solution}"
+        # )
