@@ -15,9 +15,9 @@ from .bfield import MagneticField
 from .efield import ElectricField, Nofield
 from .qfactor import QFactor
 from . import config, logger
-import matplotlib.pyplot as plt
-from typing import Literal
-from matplotlib.patches import Rectangle
+import matplotlib.pyplot as plt  #
+from typing import Literal  #
+from matplotlib.patches import Rectangle  #
 
 
 class Particle:
@@ -516,228 +516,223 @@ class Particle:
             self.plot = Plot(self)
             self.plot._fft(self.obj)
 
-    def fixed_point(self, initial_guess, bounds):
-
-        Pzeta = self.Pz0  # np.mean(self.Pzeta)
-
-        def dPhidpsi_p(P_theta):
-
-            phi_der_psip, _ = self.Efield.Phi_der(P_theta)
-
-            return phi_der_psip
-
-        def dPhidtheta(P_theta):
-
-            _, phi_der_theta = self.Efield.Phi_der(P_theta)
-
-            return phi_der_theta
-
-        def dBdpsi(theta, P_theta):
-
-            B_der_psi, _ = self.Bfield.B_der(P_theta, theta)
-
-            return B_der_psi
-
-        def dBdtheta(theta, P_theta):
-
-            _, B_der_theta = self.Bfield.B_der(P_theta, theta)
-
-            return B_der_theta
-
-        def B(theta, P_theta):
-
-            r = sqrt(2 * P_theta)
-            Bf = self.Bfield.B(r, theta)
-
-            return Bf
-
-        def D(P_theta):
-
-            q_value = self.q.q_of_psi(P_theta)
-            denominator = self.Bfield.g * q_value + self.Bfield.I
-
-            return denominator
-
-        def rho(P_theta):
-
-            rho_par = (Pzeta + self.q.psip_of_psi(P_theta)) / (self.Bfield.g)
-
-            return rho_par
-
-        def q_f(P_theta):
-
-            return self.q.q_of_psi(P_theta)
-
-        def equations(theta, P_theta):
-
-            g = self.Bfield.g
-            mu = self.mu
-
-            parenthesis = mu + rho(P_theta) ** 2 * B(theta, P_theta)
-
-            theta_dot = (rho(P_theta) * B(theta, P_theta) ** 2) / (D(P_theta)) + g / D(P_theta) * (
-                parenthesis * dBdpsi(theta, P_theta) * q_f(P_theta) + dPhidpsi_p(P_theta)
-            )
-
-            P_theta_dot = (
-                -1
-                / D(P_theta)
-                * (parenthesis * dBdtheta(theta, P_theta) + dPhidtheta(P_theta))
-                * (q_f(P_theta) * g + 1)
-            )
-
-            return theta_dot, P_theta_dot
-
-        def system_fsolve(vars):
-
-            theta, P_theta = vars
-
-            theta_dot, P_theta_dot = equations(theta, P_theta)
-
-            return [theta_dot, P_theta_dot]  #
-
-        def system_desolve(vars):
-
-            theta, P_theta = vars
-
-            theta_dot, P_theta_dot = equations(theta, P_theta)
-
-            return theta_dot**2 + P_theta_dot**2
-
-        # Use fsolve to find solutions
-        solution = fsolve(system_fsolve, initial_guess, xtol=1e-12, maxfev=10000)
-        result_fs = minimize(system_desolve, solution)
-        theta_solution_fs, P_theta_solution_fs = result_fs.x
-
-        # Use differential evolution to find solutions
-        result_de = differential_evolution(system_desolve, bounds, tol=1e-6, maxiter=10000)
-        theta_solution_de, P_theta_solution_de = result_de.x
-
-        return theta_solution_fs, P_theta_solution_fs, theta_solution_de, P_theta_solution_de
-
-    def multiple_fixed_points(
-        self, N=10, theta_min=-np.pi, theta_max=np.pi, P_theta_min=0.05, P_theta_max=1.51
+    def _fixed_points(
+        self,
+        Pz,
+        iterations=50,
+        theta_lim=[-np.pi - 0.1, np.pi + 0.1],
+        P_theta_lim=[0, 0.04],
+        tol=1e-6,
+        maxiter=10000,
+        popsize=15,
+        mutation=(0.5, 1),
+        recombination=0.7,
+        strategy="randtobest1bin",
     ):
 
-        thetas = np.linspace(theta_min, theta_max, N)
-        P_thetas = np.linspace(P_theta_min, P_theta_max, N)
+        theta_min = theta_lim[0]
+        theta_max = theta_lim[1]
 
-        initial_guesses = [[theta, P_theta] for theta, P_theta in zip(thetas, P_thetas)]
+        P_theta_min = P_theta_lim[0]
+        P_theta_max = P_theta_lim[1]
 
         bounds = [(theta_min, theta_max), (P_theta_min, P_theta_max)]
 
-        thetas_fixed_fs = []
-        P_thetas_fixed_fs = []
+        def fixed_point():
 
-        thetas_fixed_de = []
-        P_thetas_fixed_de = []
+            Pzeta = Pz
 
-        for initial_guess in initial_guesses:
+            def system(vars):
 
-            theta_fixed_fs, P_theta_fixed_fs, theta_fixed_de, P_theta_fixed_de = self.fixed_point(
-                initial_guess, bounds
+                theta, P_theta = vars
+                P_theta = max(P_theta, 0)
+                P_theta = P_theta
+
+                # Intermediate values
+                phi_der_psip, phi_der_theta = self.Efield.Phi_der(P_theta)
+                phi_der_psip *= self.Volts_to_NU
+                phi_der_theta *= self.Volts_to_NU
+                B_der_psi, B_der_theta = self.Bfield.B_der(P_theta, theta)
+                q_value = self.q.q_of_psi(P_theta)
+                r = sqrt(2 * P_theta)
+                B = self.Bfield.B(r, theta)
+                rho = (Pzeta + self.q.psip_of_psi(P_theta)) / (self.Bfield.g)
+                par = self.mu + rho**2 * B
+                bracket1 = -par * q_value * B_der_psi + phi_der_psip
+                bracket2 = par * B_der_theta + phi_der_theta
+                D = self.Bfield.g * q_value + self.Bfield.I
+
+                psi_dot = -self.Bfield.g / D * bracket2 * q_value
+                rho_dot = psi_dot / (self.Bfield.g * q_value)
+
+                theta_dot = 1 / D * rho * B**2 + self.Bfield.g / D * bracket1
+                P_theta_dot = psi_dot + rho_dot * self.Bfield.I
+
+                # -----------------------------------
+
+                # Phi_der_P_theta, _ = self.Efield.Phi_der(P_theta)
+                # Phi_der_P_theta *= self.Volts_to_NU
+
+                # theta_dot = (
+                #     -(1 - np.sqrt(2 * P_theta) * np.cos(theta))
+                #     * (Pzeta + self.q.psip_of_psi(P_theta)) ** 2
+                #     / (np.sqrt(2 * P_theta))
+                #     - self.mu * np.cos(theta) / (np.sqrt(2 * P_theta))
+                #     + (1 - np.sqrt(2 * P_theta) * np.cos(theta)) ** 2
+                #     * (Pz + self.q.psip_of_psi(P_theta))
+                #     / self.q.q_of_psi(P_theta)
+                #     + Phi_der_P_theta
+                # )
+
+                # P_theta_dot = -(1 - np.sqrt(2 * P_theta) * np.cos(theta)) * (
+                #     Pz + self.q.psip_of_psi(P_theta)
+                # ) ** 2 * (np.sqrt(2 * P_theta) * np.sin(theta)) - self.mu * (
+                #     np.sqrt(2 * P_theta) * np.sin(theta)
+                # )
+
+                return theta_dot**2 + P_theta_dot**2
+
+            # Use differential evolution to find solutions
+            result = differential_evolution(
+                system,
+                bounds,
+                tol=tol,
+                maxiter=maxiter,
+                popsize=popsize,
+                mutation=mutation,
+                recombination=recombination,
+                strategy=strategy,
             )
+            theta_solution, P_theta_solution = result.x
 
-            thetas_fixed_fs.append(theta_fixed_fs)
-            P_thetas_fixed_fs.append(P_theta_fixed_fs)
-            thetas_fixed_de.append(theta_fixed_de)
-            P_thetas_fixed_de.append(P_theta_fixed_de)
+            return theta_solution, P_theta_solution
 
-        self.fixed_points_fs = [
-            [float(theta_fs), float(P_theta_fs)]
-            for theta_fs, P_theta_fs in zip(thetas_fixed_fs, P_thetas_fixed_fs)
-        ]
-        self.fixed_points_de = [
-            [float(theta_de), float(P_theta_de)]
-            for theta_de, P_theta_de in zip(thetas_fixed_de, P_thetas_fixed_de)
-        ]
+        self.fixed_points = []
 
-        print(self.fixed_points_fs)
-        print(self.fixed_points_de)
+        for _ in range(iterations):
+            theta_fix, P_theta_fix = fixed_point()
+            self.fixed_points.append([float(theta_fix), float(P_theta_fix)])
 
-        def distinctify(fixed_points, tol=1e-7):
+        self.distinct_fixed_points = self.distinctify(self.fixed_points)
 
-            def are_considered_equal(sublist1, sublist2, tol=tol):
-                return (
-                    abs(sublist1[0] - sublist2[0]) <= tol and abs(sublist1[1] - sublist2[1]) <= tol
-                )
+        print(f"\nDistinct Fixed Points: {self.distinct_fixed_points}\n")
+        print(f"\nNumber of Distinct Fixed Points: {len(self.distinct_fixed_points)}\n")
 
-            distinct_fixed_points = []
-
-            for fixed_point in fixed_points:
-
-                is_unique = True
-                for distinct in distinct_fixed_points:
-                    if are_considered_equal(distinct, fixed_point):
-                        is_unique = False
-                        break
-
-                if is_unique:
-                    distinct_fixed_points.append(fixed_point)
-
-            return distinct_fixed_points
-
-        self.distinct_combinations_fs = distinctify(self.fixed_points_fs)
-        self.distinct_combinations_de = distinctify(self.fixed_points_de)
-
-        print(f"\nDistinct fs: {self.distinct_combinations_fs}")
-        print(f"Distinct de: {self.distinct_combinations_de}\n")
-
-        print(f"\nNumber of Distinct fs: {len(self.distinct_combinations_fs)}")
-        print(f"Number of Distinct de: {len(self.distinct_combinations_de)}\n")
-
-        return (thetas_fixed_fs, P_thetas_fixed_fs, thetas_fixed_de, P_thetas_fixed_de)
-
-    def _calcW_grid_fixed(
+    def fixed_contour(
         self,
-        theta: np.array,
-        psi: np.array,
-        Pz: float,
-        contour_Phi: bool,
-        units: str,
+        theta_lim=[-np.pi - 0.1, np.pi + 0.1],
+        P_theta_lim=[0, 0.04],
+        plot_drift=True,
+        units="keV",
     ):
-        r"""Returns a single value or a grid of the calculated Hamiltonian.
 
-        Only to be called internally, by ``contour_energy()``..
+        theta_min = theta_lim[0]
+        theta_max = theta_lim[1]
 
-        Args:
-            theta (np.array): The :math:`\theta` values.
-            psi (np.array): The :math:`\psi` values.
-            Pz (float): The :math:`P_\zeta` value.
-            contour_Phi (bool): Whether or not to add the electric potential term
-                :math:`e\Phi`.
-            units (str): The energy units.
-        """
-        if contour_Phi:
-            logger.debug("\tAdding Φ term to the contour.")
-        logger.debug(f"\tCalculating energy values in a {theta.shape} grid.")
+        P_theta_min = P_theta_lim[0]
+        P_theta_max = P_theta_lim[1]
 
-        r = np.sqrt(2 * psi)
+        Pz = self.Pz0
+
+        theta, P_theta = np.meshgrid(
+            np.linspace(theta_min, theta_max, 200),
+            np.linspace(P_theta_min, P_theta_max, 200),
+        )
+
+        H_cont = self._H(Pz, theta, P_theta)
+
+        fig, ax = plt.subplots(1, 1, figsize=(6, 4))
+
+        if plot_drift:
+            canvas = (fig, ax)
+            self.plot.drift(angle="theta", canvas=canvas)
+
+        ax.contourf(theta, P_theta / self.psi_wall, H_cont, levels=30, cmap="plasma")
+        ax.set_title("Fixed Contour")
+        ax.set_xlabel(r"$\theta$")
+        ax.set_ylabel(r"$P_{\theta}/P_{\theta_{wall}}$")
+
+        self._fixed_points(Pz=Pz, theta_lim=theta_lim, P_theta_lim=P_theta_lim)
+
+        thetas_fixed = [fixed_point[0] for fixed_point in self.fixed_points]
+        P_thetas_fixed = [fixed_point[1] for fixed_point in self.fixed_points]
+
+        P_theta_plot = [P_theta / self.psi_wall for P_theta in P_thetas_fixed]
+        ax.scatter(thetas_fixed, P_theta_plot, marker="x", color="green")
+
+    def _H(self, Pz, theta, P_theta, units="keV"):
+
+        # H = (
+        #     (self.Pz0 + self.q.psip_of_psi(P_theta)) ** 2
+        #     / 2
+        #     * (1 - np.sqrt(2 * P_theta) * np.cos(theta)) ** 2
+        #     + self.mu * (1 - np.sqrt(2 * P_theta) * np.cos(theta))
+        #     + self.Efield.Phi_of_psi(P_theta) * self.Volts_to_NU
+        # )
+
+        # -----------------------------------
+
+        r = np.sqrt(2 * P_theta)
         B = self.Bfield.B(r, theta)
-        psip = self.q.psip_of_psi(psi)
+        psip = self.q.psip_of_psi(P_theta)
+        Phi = self.Efield.Phi_of_psi(P_theta)
+        Phi *= self.Volts_to_NU * self.sign
 
-        W = (Pz + psip) ** 2 * B**2 / (
-            2 * self.Bfield.g**2 * self.mass_amu
-        ) + self.mu * B  # Without Φ
-
-        # Add Φ if asked
-        if contour_Phi:
-            Phi = self.Efield.Phi_of_psi(psi)
-            Phi *= self.Volts_to_NU * self.sign
-            W += Phi  # all normalized
+        H = (Pz + psip) ** 2 * B**2 / (2 * self.Bfield.g**2 * self.mass_amu) + self.mu * B + Phi
 
         if units == "eV":
-            W *= self.NU_to_eV
+            H *= self.NU_to_eV
             logger.debug("\tPlotting energy levels in [eV]")
         elif units == "keV":
-            W *= self.NU_to_eV / 1000
+            H *= self.NU_to_eV / 1000
             logger.debug("\tPlotting energy levels in [keV]")
         else:
             logger.debug("\tPlotting energy levels in [NU]")
 
-        return W
+        return H
 
-    def contour_energy(
+    def _cbar_energy(self, units="keV"):
+        """Creates a colorbar label of the particle's energy.
+
+        Args:
+            units (str): The energy units.
+
+        Returns:
+            float: The energy value.
+        """
+        if units == "normal":
+            E_cbar = self.E
+        elif units == "eV":
+            E_cbar = self.E_eV
+        elif units == "keV":
+            E_cbar = self.E_eV / 1000
+        else:
+            print('units must be either "normal", "eV" or "keV"')
+            return
+
+        return E_cbar
+
+    def distinctify(self, fixed_points, tol=1e-2):
+
+        def are_considered_equal(sublist1, sublist2, tol=tol):
+            return abs(sublist1[0] - sublist2[0]) <= tol and abs(sublist1[1] - sublist2[1]) <= tol
+
+        distinct_fixed_points = []
+
+        for fixed_point in fixed_points:
+
+            is_unique = True
+            for distinct in distinct_fixed_points:
+                if are_considered_equal(distinct, fixed_point):
+                    is_unique = False
+                    break
+
+            if is_unique:
+                distinct_fixed_points.append(fixed_point)
+
+        return distinct_fixed_points
+
+    def contour_energy_fixed(
         self,
         theta_lim: list = [-np.pi, np.pi],
         psi_lim: str | list = "auto",
@@ -804,22 +799,14 @@ class Particle:
         psi_min = psi_lim[0]
         psi_max = psi_lim[1]
 
-        thetas_fixed_fs, P_thetas_fixed_fs, thetas_fixed_de, P_thetas_fixed_de = (
-            self.multiple_fixed_points()
-        )
-
-        theta_min = min(thetas_fixed_fs) - 0.1
-        theta_max = max(thetas_fixed_fs) + 0.1
-        psi_min = min(P_thetas_fixed_fs) - 0.1
-        psi_max = max(P_thetas_fixed_fs) + 0.1
-
         # Calculate Energy values
         grid_density = self.configs["contour_grid_density"]
         theta, psi = np.meshgrid(
             np.linspace(theta_min, theta_max, grid_density),
             np.linspace(psi_min, psi_max, grid_density),
         )
-        values = self._calcW_grid_fixed(theta, psi, self.Pz0, contour_Phi, units)
+        Pz = self.Pz0
+        values = self._H(Pz, theta, psi, units)
         span = np.array([values.min(), values.max()])
         logger.debug(f"\tEnergy values span from {span[0]:.4g}{units} to {span[1]:.4g}{units}.")
 
@@ -843,10 +830,16 @@ class Particle:
         ax.set_ylabel(r"$\psi/\psi_{wall}$", rotation=90)
         ticks = ["-2π", "-3π/2", "-π", "-π/2", "0", "π/2", "π", "3π/2", "2π"]
         plt.xticks(np.linspace(-2 * np.pi, 2 * np.pi, 9), ticks)
-        ax.set(xlim=[theta_min, theta_max], ylim=[psi_min, psi_max])
+        ax.set(xlim=[theta_min, theta_max], ylim=np.array(psi_lim) / self.psi_wall)
         ax.set_facecolor("white")
-        ax.scatter(thetas_fixed_fs, P_thetas_fixed_fs, marker="o", color="green")
-        ax.scatter(thetas_fixed_de, P_thetas_fixed_de, marker="x", color="blue")
+
+        self._fixed_points(Pz=Pz, theta_lim=theta_lim, P_theta_lim=psi_lim)
+
+        thetas_fixed = [fixed_point[0] for fixed_point in self.fixed_points]
+        P_thetas_fixed = [fixed_point[1] for fixed_point in self.fixed_points]
+
+        P_theta_plot = [P_theta / self.psi_wall for P_theta in P_thetas_fixed]
+        ax.scatter(thetas_fixed, P_theta_plot, marker="x", color="green")
 
         if wall_shade:  # ψ_wall boundary rectangle
             rect = Rectangle(
@@ -867,37 +860,3 @@ class Particle:
         elif kwargs:  # If called for a collection
             logger.info("--> Energy contour successfully plotted (returned contour object)\n")
             return C
-
-    def _cbar_energy(self, units):
-        """Creates a colorbar label of the particle's energy.
-
-        Args:
-            units (str): The energy units.
-
-        Returns:
-            float: The energy value.
-        """
-        if units == "normal":
-            E_cbar = self.E
-        elif units == "eV":
-            E_cbar = self.E_eV
-        elif units == "keV":
-            E_cbar = self.E_eV / 1000
-        else:
-            print('units must be either "normal", "eV" or "keV"')
-            return
-
-        return E_cbar
-
-    def plot_fixed_points(self):
-
-        fig, ax = plt.subplots(1, 1, figsize=(8, 6))
-
-        (thetas_fixed_fs, P_thetas_fixed_fs, thetas_fixed_de, P_thetas_fixed_de) = (
-            self.multiple_fixed_points()
-        )
-        ax.scatter(thetas_fixed_fs, P_thetas_fixed_fs, marker="o", color="green")
-        ax.scatter(thetas_fixed_de, P_thetas_fixed_de, marker="x", color="blue")
-        ax.set_xlabel(r"$\theta$")
-        ax.set_ylabel(r"$P_{\theta}$")
-        ax.legend(["fslove", "differential_evolution"])
