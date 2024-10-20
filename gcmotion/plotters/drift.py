@@ -1,3 +1,24 @@
+r"""
+Plots poloidal :math:`\theta - P_\theta` or 
+:math:`\zeta - P_\zeta` drift.
+
+The x-axis (angle) limits can be either [-π,π] or [0,2π].
+
+The optional arguements are only used when plotting drifts
+from multiple particles in the same canvas.
+
+Example
+-------
+
+.. code-block:: python
+
+    gcm.drift(cwp, angle="theta")
+
+.. rubric:: Function:
+    :heading-level: 4
+
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -13,11 +34,18 @@ def drift(cwp, angle: str = "theta", lim: list = [-np.pi, np.pi], **kwargs):
     This method is called internally by ``countour_energy()``
     as well.
 
-    Args:
-        angle (str): The angle to plot.
-        lim (list, optional): Plot xlim. Must be either [0,2π] or [-π,π].
-            Defaults to [-π,π].
-        kwargs (list): Extra arguements if called for many particles.
+    :meta public:
+
+    Parameters
+    ----------
+
+    angle : str
+        The angle to plot. Defaults to "theta".
+    lim : list, optional
+        Plot xlim. Must be either [0,2π] or [-π,π]. Defaults to [-π,π].
+    kwargs : list, optional
+        Extra arguements if called for many particles.
+
     """
     logger.info(f"Plotting {angle}-P_{angle} drift...")
 

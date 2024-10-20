@@ -12,7 +12,7 @@ from gcmotion.plotters.time_evolution import time_evolution
 from gcmotion.plotters.tokamak_profile import tokamak_profile
 from gcmotion.plotters.drift import drift
 from gcmotion.plotters.drifts import drifts
-from gcmotion.plotters.contour_energy import contour_energy
+from gcmotion.plotters.energy_contour import energy_contour
 from gcmotion.plotters.parabolas import parabolas
 from gcmotion.plotters.torus2d import torus2d
 from gcmotion.plotters.torus3d import torus3d
@@ -28,7 +28,7 @@ __all__ = [
     "tokamak_profile",
     "drift",
     "drifts",
-    "contour_energy",
+    "energy_contour",
     "parabolas",
     "torus2d",
     "torus3d",

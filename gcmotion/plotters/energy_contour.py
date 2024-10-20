@@ -1,3 +1,34 @@
+r"""
+Plots the energy contour lines of the :math:`\theta-P_\theta`
+plain of the Hamiltonian.
+
+Can also plot the current particle's :math:`\theta-P_\theta` drift.
+Should be False when running with multiple initial conditions.
+
+We can optionally remove the :math:`\Phi` term from the Hamiltonian,
+to observe the change of the drifts with the added electric field.
+
+The x-axis (angle) limits can be either [-π,π] or [0,2π].
+
+The optional arguements are only used when plotting drifts
+from multiple particles in the same canvas.
+
+Example
+-------
+
+.. code-block:: python
+
+    gcm.energy_contour(
+        cwp, theta_lim = [-np.pi ,np.pi], psi_lim="auto", 
+        plot_drift=True, contour_Phi=True, units="keV", 
+        levels=20
+    )
+
+.. rubric:: Function:
+    :heading-level: 4
+
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
@@ -6,10 +37,10 @@ from gcmotion.utils._logger_setup import logger
 
 from gcmotion.plotters.drift import drift
 
-from gcmotion.configuration.plot_parameters import contour_energy as config
+from gcmotion.configuration.plot_parameters import energy_contour as config
 
 
-def contour_energy(
+def energy_contour(
     cwp,
     theta_lim: list = [-np.pi, np.pi],
     psi_lim: str | list = "auto",
@@ -20,25 +51,38 @@ def contour_energy(
     wall_shade: bool = True,
     **kwargs,
 ):
-    r"""Draws a 2D contour plot of the Hamiltonian.
+    r"""
+    Plots the energy contour lines of the :math:`\theta-P_\theta`
+    plain of the Hamiltonian.
 
     Can also plot the current particle's :math:`\theta-P_\theta` drift.
     Should be False when running with multiple initial conditions.
 
-    Args:
-        theta_lim (list, optional): Plot xlim. Must be either [0,2π] or [-π,π].
-            Defaults to [-π,π].
-        psi_lim (list | str, optional): If a list is passed, it plots between the
-            2 values relative to :math:`\psi_{wall}`. Defaults to 'auto'.
-        plot_drift (bool, optional): Whether or not to plot :math:`\theta-P_\theta`
-            drift on top. Defaults to True.
-        contour_Phi (bool, optional): Whether or not to add the Φ term in the
-            energy contour. Defaults to True.
-        units (str, optional): The energy units. Must be 'normal', 'eV' or 'keV'. Defaults
-            to `keV`. Defaults to "keV".
-        levels (int, optional): The number of contour levels. Defaults to Config setting.
-        wall_shade (bool, optional): Whether to shade the region
-            :math:`\psi/\psi_{wall} > 1`. Defaults to True.
+    :meta public:
+
+    Parameters
+    ----------
+
+    theta_lim : list, optional
+        Plot xlim. Must be either [0,2π] or [-π,π]. Defaults to [-π,π].
+    psi_lim : list | str, optional
+        If a list is passed, it plots between the 2 values relative to
+        :math:`\psi_{wall}`. If "auto" is passed, it automatically sets
+        the optimal :math:`\psi` limits. Defaults to 'auto'.
+    plot_drift : bool, optional
+        Whether or not to plot :math:`\theta-P_\theta` drift on top.
+        Defaults to True.
+    contour_Phi : bool, optional
+        Whether or not to add the Φ term in the energy contour.
+        Defaults to True.
+    units : str, optional
+        The energy units. Must be 'normal', 'eV' or 'keV'. Defaults to "keV".
+    levels : int, optional
+        The number of contour levels. Defaults to Config setting.
+    wall_shade : bool, optional
+        Whether to shade the region :math:`\psi/\psi_{wall} > 1`.
+        Defaults to True.
+
     """
     logger.info("Plotting energy contour:")
 
@@ -152,7 +196,7 @@ def _calcW_grid(
 ):
     r"""Returns a single value or a grid of the calculated Hamiltonian.
 
-    Only to be called internally, by ``contour_energy()``..
+    Only to be called internally, by ``energy_contour()``..
 
     Args:
         theta (np.array): The :math:`\theta` values.

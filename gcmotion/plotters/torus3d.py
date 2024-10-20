@@ -1,3 +1,25 @@
+r"""
+Plots the 3D tokamak and orbit.
+We can specify the percentage of the orbit to be plotted.
+
+We can also choose to enlarge the orbit so it fills the torus
+walls by setting truescale=False.
+
+Example
+-------
+
+.. code-block:: python
+
+    gcm.torus3d(
+        percentage=100, truescale=True, hd=False,
+        bold="bold", white_background=True
+    )
+
+.. rubric:: Function:
+    :heading-level: 4
+
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -16,19 +38,26 @@ def torus3d(
     bold: str = "default",
     white_background: bool = True,
 ):
-    r"""Creates a 3d transparent torus and the particle's orbit.
+    r"""
+    Creates a 3d transparent torus and the particle's orbit.
 
-    Args:
-        percentage (int, optional): 0-100: the percentage of the orbit
-            to be plotted. Defaults to 100.
-        truescale (bool, optional): Whether or not to construct the torus and orbit
-            with the actual units of R and r. Defaults to True.
-        hd (bool, optional): High definition image (dpi = 900). Defaults to False
-            (dpi = 300).
-        bold (str, optional): The "boldness" level. Levels are "bold", "BOLD", or any.
-            Defaults to Config settings.
-        white_background (bool, optional): Whether to paint the background white or not.
-            Overwrites the default plt.style(). Defaults to True.
+    Parameters
+    ----------
+
+    percentage : int, optional
+        The percentage of the orbit to be plotted. Defaults to 100.
+    truescale : bool, optional
+        Whether or not to construct the torus and orbit with the
+        actual units of R and r. Defaults to True.
+    hd : bool, optional
+        High definition image (dpi = 900). Defaults to False (dpi = 300).
+    bold : str, optional
+        The "boldness" level. Levels are "bold", "BOLD", or any.
+        Defaults to Config settings.
+    white_background : bool, optional
+        Whether to paint the background white or not. Overwrites the
+        default plt.style(). Defaults to True.
+
     """
     logger.info("Plotting 3D torus...")
     # Configure torus dimensions and orbit and store internally

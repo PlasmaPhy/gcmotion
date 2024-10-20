@@ -37,7 +37,7 @@ drift = {
     "xfontsize": 20,
 }
 
-contour_energy = {
+energy_contour = {
 
     "contour_grid_density" : 100,
     "contour_levels" : 15,

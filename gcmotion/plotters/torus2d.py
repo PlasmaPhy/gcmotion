@@ -1,3 +1,22 @@
+r"""
+Plots the Poloidal and Top-Down view of the torus.
+We can specify the percentage of the orbit to be plotted.
+
+We can also choose to enlarge the orbit so it fills the torus
+walls by setting truescale=False.
+
+Example
+-------
+
+.. code-block:: python
+
+    gcm.torus2d(percentage=100, truescale=True)
+
+.. rubric:: Function:
+    :heading-level: 4
+
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -11,12 +30,19 @@ from gcmotion.utils.canonical_to_toroidal import canonical_to_toroidal
 def torus2d(cwp, percentage: int = 100, truescale: bool = True):
     r"""Plots the poloidal and toroidal view of the orbit.
 
-    Args:
-        percentage (int, optional): 0-100: the percentage of the orbit
-            to be plotted. Defaults to 100.
-        truescale (bool, optional): Whether or not to construct the torus and orbit
-            with the actual units of R and r. Defaults to True.
+    :meta public:
+
+    Parameters
+    -----------
+
+    percentage : int, optional
+        The percentage of the orbit to be plotted. Defaults to 100.
+    truescale : bool, optional
+        Whether or not to construct the torus and orbit with the
+        actual units of R and :math:`\alpha`. Defaults to True.
+
     """
+
     logger.info("Plotting 2D torus sections...")
     # Configure torus dimensions and orbit and store internally
     Rtorus, atorus, r_torus, theta_torus, z_torus = canonical_to_toroidal(

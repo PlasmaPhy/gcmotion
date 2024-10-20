@@ -1,3 +1,24 @@
+r"""
+Plots poloidal :math:`\theta - P_\theta` and
+:math:`\zeta - P_\zeta` drifts.
+
+The x-axis (angle) limits can be either [-π,π] or [0,2π].
+
+The optional arguements are only used when plotting drifts
+from multiple particles in the same canvas.
+
+Example
+-------
+
+.. code-block:: python
+
+    gcm.drifts(cwp, lim[-np.pi, np.pi])
+
+.. rubric:: Function:
+    :heading-level: 4
+
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -8,13 +29,20 @@ from gcmotion.configuration.plot_parameters import drift as config
 
 
 def drifts(cwp, theta_lim: list = [-np.pi, np.pi], **kwargs):
-    r"""Draws 2 plots: 1] :math:`\theta-P_\theta`
+    r"""
+    Draws 2 plots: 1] :math:`\theta-P_\theta`
     and 2] :math:`\zeta-P_\zeta`.
 
-    Args:
-        theta_lim (list, optional): Plot xlim. Must be either [0,2π] or [-π,π].
-            Defaults to [-π,π].
-        kwargs (list): Extra arguements if called for many particles.
+    :meta public:
+
+    Parameters
+    ----------
+
+    theta_lim : list, optional
+        Plot xlim. Must be either [0,2π] or [-π,π]. Defaults to [-π,π].
+    kwargs : dict
+        Extra arguements if called for many particles.
+
     """
     logger.info("Plotting θ-Pθ and ζ-Pζ drifts...")
 

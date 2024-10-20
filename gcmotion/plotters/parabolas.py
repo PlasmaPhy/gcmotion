@@ -1,3 +1,21 @@
+r"""
+In the absence of electric field and in LAR configuration, it plots
+the orbit type parabolas as described by White.
+
+Can also plot the cwp's orbit type point.
+
+Example
+-------
+
+.. code-block:: python
+
+    gcm.parabolas(plot_point=True)
+
+.. rubric:: Function:
+    :heading-level: 4
+
+"""
+
 import matplotlib.pyplot as plt
 
 from gcmotion.utils._logger_setup import logger
@@ -11,6 +29,14 @@ def parabolas(cwp, plot_point: bool = True):
     """Constructs and plots the orbit type parabolas.
 
     Returns early if there is no Electric field.
+
+    :meta public:
+
+    Parameters
+    ----------
+
+    plot_point : bool
+        Whether or not to plot cwp's orbit point. Defaults to True.
     """
     logger.info("Plotting orbit type Parabolas:")
 
@@ -37,7 +63,19 @@ def parabolas(cwp, plot_point: bool = True):
 
 
 def orbit_point(cwp, canvas=None, **kwargs):
-    r"""Plots the particle point on the :math:`\mu-P_\zeta` (normalized) plane."""
+    r"""Plots the particle point on the :math:`\mu-P_\zeta` (normalized) plane.
+
+    :meta private:
+
+    Parameters
+    ----------
+
+    canvas : tuple
+        A 2-tuple containing the (fig, ax) object upon which to plot
+        the point.
+    kwargs : dict
+        Extra arguements if called for many particles.
+    """
     logger.info("Plotting orbit type point on parabolas plot...")
 
     # Get all needed attributes first
