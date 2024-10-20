@@ -8,6 +8,8 @@ in :py:class:`~gcmotion.tokamak.bfield.MagneticField` are implied.
 
 .. Show clickable q factor classes
 
+.. rubric:: Currently supported magnetic fields
+
 .. autosummary::
    :template: _templates/autosummary/class
    :recursive:

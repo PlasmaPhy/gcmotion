@@ -8,6 +8,8 @@ in :py:class:`~gcmotion.tokamak.qfactor.QFactor` are implied.
 
 .. Show clickable q factor classes
 
+.. rubric:: Currently supported q-factors
+   
 .. autosummary::
    :template: _templates/autosummary/class
    :recursive:

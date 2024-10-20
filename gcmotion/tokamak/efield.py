@@ -1,8 +1,10 @@
 """
-Electric Field
-==============
+About Electric field objects
+============================
 
-Creates the Electric field of the system.
+An Electric Field object is a class instance containing all the information 
+about the electric field of the system. It implements all the methods needed 
+buy the solver and other calculations, and is called automatically wherever required.
 
 To add a new Electric Field, simply copy-paste an already existing class
 (idealy the Nofield one) and fill the ``__init__()``, ``Phi_der()``,
@@ -11,20 +13,12 @@ In case your Electric field has extra parameters you want to pass as
 arguments, you must also create an ``__init__()`` method and declare them. 
 To avoid errors, your class should inherit the ``ElectricField`` class.
 
-.. danger::
+.. caution::
     **All values, both input and output are in SI units.**
-
+    
     Specifically [V/m] and [V].
 
-.. note::
-    Keep in mind that when those methods return singular values (rather than
-    np.ndarrays), they should return a float, and not a np.float. This is mainly
-    for optimization reasons and should probably not cause problems.
-
-.. note::
-    You can create new Electric fields in other .py files as well, but
-    you have to specify the base class path and import them correctly 
-    as well.
+    The conversion is done internally.
 
 The general structure is this::
 
@@ -45,7 +39,21 @@ The general structure is this::
         def Phi_of_psi(self, psi):
             return Phi
 
-:exclude-members: ElectricField           
+.. note::
+    The above methods return the same type as the input (either Python floats 
+    or np.ndarrays). When used inside the solver, they should return a 
+    Python float, and not a np.float. Solvers need to be fast so they work 
+    with built-in floats, while plotting functions work with np.ndarrays.This 
+    is mainly for optimization reasons and should probably not cause problems.
+
+.. rubric:: The 'ElectricField' Abstract Base Class
+
+The base class that every other class inherits from is ``ElectricField``. 
+This class does nothing, it is only a template.
+
+.. autoclass:: ElectricField
+    :members: __init__, Phi_der, Er_of_psi, Phi_of_psi
+
 """
 
 import numpy as np
@@ -56,11 +64,7 @@ from abc import ABC, abstractmethod
 
 
 class ElectricField(ABC):
-    """Electric field base class
-
-    .. note::
-        This class does nothing, it is only a template.
-    """
+    r"""Electric field base class."""
 
     def __init__(self):
         self.id = "Base Class"
@@ -68,45 +72,66 @@ class ElectricField(ABC):
 
     @abstractmethod
     def Phi_der(self, psi: float) -> tuple[float, float]:
-        r"""Derivatives of Φ(ψ) with respect to :math:`\psi_p, \theta` in [V].
+        r"""Calculates the derivatives of Φ(ψ) with respect to
+        :math:`\psi_p, \theta` in [V].
 
         Intended for use only inside the ODE solver. Returns the potential
         in [V], so the normalisation is done inside the solver.
 
-        Args:
-            psi (float): The magnetic flux surface.
+        Parameters
+        ----------
 
-        Returns:
-            2-tuple containing the calculated derivatives as floats.
+        psi : float
+            The magnetic flux surface.
+
+        Returns
+        -------
+
+        tuple : 2-tuple of floats
+            2-tuple containing the calculated derivatives.
         """
         pass
 
     @abstractmethod
     def Er_of_psi(self, psi: np.ndarray) -> np.ndarray:
-        """Calculates radial Electric field component in [V/m] from ψ.
+        r"""Calculates radial Electric field component in [V/m] from ψ.
 
         Used for plotting the Electric field
 
-        Args:
-            psi (np.ndarray): The ψ values.
+        Parameters
+        ----------
 
-        Returns:
+        psi : np.ndarray
+            The ψ values.
+
+        Returns
+        -------
+
+        E : np.ndarray
             1D numpy array with calculated E values.
+
         """
         pass
 
     @abstractmethod
     def Phi_of_psi(self, psi: np.ndarray) -> np.ndarray:
-        """Calculates Electric Potential in [V] from ψ.
+        r"""Calculates Electric Potential in [V] from ψ.
 
         Used for plotting the Electric Potential, the particles initial Φ,
         and the Φ values for the contour plot.
 
-        Args:
-            psi (np.ndarray): The ψ values.
+        Parameters
+        ----------
 
-        Returns:
+        psi : np.ndarray
+            The ψ values.
+
+        Returns
+        -------
+
+        Phi : np.ndarray
             1D numpy array with calculated values.
+
         """
         pass
 
@@ -115,9 +140,11 @@ class ElectricField(ABC):
 
 
 class Nofield(ElectricField):
-    """Initializes an electric field of 0
+    r"""Initializes an electric field of 0
 
     Exists to avoid compatibility issues.
+
+    Takes no parameters.
     """
 
     def __init__(self):
@@ -136,17 +163,25 @@ class Nofield(ElectricField):
 
 
 class Parabolic(ElectricField):
-    """Initializes an electric field of the form: :math:`E(r) = ar^2 + b` (BETA)"""
+    r"""Initializes an electric field of the form: :math:`E(r) = ar^2 + b`"""
 
     def __init__(self, R: float, a: float, q: QFactor, alpha: float, beta: float):
-        """Parameters initialization.
+        r"""Initializes the field's parameters.
 
-        Args:
-            R (float): The tokamak's major radius.
-            a (float): The tokamak's minor radius.
-            q (Qfactor): q factor profile.
-            alpha (float): The :math:`r^2` coefficient.
-            beta (float): The constant coefficient.
+        Parameters
+        ----------
+
+        R : float
+            The tokamak's major radius in [m].
+        a : float
+            The tokamak's minor radius in [m].
+        q : :class:`QFactor` object
+            q factor profile.
+        alpha : float
+            The :math:`r^2` coefficient.
+        beta : float
+            The constant coefficient.
+
         """
         self.id = "Parabolic"
         self.params = {"alpha": alpha, "beta": beta}
@@ -189,17 +224,26 @@ class Radial(ElectricField):
         minimum: float,
         waist_width: float,
     ):
-        r"""Parameters initialization.
+        r"""Initializes the field's parameters.
 
-        Args:
-            R (float): The tokamak's major radius.
-            a (float): The tokamak's minor radius.
-            q: q factor profile.
-            Ea (float): The Electric field magnitude.
-            minimum (float): The Electric field's minimum point with respect to
-                :math:`\psi_{wall}`.
-            waist_width (float): The Electric field's waist width, defined as:
-                :math:`r_w = \dfrac{a}{\\text{waste width}}`.
+        Parameters
+        ----------
+
+        R : int | float
+            The tokamak's major radius in [m].
+        a : int | float
+            The tokamak's minor radius in [m].
+        q : :class:`QFactor` object
+            q factor profile.
+        Ea : float
+            The Electric field magnitude in [V/m].
+        minimum : float
+            The Electric field's minimum point with respect to
+            :math:`\psi_{wall}`.
+        waist_width : float
+            The Electric field's waist width, defined as:
+            :math:`r_w = \dfrac{a}{\text{waste width}}`.
+
         """
         self.id = "Radial"
         self.params = {"Ea": Ea, "minimum": minimum, "waist_width": waist_width}

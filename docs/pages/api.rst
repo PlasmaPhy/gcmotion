@@ -3,17 +3,10 @@ GCMotion Documentation
 ----------------------
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
    :titlesonly:
 
    
-.. toctree::
-   :maxdepth: 2
-   :caption: Tokamak Configuration
-
-   about_objects
-   
-   qfactors
-   bfields
+   tokamak/general
 
    
