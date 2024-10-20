@@ -1,3 +1,25 @@
+r"""
+Plots the time evolution of the dynamical variables
+:math:`\theta, \zeta, \psi, \psi_p, \rho_{||}, P_\theta, P_\zeta`
+with respect to time.
+
+The time axis can be either [NU] (normalized units) of time, or 
+seconds.
+The percentage of the shown time evolution can be any integer 
+from 1 to 100.
+
+Example
+-------
+
+.. code-block:: python
+
+    gcm.time_evolution(cwp, percentage=20, units="s")
+
+.. rubric:: Function:
+    :heading-level: 4
+
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -10,16 +32,22 @@ def time_evolution(cwp, percentage: int = 100, units: str = "s"):
     r"""Plots the time evolution of all the dynamical variables and
     canonical momenta.
 
-    Args:
-        percentage (int, optional): The percentage of the orbit to be plotted.
-            Defaults to 100.
-        units (str, optional): The time units. Can be either 's' for seconds
-            or 'normal' for normalized units.
+    :meta public:
+
+    Parameters
+    ----------
+
+    percentage : int, optional
+            The percentage of the orbit to be plotted. Defaults to 100.
+    units : str, optional
+        The time units. Can be either 's' for seconds or 'normal' for
+        normalized units. Defauls to "s".
+
     """
 
     logger.info("Plotting time evolutions...")
 
-    # Get all needed attributes first
+    # Get all needed attributes first (.copy() if needed!)
     t = cwp.t_eval
     theta = cwp.theta
     psi = cwp.psi

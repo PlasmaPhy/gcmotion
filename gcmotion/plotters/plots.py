@@ -45,7 +45,7 @@ class Plots:
                 return False
         return True
 
-    def contour_energy(
+    def energy_contour(
         self,
         theta_lim: list = [-np.pi, np.pi],
         psi_lim: str | list = "auto",
@@ -126,7 +126,7 @@ class Plots:
                 psi_lim = np.array(psi_lim)
 
             # Just use the already existing method in one of the particles, doesnt matter
-            C = p.plot.contour_energy(
+            C = p.plot.energy_contour(
                 theta_lim=theta_lim,
                 psi_lim=psi_lim,
                 plot_drift=False,

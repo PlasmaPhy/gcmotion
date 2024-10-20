@@ -54,6 +54,7 @@ This class does nothing, it is only a template.
 .. autoclass:: ElectricField
     :members: __init__, Phi_der, Er_of_psi, Phi_of_psi
 
+:show-inheritance:
 """
 
 import numpy as np

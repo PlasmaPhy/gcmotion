@@ -3,7 +3,7 @@ name: Deploy documentation to GitHub Pages
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "test-docs"]
     
   workflow_dispatch:
 
@@ -40,7 +40,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/build/html
+          path: docs/_build/html
 
   # Deployment job
   deploy:

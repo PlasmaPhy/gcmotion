@@ -1,3 +1,21 @@
+r"""
+Plots the q-factor, magnetic and electric profile of the tokamak.
+
+The zoom option zooms every plot in the :math:`\psi`-axis, 
+relative to :math:`\psi_{wall}`. 
+
+Example
+-------
+
+.. code-block:: python
+
+    gcm.tokamak_profile(cwp, zoom=[0.7, 1.1])
+
+.. rubric:: Function:
+    :heading-level: 4
+
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -10,14 +28,18 @@ def tokamak_profile(cwp, zoom: list = [0, 1.1]):
     r"""Plots the electric field, potential, and q factor,
     with respect to :math:`\psi/\psi_{wall}`.
 
-    Args:
-        zoom (list, optional): zoom to specific area in the x-axis of the electric field
-            and potential plots. Defaults to [0, 1.1].
+    :meta public:
+
+    Parameters
+    ----------
+    zoom : list, optional
+        Zoom to specific area in the x-axis of the electric field
+        and potential plots. Defaults to [0, 1.1].
+
     """
     logger.info("Plotting tokamak profile...")
 
     # Get all needed attributes first
-    a = cwp.a
     psi_wall = cwp.psi_wall
     q = cwp.q
     Bfield = cwp.Bfield
@@ -29,9 +51,8 @@ def tokamak_profile(cwp, zoom: list = [0, 1.1]):
     ax_E = fig.add_subplot(322)
     ax_q1 = fig.add_subplot(323)
     ax_q2 = fig.add_subplot(324)
-    # fig.tight_layout()
 
-    psi = np.linspace(0, 1.1 * psi_wall, 1000)
+    psi = np.linspace(zoom[0] * psi_wall, zoom[1] * psi_wall, 1000)
     Er = Efield.Er_of_psi(psi)
     Phi = Efield.Phi_of_psi(psi)
 
@@ -62,8 +83,8 @@ def tokamak_profile(cwp, zoom: list = [0, 1.1]):
         ax_E.set_ylabel(Phi_ylabel)
         ax_E.set_title("Electric Potential [kV]", c="b")
 
-        ax_phi.set_xlim(zoom)
-        ax_E.set_xlim(zoom)
+        # ax_phi.set_xlim(zoom)
+        # ax_E.set_xlim(zoom)
 
         logger.debug("\t-> Electric field profile successfully plotted.")
 
@@ -102,9 +123,9 @@ def tokamak_profile(cwp, zoom: list = [0, 1.1]):
         ax_B.set_position(box)
         ax_B.set_title("LAR Magnetic Field Profile", c="b")
         ax_B.set_rlabel_position(30)
-        ax_B.set_yticks([0, a])
+        ax_B.set_yticks(psi_wall * np.array(zoom))
 
-        rs = np.linspace(0, a, 100)
+        rs = np.linspace(zoom[0] * psi_wall, zoom[1] * psi_wall, 100)
         thetas = np.linspace(0, 2 * np.pi, 100)
         r, theta = np.meshgrid(rs, thetas)
         B = Bfield.B(r, theta)
