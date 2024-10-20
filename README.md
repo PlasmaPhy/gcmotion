@@ -1,4 +1,4 @@
-[API documentation](https://plasmaphy.github.io/guiding-center-motion/generated/gcmotion.html#module-gcmotion)
+[API documentation](https://plasmaphy.github.io/gcmotion)
 
 The purpose of this tool is to calculate and analyze the orbit of different particles in a toroidal magnetic field $\vec B$ with large aspect ratio (LAR) and constant $g,I$. The orbits are calculated by solving Hamiltons equations as presented in "The theory of toroidally confined plasmas" by R. B. White,with a 4th order Runge-Kutta method
 
