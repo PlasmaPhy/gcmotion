@@ -7,9 +7,9 @@ import numpy as np
 from time import time
 from math import sqrt
 
-from gcmotion.tokamak_config.qfactor import QFactor
-from gcmotion.tokamak_config.bfield import MagneticField
-from gcmotion.tokamak_config.efield import ElectricField, Nofield
+from gcmotion.tokamak.qfactor import QFactor
+from gcmotion.tokamak.bfield import MagneticField
+from gcmotion.tokamak.efield import ElectricField, Nofield
 
 from gcmotion.utils._logger_setup import logger
 

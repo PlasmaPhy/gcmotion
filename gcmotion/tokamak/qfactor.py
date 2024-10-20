@@ -1,8 +1,10 @@
-"""
-Creates the q-factor profile of the system
+r"""
+q Factor profile object
 ==========================================
 
-Creates the q factor profile of the system.
+An object containing all the information about the q factor profile of
+the system. Implements the methods needed buy the solver and other calculations
+and is called automatically wherever required.
 
 To add a new q-factor, simply copy-paste an already existing class
 (idealy the Unity one) and fill the ``q_of_psi()`` and ``psip_of_psi()`` 
@@ -13,13 +15,8 @@ method and declare them. To avoid errors, your class should inherit the
 
 .. note::
     Keep in mind that when those methods return singular values (rather than
-    np.ndarrays), they should return a float, and not a np.float. This is mainly
-    for optimization reasons and should probably not cause problems.
-
-.. note::
-    You can create new q factor profiles in other .py files as well, but
-    you have to specify the base class path and import them correctly 
-    as well.
+    np.ndarrays), they should return a Python float, and not a np.float. This 
+    is mainly for optimization reasons and should probably not cause problems.
 
 The general structure is this::
 
@@ -31,11 +28,12 @@ The general structure is this::
             <set parameters>
 
         def q_of_psi(self, psi):
+            "Returns the value q(ψ)."
             return q
 
         def psip_of_psi(self, psi):
+            "Returns the value ψ_p(ψ)."
             return pisp
-
 """
 
 import numpy as np
@@ -45,7 +43,7 @@ from abc import ABC, abstractmethod
 
 
 class QFactor(ABC):
-    """q Factor base class
+    r"""q Factor base class
 
     .. note::
         This class does nothing, it is only a template.
@@ -58,7 +56,7 @@ class QFactor(ABC):
 
     @abstractmethod
     def q_of_psi(self, psi: float | list | np.ndarray) -> float | list | np.ndarray:
-        """Calculates q(ψ). Return type should be same as input.
+        r"""Calculates q(ψ). Return type should be same as input.
 
         Used inside dSdt, Φ derivatives (returns a float) and plotting of
         q factor (returns an np.ndarray).
@@ -117,11 +115,11 @@ class Parabolic(QFactor):
 
 class Hypergeometric(QFactor):
     r"""Initializes an object q with
-    :math:`q(\psi) = q_0\\bigg[ 1 + \\bigg( \dfrac{\psi}{\psi_k(q_{wall})} \\bigg)^n \\bigg]^{1/n}`.
+    :math:`q(\psi) = q_0\bigg[ 1 + \bigg( \dfrac{\psi}{\psi_k(q_{wall})} \bigg)^n \bigg]^{1/n}`.
     """
 
     def __init__(self, R: float, a: float, q0: float = 1.1, psi_knee: float = 2.5, n: int = 2):
-        """Parameters initialization.
+        r"""Parameters initialization.
 
         :param R: The tokamak's major radius.
         :param a: The tokamak's minor radius.

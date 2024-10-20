@@ -11,29 +11,33 @@ import sys
 
 sys.path.insert(0, os.path.abspath(".."))
 
-project = "Guiding Center Motion"
+project = "gcmotion"
 copyright = "2024, George Tsiamasiotis"
 author = "George Tsiamasiotis"
+release = "0.0.1"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
+    "sphinx.ext.duration",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.mathjax",
     "sphinx.ext.napoleon",
 ]
 
-templates_path = ["_templates"]
+autosummary_generate = True  # Turn on sphinx.ext.autosummary
 
-exclude_patterns = ["build", "Thumbs.db", ".DS_Store"]
+templates_path = ["_templates"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-autodoc_member_order = "bysource"
 html_theme = "pydata_sphinx_theme"
+# html_static_path = ["_static"]
 html_theme_options = {
     "secondary_sidebar_items": ["page-toc"],
 }
