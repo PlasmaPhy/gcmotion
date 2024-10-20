@@ -9,6 +9,6 @@ live:
 	sphinx-autobuild . _build/html
 
 clean-docs:
-	rm -fr ./pages/generated/* ./build/*
+	rm -fr ./_build/*
 
 clean: clean-docs

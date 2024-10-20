@@ -1,5 +1,15 @@
+
+GCMotion Documentation
+----------------------
+
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 4
    :titlesonly:
+
    
-   q Factor <qfactor>
+.. toctree::
+   :maxdepth: 2
+   :caption: Tokamak Configuration
+
+   about_qfactor
+   qfactors

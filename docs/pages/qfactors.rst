@@ -1,0 +1,26 @@
+Available q-factor profiles
+===========================
+
+Note that the methods :func:`q_of_psi()` and :func:`psip_of_psi()` as implemented
+in :py:class:`~gcmotion.tokamak.qfactor.QFactor` are implied.
+
+.. currentmodule:: gcmotion.tokamak.qfactor
+
+.. Show clickable q factor classes
+
+.. autosummary::
+   :template: _templates/autosummary/class
+   :recursive:
+
+   Unity
+   Parabolic
+   Hypergeometric
+
+.. rubric:: Class methods (besides q_of_psi() and psip_of_psi()):
+
+.. autoclass:: Unity
+
+.. autoclass:: Parabolic
+
+.. autoclass:: Hypergeometric
+   :members: __init__
