@@ -1,6 +1,5 @@
 # Sphinx
-/docs/build
-/docs/generated
+/docs/_build
 
 # Python
 /.venv
@@ -19,6 +18,3 @@ log.txt
 # TEMP
 gcmotion/freq.py
 gcmotion/tokamak/foo__init__.py
-
-# Documentation
-docs/pages/generated
