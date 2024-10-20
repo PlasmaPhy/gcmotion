@@ -1,31 +1,23 @@
-"""
-Creates the Magnetic field of the system
-========================================
+r"""
+About Magnetic field objects
+----------------------------
 
-Creates the Magnetic field of the system.
+A Magnetic Field object is a class instance containing all the information 
+about the magnetic field of the system. It implements all the methods needed 
+buy the solver and other calculations, and is called automatically wherever required.
 
 To add a new Magnetic Field, simply copy-paste an already existing class
-(idealy the Nofield one) and fill the ``__init__()`` and ``B()`` methods 
-to fit your Magnetic Field.  In case your Magnetic field has extra 
+(idealy the Nofield one) and fill the ``__init__()``, ``B()`` and ``B_der()``
+methods to fit your Magnetic Field.  In case your Magnetic field has extra 
 parameters you want to pass as arguments, you must also create an 
 ``__init__()`` method and declare them. To avoid errors, your class should
 inherit the ``MagneticField`` class.
 
-.. danger::
-    **All values, both input and output are in SI units.**
+.. caution::
+    **All values, both input and output are in specific units.**
 
     Specifically, g and I in [NU] and B in [T].
-
-.. note::
-    The B method returns either a float or an np.ndarray, depending on the
-    input type. Solvers need to be fast so they work with built-in floats,
-    while plotting functions work with np.ndarrays.
-
-.. note::
-    You can create new Magnetic fields in other .py files as well, but
-    you have to specify the base class path and import them correctly 
-    as well.
-
+  
 The general structure is this::
 
     class MyMagneticField(MagneticField):
@@ -40,6 +32,25 @@ The general structure is this::
                 return 1 - r * cos(theta)
             else:
                 return 1 - r * np.cos(theta)
+
+        def B_der(self, r, theta)
+            return (B_der_psi, B_der_theta)
+
+.. note::
+    These two methods return the same type as the input (either Python floats 
+    or np.ndarrays). When used inside the solver, they should return a 
+    Python float, and not a np.float. Solvers need to be fast so they work 
+    with built-in floats, while plotting functions work with np.ndarrays.This 
+    is mainly for optimization reasons and should probably not cause problems.
+  
+.. rubric:: The 'MagneticField' Abstract Base Class
+
+The base class that every other class inherits from is ``MagneticField``. 
+This class does nothing, it is only a template.
+
+.. autoclass:: MagneticField
+    :members: __init__, B, B_der
+
 """
 
 import numpy as np
@@ -48,48 +59,61 @@ from abc import ABC, abstractmethod
 
 
 class MagneticField(ABC):
-    r"""Electric field base class
-
-    .. note::
-        This class does nothing, it is only a template.
-    """
+    r"""Electric field base class"""
 
     def __init__(self):
+        r"""Contains all the needed parameters"""
         self.id = "Base Class"
         self.params = {}
 
     @abstractmethod
-    def B(self, r: float | np.ndarray, theta: float | np.ndarray):
+    def B(self, r: float | np.ndarray, theta: float | np.ndarray) -> float | np.ndarray:
         r"""Returns the magnetic field strength.
 
         Used inside the solver (input and return type must be float),
         and the countour plot of the magnetic field profile (input and
         return type must be np.array).
 
-        Args:
-            r (float, np.ndarray): the r position of the particle.
-            theta (float, np.ndarray): the theta position of the particle
+        Parameters
+        ----------
 
-        Returns:
-            B (float. np.ndarray): The magnetic field strength.
+        r : float | np.ndarray
+            the r position of the particle.
+        theta : float | np.ndarray
+            the theta position of the particle
+
+        Returns
+        -------
+
+        B : float | np.ndarray
+            The magnetic field strength.
+
         """
         pass
 
     @abstractmethod
-    def B_der(self, psi: float, theta: float):
-        """Derivaties of B(:math:`\psi`, :math:`\theta`) with respect to r,
+    def B_der(self, psi: float, theta: float) -> tuple[float, float]:
+        r"""Derivaties of B(:math:`\psi`, :math:`\theta`) with respect to r,
         :math:`\theta`.
 
         Intended for use only inside the ODE solver. Returns the derivatives
         with B in normalized units, so no conversion is needed.
 
 
-        Args:
-            psi (float): The :math:`\psi` coordinate
-            theta (float): The :math:`\theta` coordinate.
+        Parameters
+        ----------
 
-        Returns:
+        psi : float
+            The :math:`\psi` coordinate
+        theta : float
+            The :math:`\theta` coordinate.
+
+        Returns
+        -------
+
+        tuple : 2-tuple of floats
             2-tuple containing the calculated derivatives.
+
         """
 
 
@@ -97,16 +121,21 @@ class MagneticField(ABC):
 
 
 class LAR(MagneticField):
-    """Initializes the standard Large Aspect Ration magnetic field."""
+    r"""Initializes the standard Large Aspect Ration magnetic field."""
 
     def __init__(self, i: float, g: float, B0: float):
         r"""Parameters initialization.
 
-        Args:
-            i (float): The toroidal current.
-            g (float): The poloidal current.
-            B0 (float): The magnetic field strength on the
-                magnetic axis.
+        Parameters
+        -----------
+
+        i : float
+            The toroidal current in [NU].
+        g : float
+            The poloidal current in [NU].
+        B0 : float
+            The magnetic field strength on the magnetic axis in [T].
+
         """
         self.id = "LAR"
         self.params = {"I": i, "g": g, "B0": B0}

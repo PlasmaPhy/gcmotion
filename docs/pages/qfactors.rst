@@ -1,4 +1,4 @@
-Available q-factor profiles
+q-factor profiles
 ===========================
 
 Note that the methods :func:`q_of_psi()` and :func:`psip_of_psi()` as implemented

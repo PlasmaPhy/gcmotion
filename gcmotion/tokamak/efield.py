@@ -1,6 +1,6 @@
 """
-Creates the Electric field of the system
-========================================
+Electric Field
+==============
 
 Creates the Electric field of the system.
 

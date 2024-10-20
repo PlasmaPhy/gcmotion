@@ -11,5 +11,9 @@ GCMotion Documentation
    :maxdepth: 2
    :caption: Tokamak Configuration
 
-   about_qfactor
+   about_objects
+   
    qfactors
+   bfields
+
+   

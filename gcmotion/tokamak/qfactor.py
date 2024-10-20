@@ -1,6 +1,6 @@
 r"""
 About q-Factor objects
-======================
+----------------------
 
 A q-Factor object is a class instance containing all the information about the 
 q-factor profile of the system. It implements all the methods needed buy the
@@ -33,8 +33,10 @@ The general structure is this::
 .. note::
     Keep in mind that when these two methods return the same type as the input 
     (either Python floats or np.ndarrays). When used inside the solver, they 
-    should return a Python float, and not a np.float. This is mainly for 
-    optimization reasons and should probably not cause problems.
+    should return a Python float, and not a np.float. Solvers need to be fast 
+    so they work with built-in floats, while plotting functions work with 
+    np.ndarrays.This is mainly for optimization reasons and should probably 
+    not cause problems.
 
 .. rubric:: The 'QFactor' Abstract Base Class
 
