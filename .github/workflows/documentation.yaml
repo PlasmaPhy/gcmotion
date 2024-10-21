@@ -34,7 +34,9 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
       - name: Setup python requirements
-        run: pip install -r requirements.txt
+        run: pip install -r requirements.txt 
+      -name: Install gcmotion locally
+        run: pip install -e gcmotion
       - name: Build documentation
         run: cd docs && make docs
       - name: Upload artifact
