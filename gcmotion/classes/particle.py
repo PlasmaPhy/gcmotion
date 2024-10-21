@@ -1,8 +1,3 @@
-"""
-This module initializes the "Particle" class, which calculates the orbit,
-orbit type, and can draw several different plots
-"""
-
 import numpy as np
 from time import time
 from math import sqrt

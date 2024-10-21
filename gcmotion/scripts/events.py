@@ -65,3 +65,41 @@ def when_theta(theta0, terminal):
         event.terminal = terminal
 
     return event
+
+
+def when_psi(psi0, terminal):
+    r"""
+    Triggers when :math:`\psi` is equal to ``psi0`` and
+    terminates after ``terminal`` times (Starting position included).
+
+    .. note::
+        This event is used to stop the solver from calculating
+        unecessarily long orbits, when 1 should be enough. Since :math:`\psi`
+        seems to mostly be a well behaved periodic function and stays bounded
+        even for the nastiest initial condition, its a good enough critirion
+        for stopping the solver. In case it fails, the solver will just keep
+        going, so no harm is done.
+
+    Setting ``terminal=0`` makes the event non-terminal.
+
+    Parameters
+    ----------
+    theta0 : int | float
+        The :math:`\theta` value that triggers the event.
+    terminal : int
+        The event's termination number.
+
+    Returns
+    -------
+
+    event : function handle
+        The event function handle to be passed to solve_ivp.
+    """
+
+    def event(t, S):
+        return S[1] - psi0
+
+    if terminal != 0:
+        event.terminal = terminal
+
+    return event

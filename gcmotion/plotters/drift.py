@@ -56,6 +56,7 @@ def drift(cwp, angle: str = "theta", lim: list = [-np.pi, np.pi], **kwargs):
 
     canvas = kwargs.get("canvas", None)
     different_colors = kwargs.get("different_colors", False)
+    plot_initial = kwargs.get("plot_initial", True)
 
     if angle == "theta":  # Normalize to psi_wall
         P_plot /= psi_wall
@@ -76,6 +77,9 @@ def drift(cwp, angle: str = "theta", lim: list = [-np.pi, np.pi], **kwargs):
     if different_colors and "color" in scatter_kw.keys():
         del scatter_kw["color"]
 
+    if plot_initial:
+        ax.scatter(cwp.theta0, cwp.psi0 / cwp.psi_wall, c="k", s=10, zorder=3)
+
     ax.scatter(q_plot, P_plot, **scatter_kw, zorder=2)
     ax.set_xlabel(rf"$\{angle}$", fontsize=config["xfontsize"])
     ax.set_ylabel(rf"$P_\{angle}/\psi_w$", fontsize=config["yfontsize"])
@@ -85,10 +89,10 @@ def drift(cwp, angle: str = "theta", lim: list = [-np.pi, np.pi], **kwargs):
     ax.set_xticks(np.linspace(-2 * np.pi, 2 * np.pi, 9), ticks)
     ax.set_xlim(lim)
 
+    logger.info(f"{angle}-P_{angle} drift successfully plotted.")
+
     # Make interactive if single particle:
     if not kwargs:
         fig.set_tight_layout(True)
         plt.ion()
         plt.show(block=True)
-
-    logger.info(f"{angle}-P_{angle} drift successfully plotted.")

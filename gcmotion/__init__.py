@@ -2,6 +2,7 @@
 from gcmotion.utils import _logger_setup
 
 from gcmotion.classes.particle import Particle
+from gcmotion.classes.collection import Collection
 from gcmotion.scripts import events
 
 from gcmotion.tokamak import qfactor
@@ -18,12 +19,16 @@ from gcmotion.plotters.parabolas import parabolas
 from gcmotion.plotters.torus2d import torus2d
 from gcmotion.plotters.torus3d import torus3d
 
+from gcmotion.plotters.collection_drift import collection_drift
+from gcmotion.plotters.collection_energy_contour import collection_energy_contour
+
+
 import gcmotion.scripts.animation as animation
 
 __all__ = [
     "_logger_setup",
     "Particle",
-    "collection",
+    "Collection",
     "qfactor",
     "bfield",
     "efield",
@@ -35,6 +40,8 @@ __all__ = [
     "parabolas",
     "torus2d",
     "torus3d",
+    "collection_drift",
+    "collection_energy_contour",
     "events",
     "animation",
 ]
