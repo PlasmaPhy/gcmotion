@@ -1,16 +1,66 @@
+"""
+Runs a 3d animation of the particle's orbit inside the tokamak.
+
+.. caution::
+    This feature is experimental.
+
+Animation parameters include:
+
+1] percentage (int)
+    The percentage of the orbit to be animated, by default 100.
+
+2] truescale (bool)
+    Whether or not to plot the orbit in True scale, by default True.
+
+3] min_step (float)
+    The minimum stepsize to take per animation step, with respect to R.
+    The higher the number the better the performance, but the more jagged
+    the particle's trail. By default 0.01.
+
+4] seconds (int)
+    The total amount of seconds for the animation to take place. The animation
+    rate is automatically adjusted internally to match the duration.
+
+Example
+-------
+
+.. code-block:: python
+
+    params = {"percentage": 40, "truescale": True, "min_step": 0.02, "seconds": 300}
+    gcm.animation.run(cwp, params)
+
+.. rubric:: Functions
+    :heading-level: 4
+
+"""
+
 import multiprocessing as mp
 import vpython as vp
 import numpy as np
 from scipy.signal import argrelextrema as ex
 from tqdm import tqdm
-from . import config
+
+from gcmotion.configuration.animation_parameters import animation_kw as config
+from gcmotion.utils.canonical_to_toroidal import canonical_to_toroidal
 
 
 spawn_ctx = mp.get_context("spawn")
 
 
-def animate(cwp, params: dict = {}):
-    proc = spawn_ctx.Process(target=run, args=(cwp, params), daemon=True)
+def run(cwp, params: dict = {}):
+    r"""
+    Runs the script in a separate process. Necessary when running interactively.
+
+    Parameters
+    ----------
+
+    cwp : particle object.
+        The Current Working Particle.
+    params : dict, optional
+        The animation parameters, by default {}
+
+    """
+    proc = spawn_ctx.Process(target=animate, args=(cwp, params), daemon=True)
     proc.start()
     try:
         proc.join()
@@ -18,22 +68,29 @@ def animate(cwp, params: dict = {}):
         proc.kill()
 
 
-def run(cwp, params: dict = {}):
+def animate(cwp, params: dict = {}):
+    r"""Sets up animation parameters and runs it.
 
-    # Grab configuration
-    configs = config.configs["animation_kw"]
+    Parameters
+    ----------
+    cwp : particle object
+        The Current Working Particle.
+    params : dict, optional
+        The animation parameter, by default {}
 
-    for key in configs.keys():
+    """
+
+    for key in config.keys():
         if key not in params:
-            params[key] = configs[key]
+            params[key] = config[key]
 
-    percentage = params["percentage"]
-    truescale = params["truescale"]
-    min_step = params["min_step"]
-    seconds = params["seconds"]
+    percentage = params.get("percentage", 100)
+    truescale = params.get("truescale", True)
+    min_step = params.get("min_step", 0.01)
+    seconds = params.get("seconds", 60)
 
-    R, a, r_torus, theta_torus, z_torus = cwp.plot._toruspoints(
-        percentage=percentage, truescale=truescale
+    R, a, r_torus, theta_torus, z_torus = canonical_to_toroidal(
+        cwp, percentage=percentage, truescale=truescale
     )
     # Cartesian (y and z are switched in vpython!)
     x = (R + r_torus * np.cos(theta_torus)) * np.cos(z_torus)
@@ -94,9 +151,7 @@ def run(cwp, params: dict = {}):
         # Vertical axis
         height = 1 * (2 * R)
         pos = [vp.vector(0, -height / 2, 0), +vp.vector(0, height / 2, 0)]
-        vaxis = vp.curve(
-            pos=pos, color=eval("vp.color." + configs["vaxis_color"]), radius=0.004 * R
-        )
+        vaxis = vp.curve(pos=pos, color=eval("vp.color." + config["vaxis_color"]), radius=0.004 * R)
 
         # Torus walls
         shape = vp.shapes.circle(radius=float(a), np=60)
@@ -105,7 +160,7 @@ def run(cwp, params: dict = {}):
             pos=vp.vector(0, 0, 0),
             shape=shape,
             path=path,
-            color=eval("vp.color." + configs["torus_color"]),
+            color=eval("vp.color." + config["torus_color"]),
             opacity=0.4,
         )
 
@@ -141,8 +196,8 @@ def run(cwp, params: dict = {}):
             pos=vp.vector(0, 0, 0),
             shape=shape,
             path=path,
-            color=eval("vp.color." + configs["flux_surface_color"]),
-            opacity=configs["flux_surface_opacity"],
+            color=eval("vp.color." + config["flux_surface_color"]),
+            opacity=config["flux_surface_opacity"],
         )
 
         return flux_surface
@@ -154,7 +209,7 @@ def run(cwp, params: dict = {}):
         p = vp.sphere(
             pos=pos,
             radius=a / 20,
-            color=eval("vp.color." + configs["particle_color"]),
+            color=eval("vp.color." + config["particle_color"]),
             make_trail=True,
             trail_radius=R / 1000,
             interval=1,

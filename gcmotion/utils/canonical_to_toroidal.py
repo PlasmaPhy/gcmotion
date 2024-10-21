@@ -1,3 +1,12 @@
+"""
+Canonical to Toroidal coordinates conversion
+--------------------------------------------
+
+Simple function to convert a particle's calculated coordinates to
+laboratory toroidal coordinates, with the option to adjust the torus'
+scale to make the orbit more visible.
+"""
+
 import numpy as np
 
 from gcmotion.utils._logger_setup import logger
@@ -10,18 +19,26 @@ def canonical_to_toroidal(cwp, percentage: int = 100, truescale: bool = True) ->
     :math:`r = \sqrt{2\psi}` rather than :math:`\psi` itself is used for
     the plot, since it is a better representation of the actual orbit.
 
-    Args:
-        percentage (int, optional): The percentage of the orbit to be plotted.
-            Defaults to 100.
-        truescale (bool, optional): Whether or not to use the actual tokamak
-            dimensions, or fit them around the orbit for better visibility.
-            Defaults to True.
+    :meta public:
 
-    Returns:
-        5-tuple of np.arrays: 
-            The major and minor radii of the (possibly scaled) \
-            tokamak and the toroidal coordionates of the particles orbit.
-            :math:`(r, \theta, \zeta)`.
+    Parameters
+    ----------
+
+    percentage : int, optional
+        The percentage of the orbit to be plotted. Defaults to 100.
+
+    truescale : bool, optional
+        Whether or not to use the actual tokamak dimensions, or fit
+        them around the orbit for better visibility. Defaults to True.
+
+    Returns
+    -------
+
+    5-tuple of 2 floats and 3 np.arrays:
+        The major and minor radii of the (possibly scaled) tokamak and
+        the toroidal coordionates of the particles orbit
+        :math:`(r, \theta, \zeta)`.
+
     """
     logger.info("Calculating torus plotting points...")
 

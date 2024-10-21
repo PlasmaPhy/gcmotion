@@ -1,3 +1,74 @@
+r"""
+Simple function wrapper around SciPy's solve_ivp() solver. It solves
+the dynamical system:
+
+.. todo::
+    link to system formula
+
+It uses the RK4(5) solving method. The tolerance can be tweaked 
+in gcmotion/configuration/solver_configuration.py.
+
+The solver only calculates the time evolution of
+:math:`\theta, \psi, \zeta, \rho_{||}`. The rest of the dynamical variables
+are calculated afterwards.
+
+.. tip::
+    When setting up the analytical function dSdt to pass to the solver,
+    it is better to use Python's built-in mathematical functions by importing
+    the ``math`` module, instead of their ``numpy``
+    counterparts. Python's functions are much faster than numpy's when calculating
+    single values (often by a factor of 10 or more).
+
+Example
+-------
+
+This is how ``orbit`` is called inside the class :py:class:`Particle`:
+
+.. code-block:: python
+    
+    t = self.t_eval
+
+    init_cond = {
+        "theta0": self.theta0,
+        "psi0": self.psi0,
+        "zeta0": self.zeta0,
+        "rho0": self.rho0,
+    }
+
+    constants = {
+        "mu": self.mu,
+    }
+
+    profile = {
+        "q": self.q,
+        "Bfield": self.Bfield,
+        "Efield": self.Efield,
+        "Volts_to_NU": self.Volts_to_NU,
+    }
+
+    solution orbit(t, init_cond, constants, profile, events)
+
+And this is how the solution is unpacked:
+
+.. code-block:: python
+
+    self.theta = solution["theta"]
+    self.psi = solution["psi"]
+    self.zeta = solution["zeta"]
+    self.rho = solution["rho"]
+    self.psip = solution["psip"]
+    self.Ptheta = solution["Ptheta"]
+    self.Pzeta = solution["Pzeta"]
+    self.t_eval = solution["t_eval"]
+    self.t_events = solution["t_events"]
+    self.y_events = solution["y_events"]
+    self.message = solution["message"]
+
+
+.. rubric:: Function:
+    :heading-level: 4
+"""
+
 import numpy as np
 from scipy.integrate import solve_ivp
 from math import sqrt
@@ -12,7 +83,43 @@ def orbit(
     profile: dict,
     events: list,
 ):
+    r"""Wrapper function around SciPy's solve_ivp().
 
+    Parameters
+    ----------
+
+    t : np.ndarray
+        The evaluation times array.
+    init_cond : list
+        List containing the initial conditions
+        :math:`\theta_0, \psi_0, \zeta_0, \rho_{||,0}`.
+    constants : dict
+        Dict containing the constants of motion. Currently only :math:`\mu`
+        is used.
+    profile : dict
+        Dict containing the tokamak configuration objects.
+    events : list
+        List containing the independed events to track.
+
+    Returns
+    -------
+
+    solution : dict
+        A dict containing the following:
+
+        1] The calculated solutions of
+        :math:`\theta, \psi, \zeta, \rho, \psi_p, P_\theta, P_\zeta`
+        as np.ndarrays.
+
+        2] A np.ndarray containing the evaluation times. This is useful in the case
+        a terminating event is used.
+
+        3] 2 lists containing the time positions and values of the found events. If
+        more than 1 event is used, the lists are nested.
+
+        4] The solver status message.
+
+    """
     logger.info(f"Calculating orbit with events {events}")
 
     # Tokamak profile

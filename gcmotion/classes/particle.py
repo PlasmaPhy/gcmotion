@@ -7,9 +7,7 @@ import numpy as np
 from time import time
 from math import sqrt
 
-from gcmotion.tokamak.qfactor import QFactor
-from gcmotion.tokamak.bfield import MagneticField
-from gcmotion.tokamak.efield import ElectricField, Nofield
+from gcmotion.tokamak.efield import Nofield
 
 from gcmotion.utils._logger_setup import logger
 
@@ -22,59 +20,123 @@ from gcmotion.classes.parabolas import Construct
 
 
 class Particle:
-    """Initializes a particle, which calculates the orbit,
-    orbit type, unit convertion factors, and motion frequencies.
+    r"""
+    .. currentmodule:: gcmotion.classes.particle
 
-    Supposedly there is no need to change anything here. Electric Fields and Q factors
-    should be changed in the respective ``gcmotion/*.py`` files.
+    Instanciates a particle.
+
+    The particles holds its properties such as mass, species, etc as well as all its calculated
+    quantities as its attributes. We can view them at any time:
+
+    .. code-block:: python
+
+        >>> particle.species
+        'e'
+        >>> particle.Ptheta
+        array([0.02601457, 0.02580392, 0.02559509, ..., 0.03456111, 0.03481527,
+            0.0350704 ])
+
+    Physical properties and tokamak configuration are automatically setup upon the particle's
+    initialization, and its orbit is calculated upon calling its
+    :py:meth`~Particle.run` method.
+
+    Here is a list of the most important attributes:
+
+    #. Initial conditions:
+        theta0, psi0, zeta0, rho0, psip0, Ptheta0, Pzeta0
+    #. Constants of motion:
+        E, E_J, E_eV, mu, Pzeta
+    #. Time evolution arrays:
+        theta, psi, zeta, rho, psip, Ptheta, Pzeta
+    #. Configuration objects and parameters:
+        R, a, q, Bfield, Efield, psi_wall, psip_wall, r_wall
+    #. Conversion factors and physical properties
+        mass_amu, mass_kg, w0, E_unit,
+        Volts_to_NU, NU_to_J, NU_to_eV
+
+    .. hint::
+        We can always view all the currently stored attributes by running:
+
+        .. code-block:: python
+
+            >>> from pprint import pprint
+            >>> pprint(vars(cwp))
+
+    Example
+    -------
+
+    Here is a way to initialize a particle:
+
+    .. code-block:: python
+        :linenos:
+
+        R, a = 6.2, 2
+        q = gcm.qfactor.Hypergeometric(R, a)
+        Bfield = gcm.bfield.LAR(i=0, g=1, B0=5)
+        Efield = gcm.efield.Radial(R, a, q, Ea=75000, minimum=0.9, waist_width=50)
+
+        species = "p"
+        mu = 1e-6
+        theta0 = np.pi / 3
+        psi0 = 0.5  # times psi_wall
+        zeta0 = np.pi
+        Pzeta0 = -0.025
+        t_eval = np.linspace(0, 100000, 10000)  # t0, tf, steps
+
+        tokamak     = {"R": R, "a": a, "q": q, "Bfield": Bfield, "Efield":Efield}
+        init_cond   = {"theta0": theta0, "psi0": psi0, "zeta0": zeta0, "Pzeta0": Pzeta0}
+
+        particle1 = gcm.Particle(tokamak, t_eval, init_cond, mu, species)
+
+    .. rubric:: Methods
+        :heading-level: 1
     """
 
     def __init__(
         self,
-        species: str,
-        mu: float,
-        init_cond: np.array,
+        tokamak: dict,
         t_eval: np.array,
-        R: float,
-        a: float,
-        q: QFactor,
-        Bfield: MagneticField,
-        Efield: ElectricField,
+        init_cond: dict,
+        mu: float,
+        species: str,
     ):
         r"""Initializes particle and grabs configuration.
 
-        Args:
-            species (str): the particle species, used to later set charge and mass
-                automatically (from ``gcmotion/config.yaml``)
-            mu (float): magnetic moment
-            init_cond (np.array): 1x4 initial conditions array (later, self.init_cond
-                includes 2 more initial conditions,
-                [:math:`\theta_0, \psi_0, \psi_{p0}, \zeta_0, P_{\zeta_0}`])
-            t_eval (np.array): The ODE interval, in [:math:`t_0, t_f`, steps]
-            R (float): The tokamak's major radius in [m].
-            a (float): The tokamak's minor radius in [m].
-            q (QFactor): Qfactor object that supports query methods for getting values
-                of :math:`q(\psi)` and :math:`\psi_p(\psi)`.
-            Bfield (MagneticField): Magnetic Field Object that supports query methods for getting
-                values for the field itself.
-                magnitude (in [T]) of the magnetic field B, as in
-                :math:`[g, I, B_0]`.
-            Efield (ElectricField): Electric Field Object that supports query methods for getting
-                values for the field itself and some derivatives of
-                its potential.
-            rtol (float): Relative tolerance of the RK45 solver. Defaults to :math:`10^{-6}`.
+        :meta public:
+
+        Parameters
+        ----------
+
+        tokamak : dict
+            A dict containing the tokamak's configuration:
+
+                R : float
+                    The tokamak's major radius in [m].
+                a : float
+                    The tokamak's minor radius in [m].
+                q : :py:class:`~gcmotion.tokamak.qfactor.QFactor`
+                    Qfactor object that supports query methods for getting values
+                    of :math:`q(\psi)` and :math:`\psi_p(\psi)`.
+                Bfield : :py:class:`~gcmotion.tokamak.bfield.MagneticField`
+                    Magnetic Field Object that supports query methods for getting values of the
+                    field magnitude and its derivatives.
+                Efield : :py:class:`~gcmotion.tokamak.efield.ElectricField`
+                    Electric Field Object that supports query methods for getting values of the
+                    field itself and the derivatives of its potential.
+        t_eval : np.array
+            The ODE time interval return values, [:math:`t_0, t_f`, steps], in normalised
+            time units [NU].
+        init_cond : np.array
+            1x4 initial conditions array
+            [:math:`\theta_0, \psi_0, \psi_{p0}, \zeta_0, P_{\zeta_0}`]) [NU]
+        mu : float
+            The magnetic moment in [NU].
+        species : str
+            The particle species, used to later set charge and mass automatically
+            (from :py:mod:`~gcmotion.configuration.physical_constants`)
+
         """
         logger.info("--------Initializing particle--------")
-
-        def grab_configuration():
-            """Attempt to import the config Dictionary."""
-
-            logger.info("Attempting to grab configuration.")
-            try:
-                self.constants = constants
-                logger.info("--> Grabbed configuration successfully.")
-            except (IOError, ValueError, NameError, OSError):
-                logger.error("--> Failed grabbing configuration.")
 
         def setup_tokamak():
             """Sets up tokamak-related attributes."""
@@ -82,13 +144,14 @@ class Particle:
             logger.info("Setting up Tokamak...")
 
             # Dimensions
-            self.R, self.a = R, a
+            self.R, self.a = tokamak["R"], tokamak["a"]
 
             logger.debug(f"\tTokamak dimensions: R = {self.R}, a = {self.a}")
 
             # Objects
-            self.q = q
-            self.Bfield = Bfield
+            self.q = tokamak["q"]
+            self.Bfield = tokamak["Bfield"]
+            Efield = tokamak["Efield"]
             if Efield is None or isinstance(Efield, Nofield):
                 self.Efield = Nofield()
                 self.has_efield = False
@@ -119,7 +182,7 @@ class Particle:
             logger.info("--> Tokamak setup successful.")
 
         def setup_constants():
-            """Grabs particle's constants from ``config.py``"""
+            """Grabs particle's constants from ``physical_constants.py``"""
 
             logger.info("Setting up particle's constants...")
 
@@ -127,9 +190,9 @@ class Particle:
             self.mass_amu = physical_constants[self.species + "_mass_amu"]
             self.mass_keV = physical_constants[self.species + "_mass_keV"]
             self.mass_kg = physical_constants[self.species + "_mass_kg"]
-            self.zeta = physical_constants[self.species + "_Z"]
+            self.Z = physical_constants[self.species + "_Z"]
             self.e = physical_constants["elementary_charge"]
-            self.sign = self.zeta / abs(self.zeta)
+            self.sign = self.Z / abs(self.Z)
 
             logger.debug(f"\tParticle is of species '{self.species}'.")
             logger.info("--> Particle's constants setup successful")
@@ -149,11 +212,10 @@ class Particle:
 
             self.t_eval = t_eval
             self.mu = mu
-            self.theta0 = init_cond[0]
-            init_cond[1] *= self.psi_wall  # CAUTION! Normalize it to psi_wall
-            self.psi0 = init_cond[1]
-            self.zeta0 = init_cond[2]
-            self.Pzeta0 = init_cond[3]
+            self.theta0 = init_cond["theta0"]
+            self.psi0 = init_cond["psi0"] * self.psi_wall  # CAUTION! Normalize it to psi_wall
+            self.zeta0 = init_cond["zeta0"]
+            self.Pzeta0 = init_cond["Pzeta0"]
             self.psip0 = self.q.psip_of_psi(self.psi0)
             self.rho0 = self.Pzeta0 + self.psip0  # Pz0 + psip0
             self.Ptheta0 = self.psi0 + self.rho0 * self.Bfield.I  # psi + rho*I
@@ -189,7 +251,6 @@ class Particle:
 
             logger.info("--> Logic flags setup successful.")
 
-        grab_configuration()
         setup_tokamak()
         setup_constants()
         setup_solver()
@@ -198,7 +259,7 @@ class Particle:
 
         logger.info("--------Particle Initialization Completed--------\n")
 
-    def __str__(self):
+    def __repr__(self):
         info_str = (
             "Constants of motion:\n"
             + "\tParticle Energy (normalized):\tE = {:e}\n".format(self.E)
@@ -218,17 +279,28 @@ class Particle:
 
         return info_str
 
-    def run(self, info: bool = True, orbit=True, events: list = []):
-        r"""Calculates the motion and attributes of the particle.
+    def run(self, orbit=True, info: bool = True, events: list = []):
+        r"""
+        Calculates the motion and attributes of the particle.
 
-        This is the function that must be called after the initial conditions
-        are set. It runs the needed methods in the correct order first and
-        initializes the "Plot" class afterwards, which contains all the plotting
-        methods.
+        This functions runs all the required methods for calculating orbit
+        in the correct order, and lastly it runs
+        :py:meth:`~Particle._orbit`.
 
-        Args:
-            info (bool, optional): Whether or not to print the particle's
-                calculated attributes. Defaults to True.
+        :meta public:
+
+        Parameters
+        ----------
+
+        orbit : bool
+            Whether or not to actually calculate the orbit in the end. Useful
+            when studying particle properties that only depend on initial conditions.
+            Defaults to True.
+        info : bool
+            Whether or not to print the particle's calculated attributes. Defaults to True.
+        events : list
+            The list of :py:mod:`~gcmotion.scripts.events` to be passed to the solver. Defaults to [].
+
         """
         logger.info("--------Particle's 'run' routine is called.---------")
 
@@ -264,9 +336,9 @@ class Particle:
             logger.info("\tOrbit calculation deliberately skipped.")
 
         if info:
-            logger.info("Printing Particle.__str__() to stdout.")
-            print(self.__str__())
-        logger.info("Printing Particle.__str__():\n\t\t\t" + self.__str__())
+            logger.info("Printing Particle.__repr__() to stdout.")
+            print(self.__repr__())
+        logger.info("Printing Particle.__repr__():\n\t\t\t" + self.__repr__())
 
         # logger.info("Initializing composite class 'Plot'...")
         # self.plot = Plot(self)
@@ -274,12 +346,32 @@ class Particle:
         logger.info("---------Particle's 'run' routine completed--------\n")
 
     def _conversion_factors(self):
-        r"""Calculates the conversion coeffecient needed to convert from lab to NU
-        and vice versa."""
+        r"""
+        Calculates the conversion coeffecient needed to convert from lab to NU
+        and vice versa.
+
+        Specifically:
+
+        * :math:`\omega_0[s^{-1}] = \dfrac{|Z|e[C]B_0[T]}{m[kg]}`
+
+        * :math:`E_{unit} [J] = m[kg]\omega_0^2[s^{-2}]R^2[m^2]`
+
+        The attributes [NU_to_eV, NU_to_J, Volts_to_NU] are also calculated:
+
+        * To convert from [NU] to [eV], we multiply by
+            NU_to_eV = :math:`\dfrac{1}{E_{unit}}`.`
+
+        * To convert from [NU] to [J], we multiply by
+            NU_to_J = :math:`\dfrac{e}{E_{unit}}`.`
+
+        * To convert Volts to [NU], we multiply by
+            Volts_to_NU = :math:`Z E_{unit}`.`
+        """
+
         logger.info("Calculating conversion factors...")
 
         e = self.e  # 1.6*10**(-19)C
-        Z = self.zeta
+        Z = self.Z
         m = self.mass_kg  # kg
         B = self.Bfield.B0  # Tesla
         R = self.R  # meters
@@ -290,14 +382,15 @@ class Particle:
         # Conversion Factors
         self.NU_to_eV = 1 / self.E_unit
         self.NU_to_J = e / self.E_unit
-        self.Volts_to_NU = self.sign * self.E_unit
+        self.Volts_to_NU = self.Z * self.E_unit
 
         self.calculated_conversion_factors = True
         logger.info("--> Calculated conversion factors.")
 
     def _energies(self):
-        r"""Calculates the particle's energy in [NU], [eV] and [J], using
-        its initial conditions.
+        r"""
+        Calculates the particle's energy in [NU], [eV] and [J], using
+        its initial conditions and the conversion factors.
         """
         r0 = sqrt(2 * self.psi0)
         B_init = self.Bfield.B(r0, self.theta0)
@@ -320,7 +413,8 @@ class Particle:
         r"""
         Estimates the orbit type given the initial conditions ONLY.
 
-        .. caution:: This method works only in the absence of an Electric Field.
+        .. note:: This method works only in the absence of an Electric Field
+            and LAR Magnetic Field.
 
         Trapped/passing:
         The particle is trapped if rho vanishes, so we can
@@ -379,6 +473,22 @@ class Particle:
         logger.info(f"--> Orbit type completed. Result: {self.orbit_type_str}.")
 
     def _orbit(self, events: list = []):
+        """Groups the particle's initial conditions and passes the to the solver Script
+        :py:mod:`~gcmotion.scripts.orbit`. The unpacking takes place in
+        :py:mod:`~gcmotion.classes.particle.Particle.run`.
+
+        Parameters
+        ----------
+
+        events : list, optional
+            List containing the :py:mod:`~gcmotion.scripts.events`. Defaults to []
+
+        Returns
+        -------
+
+        dict
+            The ``solution`` dictionary returned by the solver
+        """
 
         t = self.t_eval
 
@@ -390,9 +500,7 @@ class Particle:
         }
 
         constants = {
-            "E": self.E,
             "mu": self.mu,
-            "Pzeta0": self.Pzeta0,
         }
 
         profile = {
@@ -403,7 +511,3 @@ class Particle:
         }
 
         return orbit(t, init_cond, constants, profile, events)
-
-    def freq_analysis(self):
-
-        pass
