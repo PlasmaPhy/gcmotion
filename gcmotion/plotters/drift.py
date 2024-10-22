@@ -28,7 +28,7 @@ from gcmotion.utils.pi_mod import pi_mod
 from gcmotion.configuration.plot_parameters import drift as config
 
 
-def drift(cwp, angle: str = "theta", lim: list = [-np.pi, np.pi], **kwargs):
+def drift(cwp, angle: str = "theta", lim: list = [-np.pi, np.pi], params: dict = {}):
     r"""Draws :math:`\theta - P_\theta` plot.
 
     This method is called internally by ``countour_energy()``
@@ -43,7 +43,7 @@ def drift(cwp, angle: str = "theta", lim: list = [-np.pi, np.pi], **kwargs):
         The angle to plot. Defaults to "theta".
     lim : list, optional
         Plot xlim. Must be either [0,2π] or [-π,π]. Defaults to [-π,π].
-    kwargs : list, optional
+    params : dict, optional
         Extra arguements if called for many particles.
 
     """
@@ -54,9 +54,9 @@ def drift(cwp, angle: str = "theta", lim: list = [-np.pi, np.pi], **kwargs):
     P_plot = getattr(cwp, "P" + angle).copy()
     psi_wall = cwp.psi_wall
 
-    canvas = kwargs.get("canvas", None)
-    different_colors = kwargs.get("different_colors", False)
-    plot_initial = kwargs.get("plot_initial", True)
+    canvas = params.get("canvas", None)
+    different_colors = params.get("different_colors", False)
+    plot_initial = params.get("plot_initial", True)
 
     if angle == "theta":  # Normalize to psi_wall
         P_plot /= psi_wall
@@ -73,9 +73,9 @@ def drift(cwp, angle: str = "theta", lim: list = [-np.pi, np.pi], **kwargs):
         fig, ax = canvas
         logger.debug("\tUsing existing canvas.")
 
-    scatter_kw = config["scatter_args"]
-    if different_colors and "color" in scatter_kw.keys():
-        del scatter_kw["color"]
+    scatter_kw = config["scatter_args"].copy()
+    if different_colors:
+        scatter_kw.pop("color", None)
 
     if plot_initial:
         ax.scatter(cwp.theta0, cwp.psi0 / cwp.psi_wall, c="k", s=10, zorder=3)
@@ -92,7 +92,7 @@ def drift(cwp, angle: str = "theta", lim: list = [-np.pi, np.pi], **kwargs):
     logger.info(f"{angle}-P_{angle} drift successfully plotted.")
 
     # Make interactive if single particle:
-    if not kwargs:
+    if not params:
         fig.set_tight_layout(True)
         plt.ion()
         plt.show(block=True)

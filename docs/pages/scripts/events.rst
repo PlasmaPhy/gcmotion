@@ -2,4 +2,5 @@ events
 -------
 
 .. automodule:: gcmotion.scripts.events
-    :members: when_theta
+    :member-order: bysource
+    :members: when_theta, when_psi

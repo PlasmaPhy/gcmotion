@@ -107,17 +107,17 @@ def orbit(
     solution : dict
         A dict containing the following:
 
-        1] The calculated solutions of
-        :math:`\theta, \psi, \zeta, \rho, \psi_p, P_\theta, P_\zeta`
-        as np.ndarrays.
+            #. The calculated solutions of
+                :math:`\theta, \psi, \zeta, \rho, \psi_p, P_\theta, P_\zeta`
+                as np.ndarrays.
 
-        2] A np.ndarray containing the evaluation times. This is useful in the case
-        a terminating event is used.
+            #. A np.ndarray containing the evaluation times. This is useful in the case
+                a terminating event is used.
 
-        3] 2 lists containing the time positions and values of the found events. If
-        more than 1 event is used, the lists are nested.
+            #. 2 lists containing the time positions and values of the found events. If
+                more than 1 event is used, the lists are nested.
 
-        4] The solver status message.
+            #. The solver status message.
 
     """
     logger.info(f"Calculating orbit with events {events}")

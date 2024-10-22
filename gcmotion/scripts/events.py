@@ -76,7 +76,7 @@ def when_psi(psi0, terminal):
         This event is used to stop the solver from calculating
         unecessarily long orbits, when 1 should be enough. Since :math:`\psi`
         seems to mostly be a well behaved periodic function and stays bounded
-        even for the nastiest initial condition, its a good enough critirion
+        even for the nastiest initial conditions, its a good enough critirion
         for stopping the solver. In case it fails, the solver will just keep
         going, so no harm is done.
 

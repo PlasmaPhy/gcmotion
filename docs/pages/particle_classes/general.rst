@@ -5,3 +5,4 @@ Particle Classes
     :maxdepth: 1
 
     particle
+    collection

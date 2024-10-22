@@ -28,7 +28,7 @@ from gcmotion.utils.pi_mod import pi_mod
 from gcmotion.configuration.plot_parameters import drift as config
 
 
-def drifts(cwp, theta_lim: list = [-np.pi, np.pi], **kwargs):
+def drifts(cwp, theta_lim: list = [-np.pi, np.pi], params: dict = {}):
     r"""
     Draws 2 plots: 1] :math:`\theta-P_\theta`
     and 2] :math:`\zeta-P_\zeta`.
@@ -40,7 +40,7 @@ def drifts(cwp, theta_lim: list = [-np.pi, np.pi], **kwargs):
 
     theta_lim : list, optional
         Plot xlim. Must be either [0,2π] or [-π,π]. Defaults to [-π,π].
-    kwargs : dict
+    params : dict
         Extra arguements if called for many particles.
 
     """
@@ -57,8 +57,8 @@ def drifts(cwp, theta_lim: list = [-np.pi, np.pi], **kwargs):
     theta_min, theta_max = theta_lim
     theta_plot = pi_mod(theta, theta_lim)
 
-    canvas = kwargs.get("canvas", None)
-    different_colors = kwargs.get("different_colors", False)
+    canvas = params.get("canvas", None)
+    different_colors = params.get("different_colors", False)
 
     if canvas is None:
         fig, ax = plt.subplots(1, 2, figsize=(12, 5))
@@ -92,7 +92,7 @@ def drifts(cwp, theta_lim: list = [-np.pi, np.pi], **kwargs):
     ax[0].set_xlim(theta_lim)
 
     # Make interactive if single particle:
-    if not kwargs:
+    if not params:
         fig.set_tight_layout(True)
         plt.ion()
         plt.show(block=True)

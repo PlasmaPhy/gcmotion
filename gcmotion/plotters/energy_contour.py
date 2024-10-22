@@ -49,7 +49,7 @@ def energy_contour(
     units: str = "keV",
     levels: int = None,
     wall_shade: bool = True,
-    **kwargs,
+    params: dict = {},
 ):
     r"""
     Plots the energy contour lines of the :math:`\theta-P_\theta`
@@ -82,6 +82,20 @@ def energy_contour(
     wall_shade : bool, optional
         Whether to shade the region :math:`\psi/\psi_{wall} > 1`.
         Defaults to True.
+    params : dict, optional
+        Extra plotting parameters:
+
+            * different_colors : bool
+                Whether or not not use different colors for every drift.
+                Defaults to False.
+            * plot_initial: bool
+                Whether or not to plot the starting points of each drift.
+                Defaults to True.
+            * canvas: 2-tuple:
+                Whether or not to plot upon an existing (fig, ax) canvas.
+                Usually only used internally. Defaults to None, which
+                creates a new canvas.
+
 
     """
     logger.info("Plotting energy contour:")
@@ -91,7 +105,7 @@ def energy_contour(
     psi_wall = cwp.psi_wall
     psi = cwp.psi.copy()
 
-    canvas = kwargs.get("canvas", None)
+    canvas = params.get("canvas", None)
 
     if canvas is None:
         fig = plt.figure(figsize=(6, 4))
@@ -106,7 +120,7 @@ def energy_contour(
     theta_min, theta_max = theta_lim
 
     if plot_drift:
-        drift(cwp, angle="theta", theta_lim=theta_lim, canvas=canvas)
+        drift(cwp, angle="theta", lim=theta_lim, params=params)
         logger.debug("\tPlotting particle's Pθ drift.")
 
     # Set psi limits (Normalised to psi_wall)
@@ -162,7 +176,7 @@ def energy_contour(
         ax.add_patch(rect)
         logger.debug("\tAdding wall shade.")
 
-    if not kwargs:  # If called for a single particle
+    if not params:  # If called for a single particle
         cbar = fig.colorbar(C, ax=ax, fraction=0.03, pad=0.2, label=f"E[{units}]")
         cbar_kw = {
             "linestyle": "-",
@@ -173,12 +187,12 @@ def energy_contour(
         cbar.ax.plot([0, 1], [E_cbar, E_cbar], **cbar_kw)
         logger.debug(f"\tSingle particle call. Adding energy label at {E_cbar:.4g}{units}")
 
-    if not kwargs:  # If called for a single particle
+    if not params:  # If called for a single particle
         fig.set_tight_layout(True)
         plt.ion()
         plt.show(block=True)
         logger.info("--> Energy contour successfully plotted (returned null)\n")
-    elif kwargs:  # If called for a collection
+    elif params:  # If called for a collection
         logger.info("--> Energy contour successfully plotted (returned contour object)\n")
         return C
 

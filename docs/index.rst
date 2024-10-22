@@ -7,4 +7,5 @@ Guiding Center Motion
    :hidden:
 
    Installing <pages/Installing>
+   User Guide <pages/user_guide/general>
    API Reference <pages/api>

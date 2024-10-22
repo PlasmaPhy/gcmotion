@@ -9,9 +9,52 @@ from gcmotion.utils._logger_setup import logger, add_logger
 
 
 class Collection:
+    r"""
+    Instantiates a collection of particles.
+
+    All the particles are stored inside a ``Collection`` object as
+    its attributes. We can view them at any time. For example, for a
+    collection of 3 Protons:
+
+    .. code-block:: python
+
+        >>> collection.particles
+        Proton with energy E=2.723keV.,
+        Proton with energy E=2.224keV.,
+        Proton with energy E=1.833keV.]
+
+        >>> collection.particles[2]
+        Proton with energy E=1.833keV.
+
+        >>> print(collection.particles[2])
+        <particle's ``__str__()`` method>
+
+        >>> collection.params
+        <parameters imported from ``parameters.py`` file>
+
+
+
+    Most of the methods as well as plotters are
+    simple wrappers around the
+    :py:class:`~gcmotion.classes.particle.Particle` class and the
+    single-particle plotters.
+
+    Example
+    -------
+
+    Here is a way to initialize a collection of particles and run them:
+
+    .. code-block:: python
+
+        >>> collection = gcm.Collection(parameters)
+        >>> collection.run_all(orbit=True, terminal = 10)
+
+    .. rubric:: Methods
+        :heading-level: 1
+    """
 
     def __init__(self, file):
-        """
+        r"""
         Initializes a Collection of particles.
 
         This class is a *Collection* of many independent particles, each one with
@@ -43,7 +86,7 @@ class Collection:
         self._create()
 
     def _check(self, file) -> bool:
-        """
+        r"""
         Checks for the validity of the parameters file.
 
         Checks if all given parameter lists are of length 1 or otherwise of
@@ -96,7 +139,7 @@ class Collection:
             return False
 
     def _create(self):
-        """Initiates the particles."""
+        r"""Initiates the particles."""
 
         logger.info("Initializing particles...")
 
@@ -148,14 +191,44 @@ class Collection:
         add_logger()
         logger.info("Particle Initialization complete.")
 
+    def _check_multiples(self, allowed: list) -> bool:
+        r"""Checks if the given parameters are static or vary from particle to particle.
+
+        Since all the plots require some parameters to be the same and allowing only
+        certain parameters to vary from particle to particle, this check is important.
+        Otherwise the resulting plots are nonsense.
+
+        Parameters
+        ----------
+        allowed : list
+            The parameters which are alloed to vary.
+
+        Returns
+        --------
+        bool
+            Truth value depending on the result of the check.
+        """
+        for key in allowed:
+            expr = "self.multiple_" + key + " is True"
+            if eval(expr):
+                print("Error")
+                return False
+        return True
+
     def run_all(self, orbit=True, terminal=0):
-        """Calculates all the particle's orbit, by running Particle.run() itself.
+        r"""Calculates all the particle's orbit, by running Particle.run() itself.
 
         Some plots and calculations, such as the parabolas and the orbit type
         calculation don't require the whole orbit to be calculated, since they
         only depend on the initial conditions. We can therefore save valuable time.
 
         Also keeps statistics of calculation times and event triggers.
+
+        .. caution::
+            The ``terminal`` parameter does not specify the number of *full periods*
+            before halting the solver, but rather the number that the :math:`psi`
+            coordinate has encountered the same value. For more info, see ``note``
+            in :py:func:`~gcmotion.scripts.events.when_psi`.
 
         Parameters
         ----------
@@ -168,10 +241,12 @@ class Collection:
         """
         logger.info("Calculating particle's orbits...")
 
+        # Statistics
         times = []
         reached_end = 0
         terminated = 0
 
+        pbar = tqdm(total=self.n)
         for p in self.particles:
 
             logger.remove()
@@ -183,19 +258,19 @@ class Collection:
 
             add_logger
 
-            if p.message[0] == "0":
+            if p.message[0] == "0":  # Reached the end of termination integral
                 reached_end += 1
-            else:
+            else:  # terminated by the event
                 terminated += 1
 
-            if "0" == "1":
-                pass
+            pbar.update(1)
 
+        pbar.close()
         add_logger()
 
         times = np.array(times)
         time_str = (
-            f"Total calculation time: {times.sum():.4g}s.\n"
+            f"\nTotal calculation time: {times.sum():.4g}s.\n"
             + f"Fastest particle: {times.min():.4g}s.\n"
             + f"Slowest particle: {times.max():.4g}s.\n"
             + f"Average time: ({times.mean():.4g} \u00B1 {times.std():.4g})s.\n"

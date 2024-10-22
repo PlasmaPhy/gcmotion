@@ -4,7 +4,7 @@ Plotting
 Plotting will be interactive when running from .py files,
 and inline when running from a jupyter environment.
 
-Plotting functions **always** take the cwp (the Current Working 
+Plotting functions **always** take the ``cwp`` (the Current Working 
 Particle) as their first arguement.
 
 .. toctree::

@@ -16,8 +16,6 @@ from gcmotion.classes.parabolas import Construct
 
 class Particle:
     r"""
-    .. currentmodule:: gcmotion.classes.particle
-
     Instanciates a particle.
 
     The particles holds its properties such as mass, species, etc as well as all its calculated
@@ -33,7 +31,7 @@ class Particle:
 
     Physical properties and tokamak configuration are automatically setup upon the particle's
     initialization, and its orbit is calculated upon calling its
-    :py:meth`~Particle.run` method.
+    :py:meth:`~Particle.run` method.
 
     Here is a list of the most important attributes:
 
@@ -254,7 +252,7 @@ class Particle:
 
         logger.info("--------Particle Initialization Completed--------\n")
 
-    def __repr__(self):
+    def __str__(self):
         info_str = (
             "Constants of motion:\n"
             + "\tParticle Energy (normalized):\tE = {:e}\n".format(self.E)
@@ -273,6 +271,12 @@ class Particle:
         )
 
         return info_str
+
+    def __repr__(self):
+        formal_species = {"p": "Proton", "e": "Electron"}
+
+        out = f"{formal_species[self.species]} with energy E = {self.E_eV/1000:.4g}keV."
+        return out
 
     def run(self, orbit=True, info: bool = True, events: list = []):
         r"""
@@ -331,9 +335,9 @@ class Particle:
             logger.info("\tOrbit calculation deliberately skipped.")
 
         if info:
-            logger.info("Printing Particle.__repr__() to stdout.")
-            print(self.__repr__())
-        logger.info("Printing Particle.__repr__():\n\t\t\t" + self.__repr__())
+            logger.info("Printing Particle.__str__() to stdout.")
+            print(self.__str__())
+        logger.info("Printing Particle.__str__():\n\t\t\t" + self.__str__())
 
         # logger.info("Initializing composite class 'Plot'...")
         # self.plot = Plot(self)
