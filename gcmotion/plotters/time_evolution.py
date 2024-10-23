@@ -36,19 +36,18 @@ def time_evolution(cwp, percentage: int = 100, units: str = "s"):
 
     Parameters
     ----------
-
+    cwp : :py:class:`~gcmotion.classes.particle.Particle`
+        The current working particle.
     percentage : int, optional
-            The percentage of the orbit to be plotted. Defaults to 100.
+        The percentage of the orbit to be plotted. Defaults to 100.
     units : str, optional
         The time units. Can be either 's' for seconds or 'normal' for
         normalized units. Defauls to "s".
-
     """
-
     logger.info("Plotting time evolutions...")
 
     # Get all needed attributes first (.copy() if needed!)
-    t = cwp.t_eval
+    t = cwp.t_eval.copy()
     theta = cwp.theta
     psi = cwp.psi
     zeta = cwp.zeta
@@ -64,6 +63,9 @@ def time_evolution(cwp, percentage: int = 100, units: str = "s"):
         logger.warning("Invalid percentage: Plotting the whole thing...")
 
     points = int(np.floor(t.shape[0] * percentage / 100) - 1)
+
+    if units == "s":
+        t /= cwp.w0
 
     # Plotting
     fig, ax = plt.subplots(7, 1, **config["fig_parameters"])
@@ -88,9 +90,9 @@ def time_evolution(cwp, percentage: int = 100, units: str = "s"):
     ax[6].set_ylim([-psip_wall, psip_wall])
 
     if units == "normal":
-        fig.xlabel("$t [normalised units]$")
-    elif units == "Hz":
-        fig.xlabel("$t [Hz]$")
+        fig.supxlabel("t [normalised units]", **config["ylabel_args"])
+    elif units == "s":
+        fig.supxlabel("t [s]", **config["ylabel_args"])
 
     fig.set_tight_layout(True)
     plt.ion()
