@@ -38,7 +38,7 @@ from gcmotion.plotters.energy_contour import _cbar_energy
 
 from gcmotion.configuration.plot_parameters import energy_contour as config
 
-from gcmotion.utils._logger_setup import logger, add_logger
+from gcmotion.utils._logger_setup import logger
 
 
 def collection_energy_contour(
@@ -129,7 +129,7 @@ def collection_energy_contour(
         # plt.figure()
 
         logger.info("\t\tPlotting single energy contour...")
-        logger.remove()
+        logger.disable("gcmotion")
         C = energy_contour(
             collection.particles[int(len(collection.particles) / 2)],
             theta_lim=theta_lim,
@@ -141,7 +141,7 @@ def collection_energy_contour(
             wall_shade=wall_shade,
             params=params,
         )
-        add_logger()
+        logger.enable()()
         logger.info("\t-->Single energy contour successfully plotted.")
 
         if plot_drift:

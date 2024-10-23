@@ -42,6 +42,6 @@ todo_include_todos = True
 html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
 html_theme_options = {
-    #    "secondary_sidebar_items": ["page-toc"],
+    # "secondary_sidebar_items": ["page-toc"],
     "collapse_navigation": False,
 }

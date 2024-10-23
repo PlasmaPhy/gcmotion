@@ -28,7 +28,13 @@ from gcmotion.utils.pi_mod import pi_mod
 from gcmotion.configuration.plot_parameters import drift as config
 
 
-def drift(cwp, angle: str = "theta", lim: list = [-np.pi, np.pi], params: dict = {}):
+def drift(
+    cwp,
+    angle: str = "theta",
+    lim: list = [-np.pi, np.pi],
+    params: dict = {},
+    external_call: bool = False,
+):
     r"""Draws :math:`\theta - P_\theta` plot.
 
     This method is called internally by ``countour_energy()``
@@ -45,7 +51,9 @@ def drift(cwp, angle: str = "theta", lim: list = [-np.pi, np.pi], params: dict =
         Plot xlim. Must be either [0,2π] or [-π,π]. Defaults to [-π,π].
     params : dict, optional
         Extra arguements if called for many particles.
-
+    external_call : bool
+        Flag for the plotter to know if its called on its own or from another
+        plotter. Leave as is, only meant to be used internally.
     """
     logger.info(f"Plotting {angle}-P_{angle} drift...")
 
@@ -91,8 +99,7 @@ def drift(cwp, angle: str = "theta", lim: list = [-np.pi, np.pi], params: dict =
 
     logger.info(f"{angle}-P_{angle} drift successfully plotted.")
 
-    # Make interactive if single particle:
-    if not params:
+    if not external_call:
         fig.set_tight_layout(True)
         plt.ion()
         plt.show(block=True)

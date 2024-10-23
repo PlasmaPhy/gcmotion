@@ -181,7 +181,6 @@ class Particle:
 
             self.species = species
             self.mass_amu = physical_constants[self.species + "_mass_amu"]
-            self.mass_keV = physical_constants[self.species + "_mass_keV"]
             self.mass_kg = physical_constants[self.species + "_mass_kg"]
             self.Z = physical_constants[self.species + "_Z"]
             self.e = physical_constants["elementary_charge"]
@@ -500,6 +499,8 @@ class Particle:
 
         constants = {
             "mu": self.mu,
+            "mass": self.mass_amu,
+            "Z": self.Z,
         }
 
         profile = {

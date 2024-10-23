@@ -96,4 +96,4 @@ def time_evolution(cwp, percentage: int = 100, units: str = "s"):
     plt.ion()
     plt.show(block=True)
 
-    logger.info("--> Time evolutions successfully plotted.\n")
+    logger.info("--> Time evolutions successfully plotted.")

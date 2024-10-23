@@ -28,7 +28,7 @@ from gcmotion.utils.pi_mod import pi_mod
 from gcmotion.configuration.plot_parameters import drift as config
 
 
-def drifts(cwp, theta_lim: list = [-np.pi, np.pi], params: dict = {}):
+def drifts(cwp, theta_lim: list = [-np.pi, np.pi], **params):
     r"""
     Draws 2 plots: 1] :math:`\theta-P_\theta`
     and 2] :math:`\zeta-P_\zeta`.
@@ -84,7 +84,9 @@ def drifts(cwp, theta_lim: list = [-np.pi, np.pi], params: dict = {}):
     ax[0].set_ylabel(r"$P_\theta$", fontsize=config["yfontsize"])
     ax[1].set_ylabel(r"$P_ζ$", fontsize=config["yfontsize"])
 
-    ax[1].set_ylim([-psip_wall, psip_wall])
+    # Zoom out Pzeta y-axis
+    current_ylim = np.array(ax[1].get_ylim())
+    ax[1].set_ylim([current_ylim[0] / 5, current_ylim[1] * 5])
 
     # Set all xticks as multiples of π, and then re-set xlims (smart!)
     ticks = ["-2π", "-3π/2", "-π", "-π/2", "0", "π/2", "π", "3π/2", "2π"]

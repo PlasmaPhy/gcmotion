@@ -5,7 +5,7 @@ from tqdm import tqdm
 from gcmotion.classes.particle import Particle
 from gcmotion.scripts.events import when_psi
 
-from gcmotion.utils._logger_setup import logger, add_logger
+from gcmotion.utils._logger_setup import logger
 
 
 class Collection:
@@ -153,7 +153,7 @@ class Collection:
 
         self.particles = []
 
-        logger.remove()
+        logger.disable("gcmotion")
         for i in range(self.n):
             R, a = params["R"][i], params["a"][i]  # Major/Minor Radius in [m]
             q = params["q"][i]
@@ -184,11 +184,11 @@ class Collection:
                     + f"mu, species: {mu, species}\n"
                 )
                 print(error_str)
-                add_logger()
+                logger.enable()()
                 logger.error(error_str)
 
             self.particles.append(p)
-        add_logger()
+        logger.enable()()
         logger.info("Particle Initialization complete.")
 
     def _check_multiples(self, allowed: list) -> bool:
@@ -249,14 +249,14 @@ class Collection:
         pbar = tqdm(total=self.n)
         for p in self.particles:
 
-            logger.remove()
+            logger.disable("gcmotion")
 
             start = time()
             event = when_psi(p.psi0, terminal)
             p.run(info=False, orbit=orbit, events=[event])
             times.append(time() - start)
 
-            add_logger
+            logger.enable()
 
             if p.message[0] == "0":  # Reached the end of termination integral
                 reached_end += 1
@@ -266,7 +266,7 @@ class Collection:
             pbar.update(1)
 
         pbar.close()
-        add_logger()
+        logger.enable()()
 
         times = np.array(times)
         time_str = (

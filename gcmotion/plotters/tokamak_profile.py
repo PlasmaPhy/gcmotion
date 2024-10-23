@@ -143,4 +143,4 @@ def tokamak_profile(cwp, zoom: list = [0, 1.1]):
     plt.ion()
     plt.show(block=True)
 
-    logger.info("--> Tokamak profile successfully plotted.\n")
+    logger.info("--> Tokamak profile successfully plotted.")

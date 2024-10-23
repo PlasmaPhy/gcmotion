@@ -131,6 +131,8 @@ def orbit(
     # Constants of motion
     # E = float(constants["E"]) # Not used
     mu = float(constants["mu"])
+    m = float(constants["mass"])
+    Z = int(constants["Z"])
     # Pzeta0 = float(constants["Pzeta0"]) # Not used
 
     # Initial Conditions
@@ -157,16 +159,16 @@ def orbit(
         q_value = q.q_of_psi(psi)
         r = sqrt(2 * psi)
         B = Bfield.B(r, theta)
-        par = mu + rho**2 * B
-        bracket1 = -par * q_value * B_der_psi + phi_der_psip
-        bracket2 = par * B_der_theta + phi_der_theta
-        D = Bfield.g * q_value + Bfield.I
+        par = mu + m * rho**2 * B
+        bracket1 = par * q_value * B_der_psi + Z * phi_der_psip
+        bracket2 = par * B_der_theta + Z * phi_der_theta
+        D = m * Z * (Bfield.g * q_value + Bfield.I)
 
         # Canonical Equations
-        theta_dot = 1 / D * rho * B**2 + Bfield.g / D * bracket1
-        psi_dot = -Bfield.g / D * bracket2 * q_value
-        rho_dot = psi_dot / (Bfield.g * q_value)
-        z_dot = rho * B**2 / D - Bfield.I / D * bracket1
+        theta_dot = Z * m / D * rho * B**2 + m * Bfield.g / D * bracket1
+        psi_dot = -m * Bfield.g / D * bracket2 * q_value
+        rho_dot = -Z / D * bracket2
+        z_dot = Z * m * rho * B**2 / D - m * Bfield.I / D * bracket1
 
         return [theta_dot, psi_dot, z_dot, rho_dot]
 

@@ -28,7 +28,7 @@ import matplotlib.pyplot as plt
 
 from gcmotion.plotters.drift import drift
 
-from gcmotion.utils._logger_setup import logger, add_logger
+from gcmotion.utils._logger_setup import logger
 
 
 def collection_drift(
@@ -83,10 +83,10 @@ def collection_drift(
         fig, ax = params["canvas"]
 
     for p in collection.particles:
-        logger.remove()
+        logger.disable("gcmotion")
         drift(p, angle, lim, params=params)
 
-    add_logger()
+    logger.enable()()
     logger.info("--> Collection drift successfully plotted.")
 
     if not external_call:

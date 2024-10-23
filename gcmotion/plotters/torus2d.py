@@ -94,7 +94,7 @@ def torus2d(cwp, percentage: int = 100, truescale: bool = True):
     ax[0].set_axis_off()
     ax[1].set_axis_off()
 
-    logger.info("--> 2D torus sections plotted successfully.\n")
+    logger.info("--> 2D torus sections plotted successfully.")
 
     fig.set_tight_layout(True)
     plt.ion()

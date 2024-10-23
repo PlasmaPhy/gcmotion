@@ -138,4 +138,4 @@ def torus3d(
     plt.ion()
     plt.show(block=True)
 
-    logger.info("--> 3D torus plotted successfullly.\n")
+    logger.info("--> 3D torus plotted successfullly.")

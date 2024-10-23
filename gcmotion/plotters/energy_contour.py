@@ -49,7 +49,7 @@ def energy_contour(
     units: str = "keV",
     levels: int = None,
     wall_shade: bool = True,
-    params: dict = {},
+    **params,
 ):
     r"""
     Plots the energy contour lines of the :math:`\theta-P_\theta`
@@ -120,7 +120,8 @@ def energy_contour(
     theta_min, theta_max = theta_lim
 
     if plot_drift:
-        drift(cwp, angle="theta", lim=theta_lim, params=params)
+        params["canvas"] = canvas
+        drift(cwp, angle="theta", lim=theta_lim, params=params, external_call=True)
         logger.debug("\tPlotting particle's Pθ drift.")
 
     # Set psi limits (Normalised to psi_wall)
@@ -177,7 +178,7 @@ def energy_contour(
         logger.debug("\tAdding wall shade.")
 
     if not params:  # If called for a single particle
-        cbar = fig.colorbar(C, ax=ax, fraction=0.03, pad=0.2, label=f"E[{units}]")
+        cbar = fig.colorbar(C, ax=ax, fraction=0.03, pad=0.1, label=f"E[{units}]")
         cbar_kw = {
             "linestyle": "-",
             "zorder": 3,
@@ -191,7 +192,7 @@ def energy_contour(
         fig.set_tight_layout(True)
         plt.ion()
         plt.show(block=True)
-        logger.info("--> Energy contour successfully plotted (returned null)\n")
+        logger.info("--> Energy contour successfully plotted (returned null).")
     elif params:  # If called for a collection
         logger.info("--> Energy contour successfully plotted (returned contour object)\n")
         return C
@@ -226,7 +227,7 @@ def _calcW_grid(
 
     # Get all needed attributes first
     mass_amu = cwp.mass_amu
-    sign = cwp.sign
+    Z = cwp.Z
     mu = cwp.mu
     NU_to_eV = cwp.NU_to_eV
     Volts_to_NU = cwp.Volts_to_NU
@@ -243,7 +244,7 @@ def _calcW_grid(
     # Add Φ if asked
     if contour_Phi:
         Phi = Efield.Phi_of_psi(psi)
-        Phi *= Volts_to_NU * sign
+        Phi *= Volts_to_NU * Z
         W += Phi  # all normalized
 
     if units == "eV":

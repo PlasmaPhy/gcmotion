@@ -1,3 +1,4 @@
+.. _apiref:
 
 GCMotion Documentation
 ----------------------
