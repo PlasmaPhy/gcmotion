@@ -19,7 +19,7 @@ Example
 .. code-block:: python
 
     gcm.energy_contour(
-        cwp, theta_lim = [-np.pi ,np.pi], psi_lim="auto", 
+        cwp, lim = [-np.pi ,np.pi], psi_lim="auto", 
         plot_drift=True, contour_Phi=True, units="keV", 
         levels=20
     )
@@ -42,7 +42,7 @@ from gcmotion.configuration.plot_parameters import energy_contour as config
 
 def energy_contour(
     cwp,
-    theta_lim: list = [-np.pi, np.pi],
+    lim: list = [-np.pi, np.pi],
     psi_lim: str | list = "auto",
     plot_drift: bool = True,
     contour_Phi: bool = True,
@@ -63,7 +63,7 @@ def energy_contour(
     Parameters
     ----------
 
-    theta_lim : list, optional
+    lim : list, optional
         Plot xlim. Must be either [0,2π] or [-π,π]. Defaults to [-π,π].
     psi_lim : list | str, optional
         If a list is passed, it plots between the 2 values relative to
@@ -91,21 +91,21 @@ def energy_contour(
             * plot_initial: bool
                 Whether or not to plot the starting points of each drift.
                 Defaults to True.
-            * canvas: 2-tuple:
-                Whether or not to plot upon an existing (fig, ax) canvas.
-                Usually only used internally. Defaults to None, which
-                creates a new canvas.
-
-
     """
+    # Unpack params
+    _internal_call = params.pop("_internal_call", False)  # POP!
+    canvas = params.pop("canvas", None)  # POP!
+
+    if _internal_call:
+        logger.disable("gcmotion")
+    else:
+        logger.enable("gcmotion")
     logger.info("Plotting energy contour:")
 
     # Get all needed attributes first
     Pzeta0 = cwp.Pzeta0
     psi_wall = cwp.psi_wall
     psi = cwp.psi.copy()
-
-    canvas = params.get("canvas", None)
 
     if canvas is None:
         fig = plt.figure(figsize=(6, 4))
@@ -116,12 +116,18 @@ def energy_contour(
         fig, ax = canvas
         logger.debug("\tUsing existing canvas.")
 
-    # Set theta lim. Mods all thetas to 2π
-    theta_min, theta_max = theta_lim
+    # Set theta lim.
+    theta_min, theta_max = lim
 
     if plot_drift:
-        params["canvas"] = canvas
-        drift(cwp, angle="theta", lim=theta_lim, params=params, external_call=True)
+        drift(
+            cwp,
+            angle="theta",
+            lim=lim,
+            _internal_call=True,
+            canvas=canvas,
+            **params,
+        )
         logger.debug("\tPlotting particle's Pθ drift.")
 
     # Set psi limits (Normalised to psi_wall)
@@ -147,9 +153,11 @@ def energy_contour(
     )
     values = _calcW_grid(cwp, theta, psi, Pzeta0, contour_Phi, units)
     span = np.array([values.min(), values.max()])
-    logger.debug(f"\tEnergy values span from {span[0]:.4g}{units} to {span[1]:.4g}{units}.")
+    logger.debug(
+        f"\tEnergy values span from {span[0]:.4g}{units} to {span[1]:.4g}{units}."
+    )
 
-    # Create Figure
+    # Configure
     if levels is None:  # If non is given
         levels = config["contour_levels"]
         logger.debug("\tUsing default number of levels.")
@@ -173,12 +181,20 @@ def energy_contour(
     ax.set_facecolor("white")
 
     if wall_shade:  # ψ_wall boundary rectangle
-        rect = Rectangle((theta_lim[0], 1), 2 * np.pi, psi_max / psi_wall, alpha=0.2, color="k")
+        rect = Rectangle(
+            (lim[0], 1),
+            2 * np.pi,
+            psi_max / psi_wall,
+            alpha=0.2,
+            color="k",
+        )
         ax.add_patch(rect)
         logger.debug("\tAdding wall shade.")
 
-    if not params:  # If called for a single particle
-        cbar = fig.colorbar(C, ax=ax, fraction=0.03, pad=0.1, label=f"E[{units}]")
+    if not _internal_call:
+        cbar = fig.colorbar(
+            C, ax=ax, fraction=0.03, pad=0.1, label=f"E[{units}]"
+        )
         cbar_kw = {
             "linestyle": "-",
             "zorder": 3,
@@ -186,15 +202,15 @@ def energy_contour(
         }
         E_cbar = _cbar_energy(cwp, units)
         cbar.ax.plot([0, 1], [E_cbar, E_cbar], **cbar_kw)
-        logger.debug(f"\tSingle particle call. Adding energy label at {E_cbar:.4g}{units}")
+        logger.debug(f"\tSingle particle call. Adding energy label at {E_cbar:.4g}{units}")  # fmt:skip
 
-    if not params:  # If called for a single particle
+    if not _internal_call:
         fig.set_tight_layout(True)
         plt.ion()
         plt.show(block=True)
         logger.info("--> Energy contour successfully plotted (returned null).")
-    elif params:  # If called for a collection
-        logger.info("--> Energy contour successfully plotted (returned contour object)\n")
+    else:
+        logger.info("--> Energy contour successfully plotted (returned contour object)\n")  # fmt:skip
         return C
 
 
@@ -239,7 +255,9 @@ def _calcW_grid(
     B = Bfield.B(r, theta)
     psip = q.psip_of_psi(psi)
 
-    W = (Pzeta + psip) ** 2 * B**2 / (2 * Bfield.g**2 * mass_amu) + mu * B  # Without Φ
+    W = (Pzeta + psip) ** 2 * B**2 / (
+        2 * Bfield.g**2 * mass_amu
+    ) + mu * B  # Without Φ
 
     # Add Φ if asked
     if contour_Phi:

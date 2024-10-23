@@ -8,8 +8,9 @@ time_evolution = {
     },
 
     "scatter_args": {
-        "s" : 0.01,
+        "s" : 0.5,
         "color" : "blue",
+        "marker" : "o",
     },
     
     "ylabel_args": {
@@ -41,7 +42,7 @@ energy_contour = {
 
     "contour_grid_density" : 100,
     "contour_levels" : 15,
-    "contour_cmap" : "plasma",
+    "contour_cmap" : "winter",
     "cbar_color": "k",
 }
 

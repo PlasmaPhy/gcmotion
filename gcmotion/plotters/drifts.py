@@ -4,9 +4,6 @@ Plots poloidal :math:`\theta - P_\theta` and
 
 The x-axis (angle) limits can be either [-π,π] or [0,2π].
 
-The optional arguements are only used when plotting drifts
-from multiple particles in the same canvas.
-
 Example
 -------
 
@@ -28,7 +25,11 @@ from gcmotion.utils.pi_mod import pi_mod
 from gcmotion.configuration.plot_parameters import drift as config
 
 
-def drifts(cwp, theta_lim: list = [-np.pi, np.pi], **params):
+def drifts(
+    cwp,
+    theta_lim: list = [-np.pi, np.pi],
+    **params,
+):
     r"""
     Draws 2 plots: 1] :math:`\theta-P_\theta`
     and 2] :math:`\zeta-P_\zeta`.
@@ -37,31 +38,39 @@ def drifts(cwp, theta_lim: list = [-np.pi, np.pi], **params):
 
     Parameters
     ----------
-
+    cwp : :py:class:`~gcmotion.classes.particle.Particle`
+        The current working particle.
     theta_lim : list, optional
         Plot xlim. Must be either [0,2π] or [-π,π]. Defaults to [-π,π].
     params : dict
         Extra arguements if called for many particles.
+    params : dict, optional
+        Extra arguements if called for many particles:
 
+            #. plot_initial : bool, optional
+                Whether or not to plot the initial point. Defaults to True
     """
+    # Unpack params
+    _internal_call = params.pop("_internal_call", False)  # POP!
+    canvas = params.pop("canvas", None)  # POP!
+    different_colors = params.get("different_colors", False)
+    plot_initial = params.get("plot_initial", True)
+
+    if _internal_call:
+        logger.disable("gcmotion")
+    else:
+        logger.enable("gcmotion")
     logger.info("Plotting θ-Pθ and ζ-Pζ drifts...")
 
     # Get all needed attributes first
-    psip_wall = cwp.psip_wall
+    psi_wall = cwp.psi_wall
     theta = cwp.theta
     Ptheta = cwp.Ptheta
     zeta = cwp.zeta
     Pzeta = cwp.Pzeta
 
-    # Set theta lim. Mods all thetas to 2π
-    theta_min, theta_max = theta_lim
-    theta_plot = pi_mod(theta, theta_lim)
-
-    canvas = params.get("canvas", None)
-    different_colors = params.get("different_colors", False)
-
     if canvas is None:
-        fig, ax = plt.subplots(1, 2, figsize=(12, 5))
+        fig, ax = plt.subplots(1, 2, figsize=(12, 6))
         fig.tight_layout()
         canvas = (fig, ax)
         logger.debug("\tCreating a new canvas.")
@@ -75,7 +84,11 @@ def drifts(cwp, theta_lim: list = [-np.pi, np.pi], **params):
     if different_colors and "color" in scatter_kw.keys():
         del scatter_kw["color"]
 
-    ax[0].scatter(theta_plot, Ptheta, **config["scatter_args"])
+    # Set theta lim. Mods all thetas to 2π
+    theta_min, theta_max = theta_lim
+    theta_plot, ax_lim = pi_mod(theta, theta_lim)
+
+    ax[0].scatter(theta_plot, Ptheta / psi_wall, **config["scatter_args"])
     ax[1].scatter(zeta, Pzeta, **config["scatter_args"])
 
     ax[0].set_xlabel(r"$\theta$", fontsize=config["xfontsize"])
@@ -84,19 +97,27 @@ def drifts(cwp, theta_lim: list = [-np.pi, np.pi], **params):
     ax[0].set_ylabel(r"$P_\theta$", fontsize=config["yfontsize"])
     ax[1].set_ylabel(r"$P_ζ$", fontsize=config["yfontsize"])
 
+    if plot_initial:
+        ax[0].scatter(
+            theta_plot[0], Ptheta[0] / psi_wall, c="k", s=10, zorder=3
+        )
+        ax[1].scatter(zeta[0], Pzeta[0], c="k", s=10, zorder=3)
+
     # Zoom out Pzeta y-axis
-    current_ylim = np.array(ax[1].get_ylim())
-    ax[1].set_ylim([current_ylim[0] / 5, current_ylim[1] * 5])
+    if not _internal_call:
+        current_ylim = np.array(ax[1].get_ylim())
+        ax[1].set_ylim([current_ylim[0] / 5, current_ylim[1] * 5])
 
     # Set all xticks as multiples of π, and then re-set xlims (smart!)
     ticks = ["-2π", "-3π/2", "-π", "-π/2", "0", "π/2", "π", "3π/2", "2π"]
     ax[0].set_xticks(np.linspace(-2 * np.pi, 2 * np.pi, 9), ticks)
-    ax[0].set_xlim(theta_lim)
+    ax[0].set_xlim(ax_lim)
 
     # Make interactive if single particle:
-    if not params:
+    if not _internal_call:
         fig.set_tight_layout(True)
         plt.ion()
         plt.show(block=True)
 
     logger.info("θ-Pθ and ζ-Pζ drifts successfully plotted.")
+    logger.enable("gcmotion")

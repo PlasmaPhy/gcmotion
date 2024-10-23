@@ -10,9 +10,6 @@ to observe the change of the drifts with the added electric field.
 
 The x-axis (angle) limits can be either [-π,π] or [0,2π].
 
-The optional arguements are only used when plotting drifts
-from multiple particles in the same canvas.
-
 Example
 -------
 
@@ -50,7 +47,7 @@ def collection_energy_contour(
     units: str = "keV",
     levels: int = None,
     wall_shade: bool = True,
-    params: dict = {},
+    **params,
 ):
     r"""
     Plots the energy contour lines of the :math:`\theta-P_\theta`
@@ -92,22 +89,41 @@ def collection_energy_contour(
             * plot_initial: bool
                 Whether or not to plot the starting points of each drift.
                 Defaults to True.
-            * canvas: 2-tuple:
-                Whether or not to plot upon an existing (fig, ax) canvas.
-                Usually only used internally. Defaults to None, which
-                creates a new canvas.
     """
+    # Unpack params
+    _internal_call = params.pop("_internal_call", False)  # POP!
+    canvas = params.get("canvas", None)  # POP!
+    different_colors = params.get("different_colors", False)
+    plot_initial = params.get("plot_initial", True)
+
+    if _internal_call:
+        logger.disable("gcmotion")
+    else:
+        logger.enable("gcmotion")
 
     def params_ok() -> bool:
-        """checks for the validity of the parameters
+        """Checks for the validity of the parameters.
 
         Returns
         -------
         bool
             The check result
         """
-        must_be_the_same = ["R", "a", "q", "Bfield", "Efield", "species", "mu", "Pz0"]
-        can_be_different = [key for key in collection.params.keys() if key not in must_be_the_same]
+        must_be_the_same = [
+            "R",
+            "a",
+            "q",
+            "Bfield",
+            "Efield",
+            "species",
+            "mu",
+            "Pz0",
+        ]
+        can_be_different = [
+            key
+            for key in collection.params.keys()
+            if key not in must_be_the_same
+        ]
 
         if not collection._check_multiples(must_be_the_same):
             error_str = f"Only the variables {can_be_different} may vary from particle to particle."
@@ -121,12 +137,16 @@ def collection_energy_contour(
 
         logger.info("Plotting Collection energy contour...")
 
-        fig = plt.figure(figsize=(6, 4))
-        ax = fig.add_subplot(111)
-        canvas = (fig, ax)
-        params["canvas"] = canvas
+        nonlocal _internal_call, canvas, different_colors, plot_initial
 
-        # plt.figure()
+        if canvas is None:
+            fig = plt.figure(figsize=(12, 8))
+            ax = fig.add_subplot(111)
+            canvas = (fig, ax)
+            logger.debug("\tCreating a new canvas.")
+        else:
+            fig, ax = canvas
+            logger.debug("\tUsing existing canvas.")
 
         logger.info("\t\tPlotting single energy contour...")
         logger.disable("gcmotion")
@@ -134,26 +154,40 @@ def collection_energy_contour(
             collection.particles[int(len(collection.particles) / 2)],
             theta_lim=theta_lim,
             psi_lim=psi_lim,
-            plot_drift=plot_drift,
+            plot_drift=False,
             contour_Phi=contour_Phi,
             units=units,
             levels=levels,
             wall_shade=wall_shade,
-            params=params,
+            _internal_call=True,
+            canvas=canvas,
+            **params,
         )
-        logger.enable()()
+        logger.enable("gcmotion")
         logger.info("\t-->Single energy contour successfully plotted.")
 
         if plot_drift:
-            collection_drift(collection, "theta", theta_lim, params=params, external_call=True)
+            collection_drift(
+                collection,
+                angle="theta",
+                theta_lim=theta_lim,
+                _internal_call=True,
+                canvas=canvas,
+                **params,
+            )
 
         # Colorbar and labels
-        cbar = fig.colorbar(C, ax=params["canvas"][1], fraction=0.03, pad=0.1, label=f"E[{units}]")
-        cbar_kw = {
-            "linestyle": "-",
-            "zorder": 3,
-            "color": config["cbar_color"],
-        }
+        cbar = fig.colorbar(
+            C,
+            ax=canvas[1],
+            fraction=0.03,
+            pad=0.1,
+            label=f"E[{units}]",
+        )
+        cbar_kw = {"linestyle": "-", "zorder": 3}
+        if not different_colors:
+            cbar_kw["color"] = config["cbar_color"]
+
         for p in collection.particles:
             E_cbar = _cbar_energy(p, units)
             cbar.ax.plot([0, 1], [E_cbar, E_cbar], **cbar_kw)

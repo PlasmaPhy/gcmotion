@@ -75,6 +75,10 @@ from math import sqrt
 
 from gcmotion.utils._logger_setup import logger
 
+from gcmotion.configuration.solver_configuration import (
+    solver_configuration as config,
+)
+
 
 def orbit(
     t: np.ndarray,
@@ -178,7 +182,8 @@ def orbit(
         t_span=t_span,
         y0=S0,
         t_eval=t,
-        rtol=1e-8,
+        atol=config["atol"],
+        rtol=config["rtol"],
         events=events,
         dense_output=True,
     )

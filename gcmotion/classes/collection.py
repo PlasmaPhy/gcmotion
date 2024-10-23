@@ -184,11 +184,11 @@ class Collection:
                     + f"mu, species: {mu, species}\n"
                 )
                 print(error_str)
-                logger.enable()()
+                logger.enable("gcmotion")
                 logger.error(error_str)
 
             self.particles.append(p)
-        logger.enable()()
+        logger.enable("gcmotion")
         logger.info("Particle Initialization complete.")
 
     def _check_multiples(self, allowed: list) -> bool:
@@ -256,7 +256,7 @@ class Collection:
             p.run(info=False, orbit=orbit, events=[event])
             times.append(time() - start)
 
-            logger.enable()
+            logger.enable("gcmotion")
 
             if p.message[0] == "0":  # Reached the end of termination integral
                 reached_end += 1
@@ -266,7 +266,7 @@ class Collection:
             pbar.update(1)
 
         pbar.close()
-        logger.enable()()
+        logger.enable("gcmotion")
 
         times = np.array(times)
         time_str = (

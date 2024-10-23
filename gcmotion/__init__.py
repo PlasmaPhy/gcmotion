@@ -1,3 +1,5 @@
+# fmt: off
+
 # Import the logger first
 from gcmotion.utils import _logger_setup
 
@@ -21,7 +23,7 @@ from gcmotion.plotters.torus3d import torus3d
 
 from gcmotion.plotters.collection_drift import collection_drift
 from gcmotion.plotters.collection_energy_contour import collection_energy_contour
-
+from gcmotion.plotters.collection_drifts import collection_drifts
 
 import gcmotion.scripts.animation as animation
 
@@ -41,6 +43,7 @@ __all__ = [
     "torus2d",
     "torus3d",
     "collection_drift",
+    "collection_drifts",
     "collection_energy_contour",
     "events",
     "animation",

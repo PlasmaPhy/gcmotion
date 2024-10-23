@@ -1,5 +1,5 @@
 r"""
-Plots the poloidal :math:`\theta - P_\theta`  or 
+Plots poloidal :math:`\theta - P_\theta` and
 :math:`\zeta - P_\zeta` drifts of a collection of particles.
 
 The x-axis (angle) limits can be either [-π,π] or [0,2π].
@@ -23,29 +23,26 @@ Example
 import numpy as np
 import matplotlib.pyplot as plt
 
-from gcmotion.plotters.drift import drift
+from gcmotion.plotters.drifts import drifts
 
 from gcmotion.utils._logger_setup import logger
 
 
-def collection_drift(
+def collection_drifts(
     collection,
-    angle: str = "theta",
-    lim: list = [-np.pi, np.pi],
+    theta_lim: list = [-np.pi, np.pi],
     **params,
 ):
     r"""
-    Plots the poloidal :math:`\theta - P_\theta` drifts of
-    a collection of particles.
+    Plots poloidal :math:`\theta - P_\theta` and
+    :math:`\zeta - P_\zeta` drifts of a collection of particles.
 
     Parameters
     ----------
     collection : :py:class:`~gcmotion.classes.collection.Collection`
         The collection of particles
-    angle : str, otpional
-        The angle to be plotted. Defaults to "theta".
-    lim : list, optional
-        The x-axis (angle) limits. Defaults to [-π,π].
+    theta_lim : list, optional
+        Plot xlim. Must be either [0,2π] or [-π,π]. Defaults to [-π,π].
     params : dict, optional
         Extra plotting parameters:
 
@@ -68,8 +65,8 @@ def collection_drift(
     logger.info("Plotting Collection drift...")
 
     if canvas is None:
-        fig = plt.figure(figsize=(12, 8))
-        ax = fig.add_subplot(111)
+        fig, ax = plt.subplots(1, 2, figsize=(12, 6))
+        fig.tight_layout()
         canvas = (fig, ax)
         logger.debug("\tCreating a new canvas.")
     else:
@@ -77,10 +74,9 @@ def collection_drift(
         logger.debug("\tUsing existing canvas.")
 
     for p in collection.particles:
-        drift(
+        drifts(
             p,
-            angle=angle,
-            lim=lim,
+            theta_lim=theta_lim,
             _internal_call=True,
             canvas=canvas,
             **params,

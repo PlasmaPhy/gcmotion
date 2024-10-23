@@ -1,3 +1,4 @@
 solver_configuration = {
-    "rtol": 10e-8,
+    "atol": 1e-8,  # Scipy's default is 1e-6
+    "rtol": 1e-8,  # Scipy's default is 1e-3
 }
