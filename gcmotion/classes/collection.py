@@ -3,7 +3,7 @@ from time import time
 from tqdm import tqdm
 
 from gcmotion.classes.particle import Particle
-from gcmotion.scripts.events import when_psi
+from gcmotion.scripts.events import when_theta
 
 from gcmotion.utils._logger_setup import logger
 
@@ -134,8 +134,12 @@ class Collection:
             logger.info(f"Data is OK. Number of particles = {self.n}")
             return True
         else:
-            print("Error: Multiple valued parameters must all be of same length")
-            logger.error("Error: Multiple valued parameters must all be of same length")
+            print(
+                "Error: Multiple valued parameters must all be of same length"
+            )
+            logger.error(
+                "Error: Multiple valued parameters must all be of same length"
+            )
             return False
 
     def _create(self):
@@ -169,8 +173,19 @@ class Collection:
             Pzeta0 = params["Pz0"][i]
             t_eval = params["t_eval"][i]  # t0, tf, steps
 
-            tokamak = {"R": R, "a": a, "q": q, "Bfield": Bfield, "Efield": Efield}
-            init_cond = {"theta0": theta0, "psi0": psi0, "zeta0": zeta0, "Pzeta0": Pzeta0}
+            tokamak = {
+                "R": R,
+                "a": a,
+                "q": q,
+                "Bfield": Bfield,
+                "Efield": Efield,
+            }
+            init_cond = {
+                "theta0": theta0,
+                "psi0": psi0,
+                "zeta0": zeta0,
+                "Pzeta0": Pzeta0,
+            }
 
             # Particle Creation
             try:
@@ -252,7 +267,7 @@ class Collection:
             logger.disable("gcmotion")
 
             start = time()
-            event = when_psi(p.psi0, terminal)
+            event = when_theta(p.theta0, terminal)
             p.run(info=False, orbit=orbit, events=[event])
             times.append(time() - start)
 

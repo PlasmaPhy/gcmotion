@@ -18,12 +18,14 @@ from gcmotion.plotters.drift import drift
 from gcmotion.plotters.drifts import drifts
 from gcmotion.plotters.energy_contour import energy_contour
 from gcmotion.plotters.parabolas import parabolas
+from gcmotion.plotters.poloidal_cut import poloidal_cut
 from gcmotion.plotters.torus2d import torus2d
 from gcmotion.plotters.torus3d import torus3d
 
 from gcmotion.plotters.collection_drift import collection_drift
 from gcmotion.plotters.collection_energy_contour import collection_energy_contour
 from gcmotion.plotters.collection_drifts import collection_drifts
+from gcmotion.plotters.collection_poloidal_cut import collection_poloidal_cut
 
 import gcmotion.scripts.animation as animation
 
@@ -40,11 +42,13 @@ __all__ = [
     "drifts",
     "energy_contour",
     "parabolas",
+    "poloidal_cut",
     "torus2d",
     "torus3d",
     "collection_drift",
     "collection_drifts",
     "collection_energy_contour",
+    "collection_poloidal_cut",
     "events",
     "animation",
 ]
