@@ -32,6 +32,8 @@ def tokamak_profile(cwp, zoom: list = [0, 1.1]):
 
     Parameters
     ----------
+    cwp : :py:class:`~gcmotion.classes.particle.Particle`
+        The current working particle.
     zoom : list, optional
         Zoom to specific area in the x-axis of the electric field
         and potential plots. Defaults to [0, 1.1].
@@ -45,7 +47,7 @@ def tokamak_profile(cwp, zoom: list = [0, 1.1]):
     Bfield = cwp.Bfield
     Efield = cwp.Efield
 
-    fig = plt.figure(figsize=(12, 8))
+    fig = plt.figure(figsize=(12, 12))
     fig.subplots_adjust(hspace=0.5)
     ax_phi = fig.add_subplot(321)
     ax_E = fig.add_subplot(322)
@@ -118,10 +120,10 @@ def tokamak_profile(cwp, zoom: list = [0, 1.1]):
 
         ax_B = plt.subplot(212, projection="polar")
         box = ax_B.get_position()
-        box.y0 = box.y0 - 0.15
-        box.y1 = box.y1 - 0.15
+        box.y0 = box.y0 - 0.1
+        box.y1 = box.y1 - 0.1
         ax_B.set_position(box)
-        ax_B.set_title("LAR Magnetic Field Profile", c="b")
+        ax_B.set_title("LAR Magnetic Field Profile", c="b", loc="center", pad=5)
         ax_B.set_rlabel_position(30)
         ax_B.set_yticks(psi_wall * np.array(zoom))
 
@@ -140,6 +142,7 @@ def tokamak_profile(cwp, zoom: list = [0, 1.1]):
     plot_magnetic()
 
     fig.set_tight_layout(True)
+    plt.tight_layout()
     plt.ion()
     plt.show(block=True)
 
