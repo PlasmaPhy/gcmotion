@@ -613,6 +613,8 @@ class Particle:
             theta_fix, P_theta_fix = fixed_point()
             self.fixed_points.append([float(theta_fix), float(P_theta_fix)])
 
+        print(f"\nFixed Points: {self.fixed_points}\n")
+
         self.distinct_fixed_points = self.distinctify(self.fixed_points)
 
         print(f"\nDistinct Fixed Points: {self.distinct_fixed_points}\n")
@@ -712,7 +714,7 @@ class Particle:
 
         return E_cbar
 
-    def distinctify(self, fixed_points, tol=1e-2):
+    def distinctify(self, fixed_points, tol=1e-3):
 
         def are_considered_equal(sublist1, sublist2, tol=tol):
             return abs(sublist1[0] - sublist2[0]) <= tol and abs(sublist1[1] - sublist2[1]) <= tol
