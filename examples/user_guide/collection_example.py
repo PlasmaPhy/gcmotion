@@ -9,17 +9,18 @@ collection.run_all(orbit=True, terminal=5)
 #     collection, angle="theta", lim=[-np.pi, np.pi], plot_initial=True
 # )
 
-# gcm.collection_energy_contour(
-#     collection,
-#     theta_lim=[-np.pi, np.pi],
-#     psi_lim=[0.3, 1.2],
-#     plot_drift=True,
-#     contour_Phi=True,
-#     units="keV",
-#     levels=30,
-#     plot_initial=True,
-#     different_colors=False,
-# )
+gcm.collection_energy_contour(
+    collection,
+    theta_lim=[-np.pi, np.pi],
+    psi_lim="auto",
+    plot_drift=True,
+    contour_Phi=True,
+    units="keV",
+    levels=30,
+    plot_initial=True,
+    different_colors=False,
+)
 
 # gcm.collection_drifts(collection)
 gcm.collection_poloidal_cut(collection)
+gcm.collection_parabolas(collection, plot_label=False, autoscale=True)

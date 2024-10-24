@@ -1,14 +1,16 @@
 r"""
-Plots the Poloidal view of the torus and the 
-:math:`\theta - P_\theta` drift.
+In the absence of electric field and in LAR configuration, it plots
+the orbit type parabolas as described by White.
+
+Also plots the particles' orbit points.
 
 Example
 -------
 
 .. code-block:: python
 
-    gcm.collection_poloidal_cut(cwp)
-    
+    gcm.collection_parabolas(collection)
+
 .. rubric:: Function:
     :heading-level: 4
 
@@ -16,46 +18,49 @@ Example
 
 import matplotlib.pyplot as plt
 
-from gcmotion.plotters.poloidal_cut import poloidal_cut, _wall
+from gcmotion.plotters.parabolas import parabolas, orbit_point
 
 from gcmotion.utils._logger_setup import logger
 
 
-def collection_poloidal_cut(
+def collection_parabolas(
     collection,
-    wall_shade: bool = True,
-    plot_axis: bool = True,
     **params,
 ):
     r"""
-    Plots poloidal :math:`\theta - P_\theta` and
-    :math:`\zeta - P_\zeta` drifts of a collection of particles.
+    Plots the poloidal :math:`\theta - P_\theta` drifts of
+    a collection of particles.
 
     Parameters
     ----------
     collection : :py:class:`~gcmotion.classes.collection.Collection`
         The collection of particles
-    wall_shade : bool, optional
-        Whether or not to shade the area :math:`r>r_\wall`.
-        Defaults to True
-    plot_axis : bool, optional
-        Whether or not to plot the magnetic axis. Defaults to True.
     params : dict, optional
         Extra plotting parameters:
 
             * different_colors : bool
                 Whether or not not use different colors for every drift.
                 Defaults to False.
-            * plot_initial : bool
-                Whether or not to plot the starting points of each drift.
-                Defaults to True.
-            * plot_axis : bool
-                Whether or not to plot the magnetic axis
+            * labels : bool
+                Whether or not to plot a label above particle.
+            * autoscale : bool
+                Whether to autoscale the x axis in order to get
+                all the points int view, or limit the plot to the
+                parabolas' area.
     """
+    if collection.has_efield and collection.is_lar:
+        string = (
+            "At least 1 particle inside the collection has efield. Aborting..."
+        )
+        print(string)
+        logger.warning(string)
+        return
 
     # Unpack params
     _internal_call = params.pop("_internal_call", False)  # POP!
     canvas = params.pop("canvas", None)  # POP!
+    plot_label = params.get("plot_label", True)
+    autoscale = params.get("autoscale", False)
 
     if _internal_call:
         logger.disable("gcmotion")
@@ -64,34 +69,29 @@ def collection_poloidal_cut(
     logger.info("Plotting Collection drift...")
 
     if canvas is None:
-        fig, ax = plt.subplots(
-            figsize=(12, 12), subplot_kw={"projection": "polar"}
-        )
-        fig.tight_layout()
+        fig = plt.figure(figsize=(12, 8))
+        ax = fig.add_subplot(111)
         canvas = (fig, ax)
         logger.debug("\tCreating a new canvas.")
     else:
         fig, ax = canvas
         logger.debug("\tUsing existing canvas.")
 
-    atorus = collection.particles[0].a  # should be the same, obviously
-    _wall(canvas=canvas, atorus=atorus, wall_shade=wall_shade)
-
     for p in collection.particles:
-        poloidal_cut(
+        orbit_point(
             cwp=p,
-            wall_shade=wall_shade,  # ignored
-            plot_axis=plot_axis,
             _internal_call=True,
             canvas=canvas,
-            **params,
+            plot_label=plot_label,
         )
 
-    top = plt.gca().get_ylim()[1]
-    plt.autoscale(axis="y")
-    # Hard y limit
-    if top > atorus * 3:
-        plt.ylim(top=atorus * 3)
+    parabolas(
+        collection.particles[0],
+        plot_point=False,
+        _internal_call=True,
+        canvas=canvas,
+        autoscale=autoscale,
+    )
 
     if not _internal_call:
         fig.set_tight_layout(True)

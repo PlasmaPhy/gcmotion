@@ -3,7 +3,7 @@ from time import time
 from tqdm import tqdm
 
 from gcmotion.classes.particle import Particle
-from gcmotion.scripts.events import when_theta
+from gcmotion.scripts.events import when_theta_trapped, when_theta_passing
 
 from gcmotion.utils._logger_setup import logger
 
@@ -206,6 +206,10 @@ class Collection:
         logger.enable("gcmotion")
         logger.info("Particle Initialization complete.")
 
+        # Check for electric fields and LAR
+        self.has_efield = any((p.has_efield) for p in self.particles)
+        self.is_lar = any((p.Bfield.is_lar) for p in self.particles)
+
     def _check_multiples(self, allowed: list) -> bool:
         r"""Checks if the given parameters are static or vary from particle to particle.
 
@@ -230,7 +234,9 @@ class Collection:
                 return False
         return True
 
-    def run_all(self, orbit=True, terminal=0):
+    def run_all(
+        self, orbit=True, terminal: int = 0, pole: int | float = np.pi / 2
+    ):
         r"""Calculates all the particle's orbit, by running Particle.run() itself.
 
         Some plots and calculations, such as the parabolas and the orbit type
@@ -253,6 +259,10 @@ class Collection:
         terminal : int
             The number of event triggers before stopping the orbit calculation of
             each particle. Defaults to 0, which makes the event non-terminal.
+        pole : int | float
+            The modulo pole used for the event that stops passing particles.
+            Must be different than **ANY** of the initial theta0s, and should
+            lie between (0,2π). Defaults to π/2.
         """
         logger.info("Calculating particle's orbits...")
 
@@ -267,8 +277,11 @@ class Collection:
             logger.disable("gcmotion")
 
             start = time()
-            event = when_theta(p.theta0, terminal)
-            p.run(info=False, orbit=orbit, events=[event])
+            events = [
+                when_theta_trapped(p.theta0, terminal),
+                when_theta_passing(p.theta0, terminal, pole=pole),
+            ]
+            p.run(info=False, orbit=orbit, events=events)
             times.append(time() - start)
 
             logger.enable("gcmotion")

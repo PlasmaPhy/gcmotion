@@ -26,8 +26,8 @@ from gcmotion.plotters.collection_drift import collection_drift
 from gcmotion.plotters.collection_energy_contour import collection_energy_contour
 from gcmotion.plotters.collection_drifts import collection_drifts
 from gcmotion.plotters.collection_poloidal_cut import collection_poloidal_cut
-
-import gcmotion.scripts.animation as animation
+from gcmotion.plotters.collection_parabolas import collection_parabolas
+#import gcmotion.scripts.animation as animation
 
 __all__ = [
     "_logger_setup",
@@ -49,6 +49,7 @@ __all__ = [
     "collection_drifts",
     "collection_energy_contour",
     "collection_poloidal_cut",
+    "collection_parabolas",
     "events",
-    "animation",
+    #"animation",
 ]

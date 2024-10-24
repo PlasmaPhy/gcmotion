@@ -137,7 +137,7 @@ def collection_energy_contour(
 
         logger.info("Plotting Collection energy contour...")
 
-        nonlocal _internal_call, canvas, different_colors, plot_initial
+        nonlocal psi_lim, _internal_call, canvas, different_colors, plot_initial
 
         if canvas is None:
             fig = plt.figure(figsize=(12, 8))
@@ -160,6 +160,10 @@ def collection_energy_contour(
 
         if psi_lim == "auto":
             plt.autoscale(axis="y")
+            psi_lim = list(plt.gca().get_ylim())
+            psi_lim[0] = max(0, psi_lim[0])
+            # Hard y lim
+            psi_lim[1] = min(1.6, psi_lim[1])
 
         logger.info("\t\tPlotting single energy contour...")
         logger.disable("gcmotion")

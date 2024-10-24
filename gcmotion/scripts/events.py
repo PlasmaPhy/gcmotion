@@ -21,7 +21,7 @@ parameter only checks the **sign** of the direction.
 
 .. code-block:: python
 
-    def when_theta(theta0, terminal):
+    def when_theta_trapped(theta0, terminal):
 
         def event(t, S):
             return S[0] - theta0
@@ -36,11 +36,15 @@ parameter only checks the **sign** of the direction.
 
 """
 
+from numpy import pi
 
-def when_theta(theta0, terminal):
+
+def when_theta_trapped(theta0, terminal):
     r"""
     Triggers when :math:`\theta` is equal to ``theta0`` and
     terminates after ``terminal`` times (Starting position included).
+
+    Can only stop trapped orbits.
 
     Setting ``terminal=0`` makes the event non-terminal.
 
@@ -60,6 +64,49 @@ def when_theta(theta0, terminal):
 
     def event(t, S):
         return S[0] - theta0
+
+    if terminal != 0:
+        event.terminal = terminal
+
+    return event
+
+
+def when_theta_passing(theta0, terminal, pole: int | float = pi / 2):
+    r"""
+    Triggers when :math:`\theta` is equal to :math:`3\pi\cdot` ``theta0`` and
+    terminates after ``terminal`` times (Starting position included).
+
+    Can only stop passing orbits.
+
+
+    Setting ``terminal=0`` makes the event non-terminal.
+
+    Parameters
+    ----------
+    theta0 : int | float
+        The :math:`\theta` value that triggers the event.
+    terminal : int
+        The event's termination number.
+    pole : int | float
+        The modulo pole. Must be different than **ANY** of the
+        initial theta0s, and should lie between (0,2π).
+        Defaults to π/2.
+    Returns
+    -------
+
+    event : function handle
+        The event function handle to be passed to solve_ivp.
+    """
+
+    # Warn about pole position
+    if abs(pole - theta0) < 1e-3:
+        string = "Warning. Pole dangerously close to an initial θ. Event might not trigger."
+        print(string)
+
+    def event(t, S):
+        new = S[0] + pi
+        new0 = theta0 + pi
+        return (new % (2 * pi) + new0) * (new % (2 * pi) - new0)
 
     if terminal != 0:
         event.terminal = terminal

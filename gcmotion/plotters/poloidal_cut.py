@@ -25,7 +25,9 @@ from gcmotion.configuration.plot_parameters import torus2d as config
 from gcmotion.utils.canonical_to_toroidal import canonical_to_toroidal
 
 
-def poloidal_cut(cwp, wall_shade: bool = True, **params):
+def poloidal_cut(
+    cwp, wall_shade: bool = True, plot_axis: bool = True, **params
+):
     r"""Plots the poloidal cut of the orbit in polar coordinates.
 
     :meta public:
@@ -36,7 +38,20 @@ def poloidal_cut(cwp, wall_shade: bool = True, **params):
         The current working particle.
     wall_shade : bool, optional
         Whether or not to shade the area :math:`r>r_\wall`.
+        Defaults to True
+    plot_axis : bool, optional
+        Whether or not to plot the magnetic axis. Defaults to True.
+    params : dict, optional
+        Extra plotting parameters:
 
+            * different_colors : bool
+                Whether or not not use different colors for every drift.
+                Defaults to False.
+            * plot_initial : bool
+                Whether or not to plot the starting points of each drift.
+                Defaults to True.
+            * plot_axis : bool
+                Whether or not to plot the magnetic axis
     """
 
     # Unpack params
@@ -79,6 +94,10 @@ def poloidal_cut(cwp, wall_shade: bool = True, **params):
     if plot_initial:
         ax.scatter(theta_torus[0], r_plot1[0], c="k", s=10, zorder=3)
 
+    if plot_axis:
+        kwargs = {"facecolor": "r", "edgecolor": "k", "linewidths": 2}
+        ax.scatter(0, 0, s=60, **kwargs)
+
     # Orbits
     ax.scatter(theta_torus, r_plot1, **orbit_kw, zorder=-1)
 
@@ -90,6 +109,13 @@ def poloidal_cut(cwp, wall_shade: bool = True, **params):
     ax.set_axis_off()
 
     logger.info("--> 2D torus sections plotted successfully.")
+
+    if not _internal_call:
+        top = plt.gca().get_ylim()[1]
+        plt.autoscale(axis="y")
+        # Hard y limit
+        if top > atorus * 3:
+            plt.ylim(top=atorus * 3)
 
     if not _internal_call:
         _wall(canvas, atorus, wall_shade)  # Wall

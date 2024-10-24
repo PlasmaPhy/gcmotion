@@ -11,19 +11,33 @@ class Construct:
     trapped-passing boundary and plots them.
     """
 
-    def __init__(self, cwp, get_abcs=False, limit_axis=True):
+    def __init__(self, cwp, get_abcs=False, limit_axis=True, **params):
         r"""Copies attributes from cwp to self.
 
         The instance itself is initialized internally by the Plot class, and
         should not be called by the user.
 
-        Args:
-            cwp (Particle): The Current Working Particle
+        Parameters
+        ----------
+        cwp : :py:class:`~gcmotion.classes.particle.Particle`
+            The current working particle.
+        get_abcs : bool
+            Set to True if only the coefficients of the parabolas
+            are needed. Defaults to False.
+        limit_axis : bool
+            Whether or not to limit the x and y axis or allow them
+            to be autoscaled().
         """
+        # Unpack params
+        self._internal_call = params.pop("_internal_call", False)  # POP!
+        self.canvas = params.pop("canvas", None)  # POP!
+
         self.cwp = cwp
         if self.cwp.psip_wall >= 5:
             print("Warning: Parabolas dont work with ψp_wall > 0.5.")
-            logger.warning(f"ψp_wall = {self.psip_wall} > 0.5. Parabolas wont work.")
+            logger.warning(
+                f"ψp_wall = {self.psip_wall} > 0.5. Parabolas wont work."
+            )
 
         self.get_abcs = get_abcs
         self.limit_axis = limit_axis
@@ -34,7 +48,13 @@ class Construct:
             self.return_abcs()
             return
 
-        self.fig, self.ax = plt.subplots()
+        if self.canvas is None:
+            self.fig, self.ax = plt.subplots()
+            self.canvas = (self.fig, self.ax)
+            logger.debug("\tCreating a new canvas.")
+        else:
+            self.fig, self.ax = self.canvas
+            logger.debug("\tUsing existing canvas.")
 
         self._plot_parabolas()
         self._plot_tp_boundary()
@@ -137,7 +157,9 @@ class Construct:
 
         # Right
         x, y = self.par3._construct(self.xlim)
-        self.ax.plot(x, y, linestyle="dashdot", **config["parabolas_dashed_kw"])
+        self.ax.plot(
+            x, y, linestyle="dashdot", **config["parabolas_dashed_kw"]
+        )
 
         # General plot settings
         top_par = _Parabola(self.abcs[0])
@@ -149,7 +171,10 @@ class Construct:
             logger.debug("\tLimited x and y axis")
         self.ax.set_ylabel(r"$\dfrac{\mu B_0}{E}$", rotation=0)
         self.ax.set_xlabel(r"$P_\zeta/\psi_p$")
-        self.ax.set_title(r"Orbit types in the plane of $P_\zeta - \mu$ for fixed energy.", c="b")
+        self.ax.set_title(
+            r"Orbit types in the plane of $P_\zeta - \mu$ for fixed energy.",
+            c="b",
+        )
         logger.info("--> Obrit Parabolas plotted successfully.")
 
     def _plot_tp_boundary(self):
@@ -164,7 +189,9 @@ class Construct:
         foo = _Parabola(self.abcs[1])
         p2 = foo._get_extremum()
 
-        self.ax.plot([p1[0], p2[0]], [p1[1], p2[1]], **config["parabolas_normal_kw"])
+        self.ax.plot(
+            [p1[0], p2[0]], [p1[1], p2[1]], **config["parabolas_normal_kw"]
+        )
 
         # Sideways parabola
         x1 = self.par2._get_extremum()[0]
@@ -226,20 +253,27 @@ class _Parabola:
             return
 
         self.x_intercepts = np.array(
-            [-self.b - np.sqrt(self.discriminant), -self.b + np.sqrt(self.discriminant)]
+            [
+                -self.b - np.sqrt(self.discriminant),
+                -self.b + np.sqrt(self.discriminant),
+            ]
         ) / (2 * self.a)
         self.y_intercept = self.c
 
         if self.a > 0:
             self.min_pos = -self.b / (2 * self.a)
-            self.min = self.a * self.min_pos**2 + self.b * self.min_pos + self.c
+            self.min = (
+                self.a * self.min_pos**2 + self.b * self.min_pos + self.c
+            )
             self.max_pos = "Not defined"
             self.max = "Not Defined"
         else:
             self.min_pos = "Not Defined"
             self.min = "Not Defined"
             self.max_pos = -self.b / (2 * self.a)
-            self.max = self.a * self.max_pos**2 + self.b * self.max_pos + self.c
+            self.max = (
+                self.a * self.max_pos**2 + self.b * self.max_pos + self.c
+            )
 
     def _get_x_intercepts(self):
         """Returns the 2 x-intercepts as an array.
