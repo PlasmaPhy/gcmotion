@@ -1,5 +1,7 @@
 animate
 -------
 
-.. automodule:: gcmotion.scripts.animation
-    :members: animate, run
+Under development
+
+.. .. automodule:: gcmotion.scripts.animation
+..     :members: animate, run
