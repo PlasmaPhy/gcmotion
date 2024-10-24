@@ -148,6 +148,19 @@ def collection_energy_contour(
             fig, ax = canvas
             logger.debug("\tUsing existing canvas.")
 
+        if plot_drift:
+            collection_drift(
+                collection,
+                angle="theta",
+                theta_lim=theta_lim,
+                _internal_call=True,
+                canvas=canvas,
+                **params,
+            )
+
+        if psi_lim == "auto":
+            plt.autoscale(axis="y")
+
         logger.info("\t\tPlotting single energy contour...")
         logger.disable("gcmotion")
         C = energy_contour(
@@ -165,16 +178,6 @@ def collection_energy_contour(
         )
         logger.enable("gcmotion")
         logger.info("\t-->Single energy contour successfully plotted.")
-
-        if plot_drift:
-            collection_drift(
-                collection,
-                angle="theta",
-                theta_lim=theta_lim,
-                _internal_call=True,
-                canvas=canvas,
-                **params,
-            )
 
         # Colorbar and labels
         cbar = fig.colorbar(

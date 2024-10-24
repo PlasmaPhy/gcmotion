@@ -43,7 +43,7 @@ energy_contour = {
     "contour_grid_density" : 100,
     "contour_levels" : 15,
     "contour_cmap" : "winter",
-    "cbar_color": "k",
+    "cbar_color": "red",
 }
 
 parabolas = {
