@@ -1,3 +1,5 @@
+.. _bfields:
+
 Magnetic field profiles
 =================================
 

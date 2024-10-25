@@ -1,3 +1,5 @@
+.. _efields:
+
 Electric field profiles
 =================================
 
@@ -7,7 +9,7 @@ in :py:class:`~gcmotion.tokamak.efield.ElectricField` are implied.
 
 .. currentmodule:: gcmotion.tokamak.efield
 
-.. Show clickable q factor classes
+.. Show clickable efield classes
 
 .. rubric:: Currently supported electric fields
 

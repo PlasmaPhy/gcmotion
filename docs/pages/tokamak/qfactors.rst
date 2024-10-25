@@ -1,3 +1,5 @@
+.. _qfactors:
+
 q-factor profiles
 ===========================
 
