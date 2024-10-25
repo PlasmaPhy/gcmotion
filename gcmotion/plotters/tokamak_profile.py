@@ -141,8 +141,8 @@ def tokamak_profile(cwp, zoom: list = [0, 1.1]):
     plot_q()
     plot_magnetic()
 
-    fig.set_tight_layout(True)
-    plt.tight_layout()
+    # fig.set_tight_layout(True)
+    # plt.tight_layout()
     plt.ion()
     plt.show(block=True)
 
