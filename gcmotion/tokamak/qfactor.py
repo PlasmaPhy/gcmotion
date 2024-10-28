@@ -151,9 +151,9 @@ class Hypergeometric(QFactor):
         self,
         R: int | float,
         a: int | float,
-        q0: int | float = 1.1,
-        psi_knee: int | float = 2.5,
-        n: int = 2,
+        q0: int | float,
+        q_wall: int | float,
+        n: int,
     ):
         r"""Parameters initialization.
 
@@ -165,32 +165,38 @@ class Hypergeometric(QFactor):
         a : int, float
             float The tokamak's minor radius.
         q0 : int, float
-            q-value at the magnetic axis. (Optional, defaults to 1.1)
-        psi_knee : int, float
-            Location of knee. (Optional, defaults to 2.5)
+            q-value at the magnetic axis.
+        q_wall : int, float
+            q_value at the wall
         n : int
             Order of equillibrium (1: peaked, 2: round, 4: flat).
-            (Optional, defaults to 2)
-
         """
         self.id = "Hypergeometric"
-        self.params = {"q0": q0, "psi_knee": psi_knee, "n": n}
+        self.params = {"q0": q0, "q_wall": q_wall, "n": n}
 
         self.r_wall = a / R  # normalized to R
         self.psi_wall = (self.r_wall) ** 2 / 2
-        self.psi_wall = self.psi_wall
         self.q0 = q0
-        self.psi_knee = 0.75 * self.psi_wall
+        self.q_wall = q_wall
+        self.psi_knee = 0.28 * self.psi_wall
         self.n = n
-        self.q_wall = self.q_of_psi(self.psi_wall)
 
     def q_of_psi(self, psi):
-        return self.q0 * (1 + (psi / (self.psi_knee)) ** self.n) ** (1 / self.n)
+        # return self.q0 * (1 + (psi / (self.psi_knee)) ** self.n) ** (
+        #     1 / self.n
+        # )
+        return self.q0 * (
+            1
+            + ((self.q_wall / self.q0) ** self.n - 1)
+            * (psi / self.psi_wall) ** self.n
+        ) ** (1 / self.n)
 
     def psip_of_psi(self, psi):
         a = b = 1 / self.n
         c = 1 + 1 / self.n
-        z = (1 - (self.q_wall / self.q0) ** self.n) * (psi / self.psi_wall) ** self.n
+        z = (1 - (self.q_wall / self.q0) ** self.n) * (
+            psi / self.psi_wall
+        ) ** self.n
         if type(psi) is float:
             return psi / self.q0 * float(hyp2f1(a, b, c, z))
         else:

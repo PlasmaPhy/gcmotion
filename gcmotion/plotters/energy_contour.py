@@ -76,7 +76,7 @@ def energy_contour(
         Whether or not to add the Φ term in the energy contour.
         Defaults to True.
     units : str, optional
-        The energy units. Must be 'normal', 'eV' or 'keV'. Defaults to "keV".
+        The energy units. Must be 'NU', 'eV' or 'keV'. Defaults to "keV".
     levels : int, optional
         The number of contour levels. Defaults to Config setting.
     wall_shade : bool, optional
@@ -168,6 +168,7 @@ def energy_contour(
         "vmax": span[1],
         "levels": levels,
         "cmap": config["contour_cmap"],
+        "locator": config["locator"],
         "zorder": 1,
     }
 
@@ -291,14 +292,14 @@ def _cbar_energy(cwp, units):
     """
     logger.debug("Calling _cbar_energy()")
 
-    if units == "normal":
+    if units == "NU":
         E_cbar = cwp.E
     elif units == "eV":
         E_cbar = cwp.E_eV
     elif units == "keV":
         E_cbar = cwp.E_eV / 1000
     else:
-        print('units must be either "normal", "eV" or "keV"')
+        print('units must be either "NU", "eV" or "keV"')
         return 0
 
     return E_cbar

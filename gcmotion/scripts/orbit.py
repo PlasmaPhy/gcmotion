@@ -135,8 +135,8 @@ def orbit(
     # Constants of motion
     # E = float(constants["E"]) # Not used
     mu = float(constants["mu"])
-    m = float(constants["mass"])
-    Z = int(constants["Z"])
+    mi = float(constants["mass"])
+    qi = int(constants["qi"])
     # Pzeta0 = float(constants["Pzeta0"]) # Not used
 
     # Initial Conditions

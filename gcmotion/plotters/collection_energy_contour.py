@@ -74,7 +74,7 @@ def collection_energy_contour(
         Whether or not to add the Φ term in the energy contour.
         Defaults to True.
     units : str, optional
-        The energy units. Must be 'normal', 'eV' or 'keV'. Defaults to "keV".
+        The energy units. Must be 'NU', 'eV' or 'keV'. Defaults to "keV".
     levels : int, optional
         The number of contour levels. Defaults to Config setting.
     wall_shade : bool, optional
@@ -86,15 +86,19 @@ def collection_energy_contour(
             * different_colors : bool
                 Whether or not not use different colors for every drift.
                 Defaults to False.
-            * plot_initial: bool
+            * plot_initial : bool
                 Whether or not to plot the starting points of each drift.
                 Defaults to True.
+            * adjust_cbar : bool
+                Whether or not to abjust color bar ticks and boundaries to
+                the particles' energies.
     """
     # Unpack params
     _internal_call = params.pop("_internal_call", False)  # POP!
     canvas = params.get("canvas", None)  # POP!
     different_colors = params.get("different_colors", False)
     plot_initial = params.get("plot_initial", True)
+    adjust_cbar = params.get("adjust_cbar", False)
 
     if _internal_call:
         logger.disable("gcmotion")
@@ -138,6 +142,14 @@ def collection_energy_contour(
         logger.info("Plotting Collection energy contour...")
 
         nonlocal psi_lim, _internal_call, canvas, different_colors, plot_initial
+
+        Eunit = f"E_{units}"
+        energies = np.array(
+            [
+                collection.particles[_].__getattribute__(Eunit)
+                for _ in range(collection.n)
+            ]
+        )
 
         if canvas is None:
             fig = plt.figure(figsize=(12, 8))
@@ -184,12 +196,14 @@ def collection_energy_contour(
         logger.info("\t-->Single energy contour successfully plotted.")
 
         # Colorbar and labels
+        boundaries = [min(energies), max(energies)]
         cbar = fig.colorbar(
             C,
             ax=canvas[1],
             fraction=0.03,
             pad=0.1,
             label=f"E[{units}]",
+            format="{x:.3g}",
         )
         cbar_kw = {"linestyle": "-", "zorder": 3}
         if not different_colors:
@@ -198,6 +212,11 @@ def collection_energy_contour(
         for p in collection.particles:
             E_cbar = _cbar_energy(p, units)
             cbar.ax.plot([0, 1], [E_cbar, E_cbar], **cbar_kw)
+
+        if adjust_cbar:
+            cbar.ax.set_yticks(energies)
+            cbar.ax.set_ylim(boundaries)
+
         logger.debug("\tCollection call. Adding energy labels...")
 
         logger.info("--> Collection energy contour plotted successfully.")

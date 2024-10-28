@@ -166,7 +166,9 @@ class Nofield(ElectricField):
 class Parabolic(ElectricField):
     r"""Initializes an electric field of the form: :math:`E(r) = ar^2 + b`"""
 
-    def __init__(self, R: float, a: float, q: QFactor, alpha: float, beta: float):
+    def __init__(
+        self, R: float, a: float, q: QFactor, alpha: float, beta: float
+    ):
         r"""Initializes the field's parameters.
 
         Parameters
@@ -223,7 +225,7 @@ class Radial(ElectricField):
         q: QFactor,
         Ea: float,
         minimum: float,
-        waist_width: float,
+        r_w: float,
     ):
         r"""Initializes the field's parameters.
 
@@ -241,25 +243,28 @@ class Radial(ElectricField):
         minimum : float
             The Electric field's minimum point with respect to
             :math:`\psi_{wall}`.
-        waist_width : float
+        r_w : float
             The Electric field's waist width, defined as:
-            :math:`r_w = \dfrac{a}{\text{waste width}}`.
+            :math:`r_w = \alpha\cdot r_w`.
 
         """
         self.id = "Radial"
-        self.params = {"Ea": Ea, "minimum": minimum, "waist_width": waist_width}
+        self.params = {
+            "Ea": Ea,
+            "minimum": minimum,
+            "r_w": r_w,
+        }
 
         self.q = q
         self.r_wall = a / R
         self.psi_wall = (self.r_wall) ** 2 / 2  # normalized to R
         self.psip_wall = q.psip_of_psi(self.psi_wall)
         self.minimum = minimum
-        self.waist_width = waist_width
 
         self.Ea = Ea  # V/m
         self.ra = self.minimum * self.r_wall  # Defines the minimum point
         self.Efield_min = self.ra**2 / 2
-        self.rw = self.r_wall / self.waist_width  # waist, not wall
+        self.rw = a * r_w  # waist, not wall. Also scaled to r_wall.
         self.psia = self.ra**2 / 2
         self.psiw = self.rw**2 / 2  # waist, not wall
 
@@ -287,6 +292,9 @@ class Radial(ElectricField):
         Phi = (
             self.Ea
             * np.sqrt(np.pi * self.psiw / 2)
-            * (erf((np.sqrt(psi) - self.sr_psia) / self.sr_psiw) + erf(self.sr_psia / self.sr_psiw))
+            * (
+                erf((np.sqrt(psi) - self.sr_psia) / self.sr_psiw)
+                + erf(self.sr_psia / self.sr_psiw)
+            )
         )
         return Phi

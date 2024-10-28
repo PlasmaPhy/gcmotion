@@ -1,3 +1,5 @@
+from matplotlib import ticker  # for contour plot locator
+
 # fmt: off
 
 time_evolution = {
@@ -42,7 +44,8 @@ energy_contour = {
 
     "contour_grid_density" : 100,
     "contour_levels" : 15,
-    "contour_cmap" : "winter",
+    "contour_cmap" : "plasma",
+    "locator": ticker.LogLocator(base = 1.05, numticks=40),
     "cbar_color": "red",
 }
 

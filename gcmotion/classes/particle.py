@@ -187,9 +187,8 @@ class Particle:
             self.species = species
             self.mass_amu = physical_constants[self.species + "_mass_amu"]
             self.mass_kg = physical_constants[self.species + "_mass_kg"]
-            self.Z = physical_constants[self.species + "_Z"]
+            self.qi = physical_constants[self.species + "_qi"]
             self.e = physical_constants["elementary_charge"]
-            self.sign = self.Z / abs(self.Z)
 
             logger.debug(f"\tParticle is of species '{self.species}'.")
             logger.info("--> Particle's constants setup successful")
@@ -369,19 +368,18 @@ class Particle:
 
         logger.info("Calculating conversion factors...")
 
-        e = self.e  # 1.6*10**(-19)C
-        Z = self.Z
-        m = self.mass_kg  # kg
+        qp = physical_constants["elementary_charge"]  # 1.6*10**(-19)C
+        mp = physical_constants["proton_mass"]  # kg
         B = self.Bfield.B0  # Tesla
         R = self.R  # meters
 
-        self.w0 = abs(Z) * e * B / m  # [s^-1]
-        self.E_unit = m * self.w0**2 * R**2  # [J]
+        self.w0 = qp * B / mp  # [s^-1]
+        self.E_unit = mp * self.w0**2 * R**2  # [J]
 
         # Conversion Factors
-        self.NU_to_eV = 1 / self.E_unit
-        self.NU_to_J = e / self.E_unit
-        self.Volts_to_NU = self.Z * self.E_unit
+        self.NU_to_eV = self.E_unit / qp
+        self.NU_to_J = self.E_unit
+        self.Volts_to_NU = qp / self.E_unit
 
         self.calculated_conversion_factors = True
         logger.info("--> Calculated conversion factors.")
@@ -405,6 +403,7 @@ class Particle:
         )
 
         self.E_eV = self.E * self.NU_to_eV
+        self.E_keV = self.E_eV / 1000
         self.E_J = self.E * self.NU_to_J
 
         self.calculated_energies = True
@@ -515,7 +514,7 @@ class Particle:
         constants = {
             "mu": self.mu,
             "mass": self.mass_amu,
-            "Z": self.Z,
+            "qi": self.qi,
         }
 
         profile = {
