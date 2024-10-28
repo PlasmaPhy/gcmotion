@@ -8,7 +8,7 @@ collection.run_all(orbit=True, terminal=5)
 
 gcm.collection_energy_contour(
     collection,
-    psi_lim=[0.3, 1.2],
+    psi_lim="auto",
     plot_drift=True,
     contour_Phi=True,
     units="keV",
@@ -16,4 +16,4 @@ gcm.collection_energy_contour(
     different_colors=False,
 )
 
-gcm.collection_poloidal_cut(collection)
+# gcm.collection_poloidal_cut(collection)

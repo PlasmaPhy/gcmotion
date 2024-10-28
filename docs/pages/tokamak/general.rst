@@ -17,9 +17,9 @@ To use a q-factor/magnetic/electric field, simply construct an object:
 
    R = 12
    a = 2
-   q = gcm.qfactor.Hypergeometric(R, a)
+   qfactor = gcm.qfactor.Hypergeometric(R, a)
    Bfield = gcm.bfield.LAR(i=0, g=1, B0=5)
-   Efield = gcm.efield.Radial(R, a, q, Ea=75000, minimum=0.9, waist_width=50)
+   Efield = gcm.efield.Radial(R, a, qfactor, Ea=75000, minimum=0.9, waist_width=50)
 
 and pass it to the particle you want to create.
 

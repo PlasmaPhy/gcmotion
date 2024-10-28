@@ -79,7 +79,7 @@ class QFactor(ABC):
         Returns
         -------
 
-        q : float | np.ndarray
+        qfactor : float | np.ndarray
             Calculated q(ψ)
 
         """

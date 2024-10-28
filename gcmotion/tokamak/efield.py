@@ -167,7 +167,7 @@ class Parabolic(ElectricField):
     r"""Initializes an electric field of the form: :math:`E(r) = ar^2 + b`"""
 
     def __init__(
-        self, R: float, a: float, q: QFactor, alpha: float, beta: float
+        self, R: float, a: float, qfactor: QFactor, alpha: float, beta: float
     ):
         r"""Initializes the field's parameters.
 
@@ -178,8 +178,8 @@ class Parabolic(ElectricField):
             The tokamak's major radius in [m].
         a : float
             The tokamak's minor radius in [m].
-        q : :class:`QFactor` object
-            q factor profile.
+        qfactor : :class:`QFactor` object
+            qfactor factor profile.
         alpha : float
             The :math:`r^2` coefficient.
         beta : float
@@ -191,14 +191,14 @@ class Parabolic(ElectricField):
 
         self.a = alpha
         self.b = beta
-        self.q = q
+        self.qfactor = qfactor
         self.r_wall = a / R
         self.psi_wall = (self.r_wall) ** 2 / 2  # normalized to R
-        self.psip_wall = q.psip_of_psi(self.psi_wall)
+        self.psip_wall = qfactor.psip_of_psi(self.psi_wall)
 
     def Phi_der(self, psi: float) -> tuple[float, float]:
         r = np.sqrt(2 * psi)
-        Phi_der_psip = -self.q.q_of_psi(psi) * (self.a * r - self.b / r)
+        Phi_der_psip = -self.qfactor.q_of_psi(psi) * (self.a * r - self.b / r)
         Phi_der_theta = 0
         return [Phi_der_psip, Phi_der_theta]
 
@@ -222,7 +222,7 @@ class Radial(ElectricField):
         self,
         R: float,
         a: float,
-        q: QFactor,
+        qfactor: QFactor,
         Ea: float,
         minimum: float,
         r_w: float,
@@ -236,7 +236,7 @@ class Radial(ElectricField):
             The tokamak's major radius in [m].
         a : int | float
             The tokamak's minor radius in [m].
-        q : :class:`QFactor` object
+        qfactor : :class:`QFactor` object
             q factor profile.
         Ea : float
             The Electric field magnitude in [V/m].
@@ -255,16 +255,16 @@ class Radial(ElectricField):
             "r_w": r_w,
         }
 
-        self.q = q
+        self.qfactor = qfactor
         self.r_wall = a / R
         self.psi_wall = (self.r_wall) ** 2 / 2  # normalized to R
-        self.psip_wall = q.psip_of_psi(self.psi_wall)
+        self.psip_wall = qfactor.psip_of_psi(self.psi_wall)
         self.minimum = minimum
 
         self.Ea = Ea  # V/m
         self.ra = self.minimum * self.r_wall  # Defines the minimum point
         self.Efield_min = self.ra**2 / 2
-        self.rw = a * r_w  # waist, not wall. Also scaled to r_wall.
+        self.rw = self.r_wall * r_w  # waist, not wall. Also scaled to r_wall.
         self.psia = self.ra**2 / 2
         self.psiw = self.rw**2 / 2  # waist, not wall
 
@@ -274,7 +274,7 @@ class Radial(ElectricField):
 
     def Phi_der(self, psi: float) -> tuple[float, float]:
         Phi_der_psip = (
-            self.q.q_of_psi(psi)
+            self.qfactor.q_of_psi(psi)
             * self.Ea
             / (sqrt(2 * psi))
             * exp(-((sqrt(psi) - self.sr_psia) ** 2) / self.psiw)

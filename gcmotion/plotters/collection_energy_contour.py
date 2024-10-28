@@ -31,7 +31,7 @@ import matplotlib.pyplot as plt
 
 from gcmotion.plotters.collection_drift import collection_drift
 from gcmotion.plotters.energy_contour import energy_contour
-from gcmotion.plotters.energy_contour import _cbar_energy
+from gcmotion.plotters.energy_contour import _cbar_energy, _calcW_grid
 
 from gcmotion.configuration.plot_parameters import energy_contour as config
 
@@ -116,7 +116,7 @@ def collection_energy_contour(
         must_be_the_same = [
             "R",
             "a",
-            "q",
+            "qfactor",
             "Bfield",
             "Efield",
             "species",
@@ -144,7 +144,7 @@ def collection_energy_contour(
         nonlocal psi_lim, _internal_call, canvas, different_colors, plot_initial
 
         Eunit = f"E_{units}"
-        energies = np.array(
+        energies = np.sort(
             [
                 collection.particles[_].__getattribute__(Eunit)
                 for _ in range(collection.n)
@@ -216,6 +216,31 @@ def collection_energy_contour(
         if adjust_cbar:
             cbar.ax.set_yticks(energies)
             cbar.ax.set_ylim(boundaries)
+
+        # Energy labels on contour lines
+        plt.clabel(C, inline=1, fontsize=10, zorder=10)
+
+        # Cursor
+        cwp = collection.particles[0]
+        Pzeta = cwp.Pzeta0
+
+        def fmt(theta, psi):
+            E = _calcW_grid(
+                cwp,
+                theta,
+                psi * cwp.psi_wall,
+                Pzeta,
+                contour_Phi=contour_Phi,
+                units=units,
+            )
+            return (
+                "theta={theta:.4f},\tpsi={psi:.4f},\tE={E:.4f} ".format(
+                    theta=theta, psi=psi, E=E
+                )
+                + units
+            )
+
+        plt.gca().format_coord = fmt
 
         logger.debug("\tCollection call. Adding energy labels...")
 

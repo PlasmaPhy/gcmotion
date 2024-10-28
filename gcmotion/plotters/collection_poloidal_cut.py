@@ -87,11 +87,12 @@ def collection_poloidal_cut(
             **params,
         )
 
-    top = plt.gca().get_ylim()[1]
-    plt.autoscale(axis="y")
     # Hard y limit
-    if top > atorus * 3:
-        plt.ylim(top=atorus * 3)
+    if not _internal_call:
+        top = plt.gca().get_ylim()[1]
+        plt.autoscale(axis="y")
+        if top > atorus * 2:
+            plt.ylim(top=atorus * 2)
 
     if not _internal_call:
         fig.set_tight_layout(True)

@@ -43,7 +43,7 @@ def tokamak_profile(cwp, zoom: list = [0, 1.1]):
 
     # Get all needed attributes first
     psi_wall = cwp.psi_wall
-    q = cwp.q
+    qfactor = cwp.qfactor
     Bfield = cwp.Bfield
     Efield = cwp.Efield
 
@@ -95,7 +95,7 @@ def tokamak_profile(cwp, zoom: list = [0, 1.1]):
         logger.debug("\tPlotting q factor profile...")
         nonlocal psi, Er, Phi
         # q(ψ)
-        y1 = q.q_of_psi(psi)
+        y1 = qfactor.q_of_psi(psi)
         if type(y1) is int:  # if q = Unity
             y1 *= np.ones(psi.shape)
         ax_q1.plot(psi / psi_wall, y1, color="b", linewidth=1.5)
@@ -105,7 +105,7 @@ def tokamak_profile(cwp, zoom: list = [0, 1.1]):
         ax_q1.set_title(r"$\text{q factor }q(\psi)$", c="b")
 
         # ψ_π(ψ)
-        y2 = q.psip_of_psi(psi)
+        y2 = qfactor.psip_of_psi(psi)
         ax_q2.plot(psi / psi_wall, y2, color="b", linewidth=1.5)
         ax_q2.plot([1, 1], [y2.min(), y2.max()], color="r", linewidth=1.5)
         ax_q2.set_xlabel(r"$\psi/\psi_{wall}$")
@@ -123,7 +123,9 @@ def tokamak_profile(cwp, zoom: list = [0, 1.1]):
         box.y0 = box.y0 - 0.1
         box.y1 = box.y1 - 0.1
         ax_B.set_position(box)
-        ax_B.set_title("LAR Magnetic Field Profile", c="b", loc="center", pad=5)
+        ax_B.set_title(
+            "LAR Magnetic Field Profile", c="b", loc="center", pad=5
+        )
         ax_B.set_rlabel_position(30)
         ax_B.set_yticks(psi_wall * np.array(zoom))
 

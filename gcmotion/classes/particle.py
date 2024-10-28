@@ -41,7 +41,7 @@ class Particle:
     #. Time evolution arrays:
         theta, psi, zeta, rho, psip, Ptheta, Pzeta
     #. Configuration objects and parameters:
-        R, a, q, Bfield, Efield, psi_wall, psip_wall, r_wall
+        R, a, qfactor, Bfield, Efield, psi_wall, psip_wall, r_wall
     #. Conversion factors and physical properties
         mass_amu, mass_kg, w0, E_unit,
         Volts_to_NU, NU_to_J, NU_to_eV
@@ -63,9 +63,9 @@ class Particle:
         :linenos:
 
         R, a = 6.2, 2
-        q = gcm.qfactor.Hypergeometric(R, a)
+        qfactor = gcm.qfactor.Hypergeometric(R, a)
         Bfield = gcm.bfield.LAR(i=0, g=1, B0=5)
-        Efield = gcm.efield.Radial(R, a, q, Ea=75000, minimum=0.9, waist_width=50)
+        Efield = gcm.efield.Radial(R, a, qfactor, Ea=75000, minimum=0.9, waist_width=50)
 
         species = "p"
         mu = 1e-6
@@ -75,7 +75,7 @@ class Particle:
         Pzeta0 = -0.025
         t_eval = np.linspace(0, 100000, 10000)  # t0, tf, steps
 
-        tokamak     = {"R": R, "a": a, "q": q, "Bfield": Bfield, "Efield":Efield}
+        tokamak     = {"R": R, "a": a, "qfactor": qfactor, "Bfield": Bfield, "Efield":Efield}
         init_cond   = {"theta0": theta0, "psi0": psi0, "zeta0": zeta0, "Pzeta0": Pzeta0}
 
         particle1 = gcm.Particle(tokamak, t_eval, init_cond, mu, species)
@@ -106,7 +106,7 @@ class Particle:
                     The tokamak's major radius in [m].
                 a : float
                     The tokamak's minor radius in [m].
-                q : :py:class:`~gcmotion.tokamak.qfactor.QFactor`
+                qfactor : :py:class:`~gcmotion.tokamak.qfactor.QFactor`
                     Qfactor object that supports query methods for getting values
                     of :math:`q(\psi)` and :math:`\psi_p(\psi)`.
                 Bfield : :py:class:`~gcmotion.tokamak.bfield.MagneticField`
@@ -141,7 +141,7 @@ class Particle:
             logger.debug(f"\tTokamak dimensions: R = {self.R}, a = {self.a}")
 
             # Objects
-            self.q = tokamak["q"]
+            self.qfactor = tokamak["qfactor"]
             self.Bfield = tokamak["Bfield"]
             Efield = tokamak["Efield"]
             if Efield is None or isinstance(Efield, Nofield):
@@ -152,7 +152,7 @@ class Particle:
                 self.has_efield = True
 
             logger.debug(
-                f"\t'{self.q.id}' qfactor used with parameters {self.q.params}"
+                f"\t'{self.qfactor.id}' qfactor used with parameters {self.qfactor.params}"
             )
             logger.debug(
                 f"\t'{self.Bfield.id}' Bfield used with parameters {self.Bfield.params}"
@@ -163,7 +163,7 @@ class Particle:
 
             self.r_wall = self.a / self.R
             self.psi_wall = (self.r_wall) ** 2 / 2  # normalized to R
-            self.psip_wall = self.q.psip_of_psi(self.psi_wall)
+            self.psip_wall = self.qfactor.psip_of_psi(self.psi_wall)
 
             # psi_p > 0.5 warning
             if self.psip_wall >= 0.5:
@@ -184,8 +184,8 @@ class Particle:
 
             logger.info("Setting up particle's constants...")
 
-            self.species = species
-            self.mass_amu = physical_constants[self.species + "_mass_amu"]
+            self.species = species.lower()
+            self.mi = physical_constants[self.species + "_mi"]
             self.mass_kg = physical_constants[self.species + "_mass_kg"]
             self.qi = physical_constants[self.species + "_qi"]
             self.e = physical_constants["elementary_charge"]
@@ -206,7 +206,7 @@ class Particle:
             )  # CAUTION! Normalize it to psi_wall
             self.zeta0 = init_cond["zeta0"]
             self.Pzeta0 = init_cond["Pzeta0"]
-            self.psip0 = self.q.psip_of_psi(self.psi0)
+            self.psip0 = self.qfactor.psip_of_psi(self.psi0)
             self.rho0 = self.Pzeta0 + self.psip0  # Pz0 + psip0
             self.Ptheta0 = self.psi0 + self.rho0 * self.Bfield.I  # psi + rho*I
 
@@ -397,9 +397,9 @@ class Particle:
         self.E = (  # Normalized Energy from initial conditions
             (self.Pzeta0 + self.psip0) ** 2
             * B_init**2
-            / (2 * self.Bfield.g**2 * self.mass_amu)
+            / (2 * self.Bfield.g**2 * self.mi)
             + self.mu * B_init
-            + self.sign * Phi_init_NU
+            + self.qi * Phi_init_NU
         )
 
         self.E_eV = self.E * self.NU_to_eV
@@ -513,12 +513,12 @@ class Particle:
 
         constants = {
             "mu": self.mu,
-            "mass": self.mass_amu,
+            "mass": self.mi,
             "qi": self.qi,
         }
 
         profile = {
-            "q": self.q,
+            "qfactor": self.qfactor,
             "Bfield": self.Bfield,
             "Efield": self.Efield,
             "Volts_to_NU": self.Volts_to_NU,

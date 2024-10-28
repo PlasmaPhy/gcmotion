@@ -42,10 +42,10 @@ drift = {
 
 energy_contour = {
 
-    "contour_grid_density" : 100,
+    "contour_grid_density" : 300,
     "contour_levels" : 15,
     "contour_cmap" : "plasma",
-    "locator": ticker.LogLocator(base = 1.05, numticks=40),
+    "locator": ticker.LogLocator(base = 1.05, numticks=30),
     "cbar_color": "red",
 }
 

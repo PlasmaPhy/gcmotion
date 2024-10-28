@@ -160,7 +160,7 @@ class Collection:
         logger.disable("gcmotion")
         for i in range(self.n):
             R, a = params["R"][i], params["a"][i]  # Major/Minor Radius in [m]
-            q = params["q"][i]
+            qfactor = params["qfactor"][i]
             Bfield = params["Bfield"][i]
             Efield = params["Efield"][i]
 
@@ -176,7 +176,7 @@ class Collection:
             tokamak = {
                 "R": R,
                 "a": a,
-                "q": q,
+                "qfactor": qfactor,
                 "Bfield": Bfield,
                 "Efield": Efield,
             }

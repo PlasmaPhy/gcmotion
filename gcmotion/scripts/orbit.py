@@ -40,7 +40,7 @@ This is how ``orbit`` is called inside the class :py:class:`Particle`:
     }
 
     profile = {
-        "q": self.q,
+        "qfactor": self.qfactor,
         "Bfield": self.Bfield,
         "Efield": self.Efield,
         "Volts_to_NU": self.Volts_to_NU,
@@ -127,7 +127,7 @@ def orbit(
     logger.info(f"Calculating orbit with events {events}")
 
     # Tokamak profile
-    q = profile["q"]
+    qfactor = profile["qfactor"]
     Bfield = profile["Bfield"]
     Efield = profile["Efield"]
     Volts_to_NU = float(profile["Volts_to_NU"])
@@ -160,19 +160,21 @@ def orbit(
         phi_der_psip *= Volts_to_NU
         phi_der_theta *= Volts_to_NU
         B_der_psi, B_der_theta = Bfield.B_der(psi, theta)
-        q_value = q.q_of_psi(psi)
+        q = qfactor.q_of_psi(psi)
         r = sqrt(2 * psi)
         B = Bfield.B(r, theta)
-        par = mu + rho**2 * B
-        bracket1 = -par * q_value * B_der_psi + phi_der_psip
-        bracket2 = par * B_der_theta + phi_der_theta
-        D = Bfield.g * q_value + Bfield.I
+        par = mu + (qi**2 / mi) * rho**2 * B
+        bracket1 = -par * q * B_der_psi + qi * phi_der_psip
+        bracket2 = par * B_der_theta + qi * phi_der_theta
+        D = Bfield.g * q + Bfield.I
 
         # Canonical Equations
-        theta_dot = 1 / D * rho * B**2 + Bfield.g / D * bracket1
-        psi_dot = -Bfield.g / D * bracket2 * q_value
-        rho_dot = psi_dot / (Bfield.g * q_value)
-        z_dot = rho * B**2 / D - Bfield.I / D * bracket1
+        theta_dot = (qi / mi) / D * rho * B**2 + Bfield.g / (D * qi) * bracket1
+        psi_dot = -Bfield.g * q / (D * qi) * bracket2
+        rho_dot = psi_dot / (Bfield.g * q)
+        z_dot = q * (
+            (qi / mi) * rho * B**2 / D - Bfield.I / (D * qi) * bracket1
+        )
 
         return [theta_dot, psi_dot, z_dot, rho_dot]
 
@@ -200,7 +202,7 @@ def orbit(
     logger.debug(f"Solver status: {message}")
 
     # Calculate psip and Canonical Momenta
-    psip = q.psip_of_psi(psi)
+    psip = qfactor.psip_of_psi(psi)
     Ptheta = psi + rho * Bfield.I
     Pzeta = rho * Bfield.g - psip
 

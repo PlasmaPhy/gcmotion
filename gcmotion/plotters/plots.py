@@ -87,11 +87,26 @@ class Plots:
             Returns:
                 bool: The check result
             """
-            must_be_the_same = ["R", "a", "q", "Bfield", "Efield", "species", "mu", "Pz0"]
-            can_be_different = [key for key in self.params.keys() if key not in must_be_the_same]
+            must_be_the_same = [
+                "R",
+                "a",
+                "qfactor",
+                "Bfield",
+                "Efield",
+                "species",
+                "mu",
+                "Pz0",
+            ]
+            can_be_different = [
+                key
+                for key in self.params.keys()
+                if key not in must_be_the_same
+            ]
 
             if not self._check_multiples(must_be_the_same):
-                print(f"Only the variables {can_be_different} may vary from particle to particle.")
+                print(
+                    f"Only the variables {can_be_different} may vary from particle to particle."
+                )
                 return False
             return True
 
@@ -113,7 +128,9 @@ class Plots:
             # Plot starting points
             if plot_initial:
                 for p in self.particles:
-                    ax.scatter(p.theta0, p.psi0 / p.psi_wall, s=10, c="k", zorder=4)
+                    ax.scatter(
+                        p.theta0, p.psi0 / p.psi_wall, s=10, c="k", zorder=4
+                    )
 
             # Set psi limits (Normalised to psi_wall)
             nonlocal psi_lim
@@ -173,11 +190,25 @@ class Plots:
                 bool: The check result
             """
 
-            must_be_the_same = ["R", "a", "q", "Bfield", "Efield", "species", "mu"]
-            can_be_different = [key for key in self.params.keys() if key not in must_be_the_same]
+            must_be_the_same = [
+                "R",
+                "a",
+                "qfactor",
+                "Bfield",
+                "Efield",
+                "species",
+                "mu",
+            ]
+            can_be_different = [
+                key
+                for key in self.params.keys()
+                if key not in must_be_the_same
+            ]
 
             if not self._check_multiples(must_be_the_same):
-                print(f"Only the variables {can_be_different} may vary from particle to particle.")
+                print(
+                    f"Only the variables {can_be_different} may vary from particle to particle."
+                )
                 return False
 
             if self.particles[0].has_efield:
@@ -194,14 +225,19 @@ class Plots:
             Construct(self.particles[0], limit_axis=False)
 
             for p in self.particles:
-                p.plot.orbit_point(different_colors=different_colors, labels=labels)
+                p.plot.orbit_point(
+                    different_colors=different_colors, labels=labels
+                )
 
         if params_ok():
             plot()
         return
 
     def poincare(
-        self, angle: Literal["zeta", "theta"] = "theta", lim: list = [-np.pi, np.pi], **kwargs
+        self,
+        angle: Literal["zeta", "theta"] = "theta",
+        lim: list = [-np.pi, np.pi],
+        **kwargs,
     ):
 
         different_colors = kwargs.get("different_colors", False)
@@ -222,17 +258,23 @@ class Plots:
             must_be_the_same = [
                 "R",
                 "a",
-                "q",
+                "qfactor",
                 "Bfield",
                 "Efield",
                 "species",
                 "mu",
                 same_initial_momenta,
             ]
-            can_be_different = [key for key in self.params.keys() if key not in must_be_the_same]
+            can_be_different = [
+                key
+                for key in self.params.keys()
+                if key not in must_be_the_same
+            ]
 
             if not self._check_multiples(must_be_the_same):
-                print(f"Only the variables {can_be_different} may vary from particle to particle.")
+                print(
+                    f"Only the variables {can_be_different} may vary from particle to particle."
+                )
                 return False
             return True
 
@@ -244,12 +286,19 @@ class Plots:
 
             # Plot drifts:
             for p in self.particles:
-                p.plot.drift(angle, lim, canvas=(fig, ax), different_colors=different_colors)
+                p.plot.drift(
+                    angle,
+                    lim,
+                    canvas=(fig, ax),
+                    different_colors=different_colors,
+                )
 
             # Plot starting points
             if plot_initial and angle == "theta":
                 for p in self.particles:
-                    ax.scatter(p.theta0, p.psi0 / p.psi_wall, s=10, c="k", zorder=4)
+                    ax.scatter(
+                        p.theta0, p.psi0 / p.psi_wall, s=10, c="k", zorder=4
+                    )
             elif plot_initial and angle == "zeta":
                 for p in self.particles:
                     ax.scatter(p.z0, p.Pz0, s=10, c="k", zorder=4)
@@ -275,7 +324,9 @@ class Plots:
             omega_thetas_fft.append(p.obj.theta_freq_fft)
             Pz0s.append(p.Pz0)
             divergence.append(
-                100 * (omega_thetas_fft[-1] - omega_thetas_event[-1]) / (omega_thetas_event[-1])
+                100
+                * (omega_thetas_fft[-1] - omega_thetas_event[-1])
+                / (omega_thetas_event[-1])
             )
 
         print(f"Events:{[omega for omega in omega_thetas_event]}")

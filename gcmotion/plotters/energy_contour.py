@@ -194,7 +194,12 @@ def energy_contour(
 
     if not _internal_call:
         cbar = fig.colorbar(
-            C, ax=ax, fraction=0.03, pad=0.1, label=f"E[{units}]"
+            C,
+            ax=ax,
+            fraction=0.03,
+            pad=0.1,
+            label=f"E[{units}]",
+            format="{x:.3g}",
         )
         cbar_kw = {
             "linestyle": "-",
@@ -243,27 +248,26 @@ def _calcW_grid(
     logger.debug(f"\tCalculating energy values in a {theta.shape} grid.")
 
     # Get all needed attributes first
-    mass_amu = cwp.mass_amu
-    Z = cwp.Z
+    mi = cwp.mi
+    qi = cwp.qi
     mu = cwp.mu
     NU_to_eV = cwp.NU_to_eV
     Volts_to_NU = cwp.Volts_to_NU
-    q = cwp.q
+    qfactor = cwp.qfactor
     Bfield = cwp.Bfield
     Efield = cwp.Efield
 
     r = np.sqrt(2 * psi)
     B = Bfield.B(r, theta)
-    psip = q.psip_of_psi(psi)
+    psip = qfactor.psip_of_psi(psi)
 
-    W = (Pzeta + psip) ** 2 * B**2 / (
-        2 * Bfield.g**2 * mass_amu
-    ) + mu * B  # Without Φ
+    rho = (Pzeta + psip) / Bfield.g
+    W = (qi**2 / (2 * mi)) * rho**2 * B**2 + mu * B  # Without Φ
 
     # Add Φ if asked
     if contour_Phi:
         Phi = Efield.Phi_of_psi(psi)
-        Phi *= Volts_to_NU * Z
+        Phi *= Volts_to_NU * qi
         W += Phi  # all normalized
 
     if units == "eV":

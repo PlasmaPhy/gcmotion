@@ -10,9 +10,9 @@ First we need to configure our tokamak:
 .. code-block:: python
     
     >>> R, a = 6, 2  # Major/Minor Radius in [m]
-    >>> q = gcm.qfactor.Hypergeometric(R, a)
+    >>> qfactor = gcm.qfactor.Hypergeometric(R, a)
     >>> Bfield = gcm.bfield.LAR(i=0, g=1, B0=5)
-    >>> Efield = gcm.efield.Radial(R, a, q, Ea=75000, minimum=0.9, waist_width=50)
+    >>> Efield = gcm.efield.Radial(R, a, qfactor, Ea=75000, minimum=0.9, waist_width=50)
 
 
 #. In the first line, we set the tokamak's major and minor radii in [m]. Note that 
@@ -22,7 +22,7 @@ First we need to configure our tokamak:
 
 #. In the second line, we set up the q factor profile. In this example we use a 
    hypergeometric profile, but other configurations are :ref:`availiable <qfactors>`. To choose a 
-   different profile, we simple set :code:`q = gcm.qfactor.<q factor>(parameters)`. 
+   different profile, we simple set :code:`qfactor = gcm.qfactor.<q factor>(parameters)`. 
    Different q profiles require different parameters. We can also easily create 
    new profiles with however many parameters we want. For more info, see the 
    :ref:`documentation <about_qfactors>`.
@@ -40,7 +40,7 @@ First we need to configure our tokamak:
 
 .. note::
 
-    The `q`, `Bfield` and `Efield` are objects created from their respective classes, 
+    The `qfactor`, `Bfield` and `Efield` are objects created from their respective classes, 
     and the solver doesn't care about what they do and how, as long as they support 
     the required querry methods described in the documentation. For example, whenever 
     the solver wants to get the value of the magnetic field stength, it just calls
@@ -82,7 +82,7 @@ Initializing particle
 
 .. code-block:: python
 
-   >>> tokamak = {"R": R, "a": a, "q": q, "Bfield": Bfield, "Efield": Efield}
+   >>> tokamak = {"R": R, "a": a, "qfactor": qfactor, "Bfield": Bfield, "Efield": Efield}
    >>> init_cond = {"theta0": theta0, "psi0": psi0, "zeta0": zeta0, "Pzeta0": Pzeta0}
 
    >>> particle1 = gcm.Particle(tokamak, t_eval, init_cond, mu, species)
