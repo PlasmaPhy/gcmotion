@@ -36,10 +36,9 @@ from matplotlib.patches import Rectangle
 from gcmotion.utils._logger_setup import logger
 
 from gcmotion.plotters.drift import drift
+from gcmotion.plotters.fixed_points_plot import fixed_points_plot
 
 from gcmotion.configuration.plot_parameters import energy_contour as config
-
-from gcmotion.scripts.fixed_points import fixed_points as fp
 
 
 def energy_contour(
@@ -187,30 +186,19 @@ def energy_contour(
     ax.set_facecolor("white")
 
     if plot_fixed_points:
-        constants = {"mu": cwp.mu, "mass": cwp.mi, "qi": cwp.qi, "Pzeta0": Pzeta0}
 
-        profile = {
-            "qfactor": cwp.qfactor,
-            "Bfield": cwp.Bfield,
-            "Efield": cwp.Efield,
-            "Volts_to_NU": cwp.Volts_to_NU,
-        }
+        params.pop("theta_lim", None)
+        params.pop("P_theta_lim", None)
 
-        _, fixed_points = fp(
-            constants,
-            profile,
+        fixed_points_plot(
+            cwp,
             theta_lim=[theta_min, theta_max],
             P_theta_lim=[psi_min, psi_max],
-            info=True,
+            _internal_call=True,
+            canvas=canvas,
+            **params,
         )
-
-        thetas_fixed = [fixed_point[0] for fixed_point in fixed_points]
-        P_thetas_fixed = [fixed_point[1] for fixed_point in fixed_points]
-
-        P_theta_plot = [P_theta / cwp.psi_wall for P_theta in P_thetas_fixed]
-        print(thetas_fixed)
-        print(P_theta_plot)
-        ax.scatter(thetas_fixed, P_theta_plot, marker="x", color="green")
+        logger.debug("\tPlotting particle's fixed points in contour.")
 
     if wall_shade:  # ψ_wall boundary rectangle
         rect = Rectangle(

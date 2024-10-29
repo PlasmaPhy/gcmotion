@@ -4,32 +4,28 @@ complicated system of equations :math:`\dot{\theta} = 0 \& \dot{P_{\theta}} = 0`
 Example
 -------
 
-This is how ``fixed_points`` can be called inside the class :py:func:`energy_contour`:
+This is how ``fixed_points`` can be called inside the function :py:func:`fixed_points_plot`:
 
 .. code-block:: python
 
- if plot_fixed_points:
+from gcmotion.scripts.fixed_points import fixed_points as fp
 
-        constants = {
-            "mu": cwp.mu,
-            "mass": cwp.mi,
-            "qi": cwp.qi,
-        }
+    constants = {"mu": cwp.mu, "mass": cwp.mi, "qi": cwp.qi, "Pzeta0": cwp.Pzeta0}
 
-        profile = {
-            "qfactor": cwp.qfactor,
-            "Bfield": cwp.Bfield,
-            "Efield": cwp.Efield,
-            "Volts_to_NU": cwp.Volts_to_NU,
-        }
+    profile = {
+        "qfactor": cwp.qfactor,
+        "Bfield": cwp.Bfield,
+        "Efield": cwp.Efield,
+        "Volts_to_NU": cwp.Volts_to_NU,
+    }
 
-        _, fixed_points = fp(constants, profile, theta_lim=[theta_min, theta_max], P_theta_lim=[psi_min, psi_max])
-
-        thetas_fixed = [fixed_point[0] for fixed_point in fixed_points]
-        P_thetas_fixed = [fixed_point[1] for fixed_point in fixed_points]
-
-        P_theta_plot = [P_theta / cwp.psi_wall for P_theta in P_thetas_fixed]
-        ax.scatter(thetas_fixed, P_theta_plot, marker="x", color="green")
+    _, fixed_points = fp(
+        constants,
+        profile,
+        theta_lim=[theta_min, theta_max],
+        P_theta_lim=[P_theta_min, P_theta_max],
+        info=info,
+    )
 
 
 
