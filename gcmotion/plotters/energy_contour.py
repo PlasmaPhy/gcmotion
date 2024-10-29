@@ -39,6 +39,8 @@ from gcmotion.plotters.drift import drift
 
 from gcmotion.configuration.plot_parameters import energy_contour as config
 
+from gcmotion.scripts.fixed_points import fixed_points as fp
+
 
 def energy_contour(
     cwp,
@@ -46,6 +48,7 @@ def energy_contour(
     psi_lim: str | list = "auto",
     plot_drift: bool = True,
     contour_Phi: bool = True,
+    plot_fixed_points: bool = False,
     units: str = "keV",
     levels: int = None,
     wall_shade: bool = True,
@@ -75,6 +78,10 @@ def energy_contour(
     contour_Phi : bool, optional
         Whether or not to add the Φ term in the energy contour.
         Defaults to True.
+    plot_fixed_points : bool, optional
+        Whether or not to calculate and include the systems fixed points
+        in the energy contour.
+        Defaults to False.
     units : str, optional
         The energy units. Must be 'NU', 'eV' or 'keV'. Defaults to "keV".
     levels : int, optional
@@ -153,9 +160,7 @@ def energy_contour(
     )
     values = _calcW_grid(cwp, theta, psi, Pzeta0, contour_Phi, units)
     span = np.array([values.min(), values.max()])
-    logger.debug(
-        f"\tEnergy values span from {span[0]:.4g}{units} to {span[1]:.4g}{units}."
-    )
+    logger.debug(f"\tEnergy values span from {span[0]:.4g}{units} to {span[1]:.4g}{units}.")
 
     # Configure
     if levels is None:  # If non is given
@@ -180,6 +185,32 @@ def energy_contour(
     plt.xticks(np.linspace(-2 * np.pi, 2 * np.pi, 9), ticks)
     ax.set(xlim=[theta_min, theta_max], ylim=np.array(psi_lim) / psi_wall)
     ax.set_facecolor("white")
+
+    if plot_fixed_points:
+        constants = {"mu": cwp.mu, "mass": cwp.mi, "qi": cwp.qi, "Pzeta0": Pzeta0}
+
+        profile = {
+            "qfactor": cwp.qfactor,
+            "Bfield": cwp.Bfield,
+            "Efield": cwp.Efield,
+            "Volts_to_NU": cwp.Volts_to_NU,
+        }
+
+        _, fixed_points = fp(
+            constants,
+            profile,
+            theta_lim=[theta_min, theta_max],
+            P_theta_lim=[psi_min, psi_max],
+            info=True,
+        )
+
+        thetas_fixed = [fixed_point[0] for fixed_point in fixed_points]
+        P_thetas_fixed = [fixed_point[1] for fixed_point in fixed_points]
+
+        P_theta_plot = [P_theta / cwp.psi_wall for P_theta in P_thetas_fixed]
+        print(thetas_fixed)
+        print(P_theta_plot)
+        ax.scatter(thetas_fixed, P_theta_plot, marker="x", color="green")
 
     if wall_shade:  # ψ_wall boundary rectangle
         rect = Rectangle(

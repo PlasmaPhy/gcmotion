@@ -1,0 +1,643 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>gcmotion.Particle &#8212; Guiding Center Motion  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'generated/gcmotion.Particle';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="gcmotion.Collection" href="gcmotion.Collection.html" />
+    <link rel="prev" title="gcmotion" href="gcmotion.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Guiding Center Motion  documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="gcmotion.html">
+    gcmotion
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="gcmotion.html">
+    gcmotion
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">gcmotion.Particle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gcmotion.Collection.html">gcmotion.Collection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gcmotion.Plot.html">gcmotion.Plot</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gcmotion.Plots.html">gcmotion.Plots</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="gcmotion.bfield.html">gcmotion.bfield</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="gcmotion.bfield.LAR.html">gcmotion.bfield.LAR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gcmotion.bfield.MagneticField.html">gcmotion.bfield.MagneticField</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="gcmotion.efield.html">gcmotion.efield</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="gcmotion.efield.ElectricField.html">gcmotion.efield.ElectricField</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gcmotion.efield.Nofield.html">gcmotion.efield.Nofield</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gcmotion.efield.Parabolic.html">gcmotion.efield.Parabolic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gcmotion.efield.Radial.html">gcmotion.efield.Radial</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="gcmotion.qfactor.html">gcmotion.qfactor</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="gcmotion.qfactor.Hypergeometric.html">gcmotion.qfactor.Hypergeometric</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gcmotion.qfactor.Parabolic.html">gcmotion.qfactor.Parabolic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gcmotion.qfactor.QFactor.html">gcmotion.qfactor.QFactor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gcmotion.qfactor.Unity.html">gcmotion.qfactor.Unity</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="gcmotion.freq.html">gcmotion.freq</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="gcmotion.freq.FreqAnalysis.html">gcmotion.freq.FreqAnalysis</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="gcmotion.html" class="nav-link">gcmotion</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">gcmotion.Particle</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="gcmotion-particle">
+<h1>gcmotion.Particle<a class="headerlink" href="#gcmotion-particle" title="Link to this heading">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="gcmotion.Particle">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gcmotion.</span></span><span class="sig-name descname"><span class="pre">Particle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">species</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_cond</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tspan</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">R</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="gcmotion.qfactor.QFactor.html#gcmotion.qfactor.QFactor" title="gcmotion.qfactor.QFactor"><span class="pre">QFactor</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bfield</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="gcmotion.bfield.MagneticField.html#gcmotion.bfield.MagneticField" title="gcmotion.bfield.MagneticField"><span class="pre">MagneticField</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">Efield</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="gcmotion.efield.ElectricField.html#gcmotion.efield.ElectricField" title="gcmotion.efield.ElectricField"><span class="pre">ElectricField</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'RK45'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-05</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gcmotion.Particle" title="Link to this definition">#</a></dt>
+<dd><p>Initializes a particle, which calculates the orbit,
+orbit type, unit convertion factors, and motion frequencies.</p>
+<p>Supposedly there is no need to change anything here. Electric Fields and Q factors
+should be changed in the respective <code class="docutils literal notranslate"><span class="pre">gcmotion/*.py</span></code> files.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="gcmotion.Particle.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">species</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_cond</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tspan</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">R</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="gcmotion.qfactor.QFactor.html#gcmotion.qfactor.QFactor" title="gcmotion.qfactor.QFactor"><span class="pre">QFactor</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bfield</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="gcmotion.bfield.MagneticField.html#gcmotion.bfield.MagneticField" title="gcmotion.bfield.MagneticField"><span class="pre">MagneticField</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">Efield</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="gcmotion.efield.ElectricField.html#gcmotion.efield.ElectricField" title="gcmotion.efield.ElectricField"><span class="pre">ElectricField</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'RK45'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-05</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gcmotion.Particle.__init__" title="Link to this definition">#</a></dt>
+<dd><p>Initializes particle and grabs configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>species</strong> (<em>str</em>) – the particle species, used to later set charge and mass
+automatically (from <code class="docutils literal notranslate"><span class="pre">gcmotion/config.yaml</span></code>)</p></li>
+<li><p><strong>mu</strong> (<em>float</em>) – magnetic moment</p></li>
+<li><p><strong>init_cond</strong> (<em>np.array</em>) – 1x4 initial conditions array (later, self.init_cond
+includes 2 more initial conditions,
+[<span class="math notranslate nohighlight">\(\theta_0, \psi_0, \psi_{p0}, \zeta_0, P_{\zeta_0}\)</span>])</p></li>
+<li><p><strong>tspan</strong> (<em>np.array</em>) – The ODE interval, in [<span class="math notranslate nohighlight">\(t_0, t_f\)</span>, steps]</p></li>
+<li><p><strong>R</strong> (<em>float</em>) – The tokamak’s major radius in [m].</p></li>
+<li><p><strong>a</strong> (<em>float</em>) – The tokamak’s minor radius in [m].</p></li>
+<li><p><strong>q</strong> (<a class="reference internal" href="gcmotion.qfactor.QFactor.html#gcmotion.qfactor.QFactor" title="gcmotion.qfactor.QFactor"><em>QFactor</em></a>) – Qfactor object that supports query methods for getting values
+of <span class="math notranslate nohighlight">\(q(\psi)\)</span> and <span class="math notranslate nohighlight">\(\psi_p(\psi)\)</span>.</p></li>
+<li><p><strong>Bfield</strong> (<a class="reference internal" href="gcmotion.bfield.MagneticField.html#gcmotion.bfield.MagneticField" title="gcmotion.bfield.MagneticField"><em>MagneticField</em></a>) – Magnetic Field Object that supports query methods for getting
+values for the field itself.
+magnitude (in [T]) of the magnetic field B, as in
+<span class="math notranslate nohighlight">\([g, I, B_0]\)</span>.</p></li>
+<li><p><strong>Efield</strong> (<a class="reference internal" href="gcmotion.efield.ElectricField.html#gcmotion.efield.ElectricField" title="gcmotion.efield.ElectricField"><em>ElectricField</em></a>) – Electric Field Object that supports query methods for getting
+values for the field itself and some derivatives of
+its potential.</p></li>
+<li><p><strong>method</strong> (<em>str</em>) – Method used by the solver. Can be either ‘lsoda’ or ‘RK45’.
+Defaults to ‘RK45’.</p></li>
+<li><p><strong>rtol</strong> (<em>float</em>) – Relative tolerance of the RK45 solver. Defaults to <span class="math notranslate nohighlight">\(10^{-6}\)</span>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#gcmotion.Particle.__init__" title="gcmotion.Particle.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(species, mu, init_cond, tspan, R, ...)</p></td>
+<td><p>Initializes particle and grabs configuration.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#gcmotion.Particle.freq_analysis" title="gcmotion.Particle.freq_analysis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">freq_analysis</span></code></a>(angle[, trim, normal, ...])</p></td>
+<td><p>Given the input angle, runs Frequncy Analysis and prints results.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#gcmotion.Particle.q_kinetic" title="gcmotion.Particle.q_kinetic"><code class="xref py py-obj docutils literal notranslate"><span class="pre">q_kinetic</span></code></a>()</p></td>
+<td><p>Calculates the <span class="math notranslate nohighlight">\(q_{kinetic}\)</span> factor.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#gcmotion.Particle.run" title="gcmotion.Particle.run"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run</span></code></a>([info, orbit])</p></td>
+<td><p>Calculates the motion and attributes of the particle.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="gcmotion.Particle.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orbit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gcmotion.Particle.run" title="Link to this definition">#</a></dt>
+<dd><p>Calculates the motion and attributes of the particle.</p>
+<p>This is the function that must be called after the initial conditions
+are set. It runs the needed methods in the correct order first and
+initializes the “Plot” class afterwards, which contains all the plotting
+methods.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>info</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to print the particle’s
+calculated attributes. Defaults to True.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gcmotion.Particle._orbit">
+<span class="sig-name descname"><span class="pre">_orbit</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gcmotion.Particle._orbit" title="Link to this definition">#</a></dt>
+<dd><p>Calculates the orbit of the particle, as well as
+<span class="math notranslate nohighlight">\(P_\theta\)</span> and <span class="math notranslate nohighlight">\(\psi_p\)</span>.</p>
+<p>Calculates the time evolution of the dynamical variables
+<span class="math notranslate nohighlight">\(\theta, \psi, \zeta, \rho_{||}\)</span>. Afterwards, it calculates
+the canonical momenta <span class="math notranslate nohighlight">\(P_\theta\)</span> and <span class="math notranslate nohighlight">\(P_\zeta\)</span>, and the
+poloidal flux <span class="math notranslate nohighlight">\(\psi_p\)</span> through the q factor.</p>
+<p>The orbit can be calculated with SciPy’s <code class="docutils literal notranslate"><span class="pre">solve_ivp</span></code> or <code class="docutils literal notranslate"><span class="pre">odeint</span></code>
+methods. The default is <code class="docutils literal notranslate"><span class="pre">solve_ivp</span></code> (RK4(5)).</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">solve_ivp</span></code> function integrates an ODE system using a 4th
+order Runge-Kutta method, with an error estimation of 5th order
+(RK4(5)). The default relative tolerance is <span class="math notranslate nohighlight">\(10^{-6}\)</span>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">odeint</span></code> function integrates an ODE system using lsoda
+from the FORTRAN library odepack.</p>
+<p>Orbit is stored in “self”.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gcmotion.Particle._conversion_factors">
+<span class="sig-name descname"><span class="pre">_conversion_factors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gcmotion.Particle._conversion_factors" title="Link to this definition">#</a></dt>
+<dd><p>Calculates the conversion coeffecient needed to convert from lab to NU
+and vice versa.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gcmotion.Particle._energies">
+<span class="sig-name descname"><span class="pre">_energies</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gcmotion.Particle._energies" title="Link to this definition">#</a></dt>
+<dd><p>Calculates the particle’s energy in [NU], [eV] and [J], using
+its initial conditions.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gcmotion.Particle._orbit_type">
+<span class="sig-name descname"><span class="pre">_orbit_type</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gcmotion.Particle._orbit_type" title="Link to this definition">#</a></dt>
+<dd><p>Estimates the orbit type given the initial conditions ONLY.</p>
+<div class="admonition caution">
+<p class="admonition-title">Caution</p>
+<p>This method works only in the absence of an Electric Field.</p>
+</div>
+<p>Trapped/passing:
+The particle is trapped if rho vanishes, so we can
+check if rho changes sign. Since
+<span class="math notranslate nohighlight">\(\rho = \dfrac{\sqrt{2W-2\mu B}}{B}\)</span>, we need only to
+check under the root.</p>
+<p>Confined/lost:
+(from shape page 87)
+We only have to check if the particle is in-between the 2 left parabolas.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gcmotion.Particle.freq_analysis">
+<span class="sig-name descname"><span class="pre">freq_analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">angle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normal</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_bias</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gcmotion.Particle.freq_analysis" title="Link to this definition">#</a></dt>
+<dd><p>Given the input angle, runs Frequncy Analysis and prints results.</p>
+<p>Trimming and removing the bias of the timeseries gives the best results, both in
+peak-to-peak calculation of the frequency and FFT.</p>
+<p>Calling this functions also stores the 0th and 1st frequency of the angle, which are
+needed to calculate the q_kinetic.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>angle</strong> (<em>str</em>) – The angle to analyse,</p></li>
+<li><p><strong>trim</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to trim the edges of the time series.
+Defaults to True.</p></li>
+<li><p><strong>normal</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to use normal or lab units.
+Defaults to True.</p></li>
+<li><p><strong>remove_bias</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to remove the signal’s bias.
+Defaults to True.</p></li>
+<li><p><strong>info</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to print results. Defaults to True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The results of the analysis.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gcmotion.Particle.q_kinetic">
+<span class="sig-name descname"><span class="pre">q_kinetic</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gcmotion.Particle.q_kinetic" title="Link to this definition">#</a></dt>
+<dd><p>Calculates the <span class="math notranslate nohighlight">\(q_{kinetic}\)</span> factor.</p>
+<p>Also checks if the frequencies have been calculated in the best way possible. If
+not, they are re-calculated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The calculation results.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="gcmotion.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">gcmotion</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="gcmotion.Collection.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">gcmotion.Collection</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gcmotion.Particle"><code class="docutils literal notranslate"><span class="pre">Particle</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gcmotion.Particle.__init__"><code class="docutils literal notranslate"><span class="pre">Particle.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gcmotion.Particle.run"><code class="docutils literal notranslate"><span class="pre">Particle.run()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gcmotion.Particle._orbit"><code class="docutils literal notranslate"><span class="pre">Particle._orbit()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gcmotion.Particle._conversion_factors"><code class="docutils literal notranslate"><span class="pre">Particle._conversion_factors()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gcmotion.Particle._energies"><code class="docutils literal notranslate"><span class="pre">Particle._energies()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gcmotion.Particle._orbit_type"><code class="docutils literal notranslate"><span class="pre">Particle._orbit_type()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gcmotion.Particle.freq_analysis"><code class="docutils literal notranslate"><span class="pre">Particle.freq_analysis()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gcmotion.Particle.q_kinetic"><code class="docutils literal notranslate"><span class="pre">Particle.q_kinetic()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024, George Tsiamasiotis.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.0.2.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.4.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

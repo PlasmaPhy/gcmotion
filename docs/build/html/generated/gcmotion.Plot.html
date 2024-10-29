@@ -1,0 +1,725 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>gcmotion.Plot &#8212; Guiding Center Motion  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'generated/gcmotion.Plot';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="gcmotion.Plots" href="gcmotion.Plots.html" />
+    <link rel="prev" title="gcmotion.Collection" href="gcmotion.Collection.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Guiding Center Motion  documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="gcmotion.html">
+    gcmotion
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="gcmotion.html">
+    gcmotion
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="gcmotion.Particle.html">gcmotion.Particle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gcmotion.Collection.html">gcmotion.Collection</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">gcmotion.Plot</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gcmotion.Plots.html">gcmotion.Plots</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="gcmotion.bfield.html">gcmotion.bfield</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="gcmotion.bfield.LAR.html">gcmotion.bfield.LAR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gcmotion.bfield.MagneticField.html">gcmotion.bfield.MagneticField</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="gcmotion.efield.html">gcmotion.efield</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="gcmotion.efield.ElectricField.html">gcmotion.efield.ElectricField</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gcmotion.efield.Nofield.html">gcmotion.efield.Nofield</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gcmotion.efield.Parabolic.html">gcmotion.efield.Parabolic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gcmotion.efield.Radial.html">gcmotion.efield.Radial</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="gcmotion.qfactor.html">gcmotion.qfactor</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="gcmotion.qfactor.Hypergeometric.html">gcmotion.qfactor.Hypergeometric</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gcmotion.qfactor.Parabolic.html">gcmotion.qfactor.Parabolic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gcmotion.qfactor.QFactor.html">gcmotion.qfactor.QFactor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gcmotion.qfactor.Unity.html">gcmotion.qfactor.Unity</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="gcmotion.freq.html">gcmotion.freq</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="gcmotion.freq.FreqAnalysis.html">gcmotion.freq.FreqAnalysis</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="gcmotion.html" class="nav-link">gcmotion</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">gcmotion.Plot</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="gcmotion-plot">
+<h1>gcmotion.Plot<a class="headerlink" href="#gcmotion-plot" title="Link to this heading">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="gcmotion.Plot">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gcmotion.</span></span><span class="sig-name descname"><span class="pre">Plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cwp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gcmotion.Plot" title="Link to this definition">#</a></dt>
+<dd><p>Component of class <code class="docutils literal notranslate"><span class="pre">Particle</span></code>. Contains all the plotting-related methods.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="gcmotion.Plot.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cwp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gcmotion.Plot.__init__" title="Link to this definition">#</a></dt>
+<dd><p>Copies attributes from cwp to self.</p>
+<p>The instance itself is automatically initialized internally by the Particle
+class, and only its methods are to be called by the user, as
+<code class="docutils literal notranslate"><span class="pre">cwp.plot.&lt;method()&gt;</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>cwp</strong> (<a class="reference internal" href="gcmotion.Particle.html#gcmotion.Particle" title="gcmotion.Particle"><em>Particle</em></a>) – The Current Working Particle</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#gcmotion.Plot.__init__" title="gcmotion.Plot.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(cwp)</p></td>
+<td><p>Copies attributes from cwp to self.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#gcmotion.Plot.contour_energy" title="gcmotion.Plot.contour_energy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">contour_energy</span></code></a>([theta_lim, psi_lim, ...])</p></td>
+<td><p>Draws a 2D contour plot of the Hamiltonian.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#gcmotion.Plot.drift" title="gcmotion.Plot.drift"><code class="xref py py-obj docutils literal notranslate"><span class="pre">drift</span></code></a>([angle, lim])</p></td>
+<td><p>Draws <span class="math notranslate nohighlight">\(\theta - P_\theta\)</span> plot.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#gcmotion.Plot.drifts" title="gcmotion.Plot.drifts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">drifts</span></code></a>([theta_lim])</p></td>
+<td><p>Draws 2 plots: 1] <span class="math notranslate nohighlight">\(\theta-P_\theta\)</span> and 2] <span class="math notranslate nohighlight">\(\zeta-P_\zeta\)</span>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#gcmotion.Plot.fft" title="gcmotion.Plot.fft"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fft</span></code></a>()</p></td>
+<td><p>Plots the timeseries and its FFT results.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#gcmotion.Plot.orbit_point" title="gcmotion.Plot.orbit_point"><code class="xref py py-obj docutils literal notranslate"><span class="pre">orbit_point</span></code></a>([different_colors, labels])</p></td>
+<td><p>Plots the particle point on the <span class="math notranslate nohighlight">\(\mu-P_\zeta\)</span> (normalized) plane.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#gcmotion.Plot.parabolas" title="gcmotion.Plot.parabolas"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parabolas</span></code></a>()</p></td>
+<td><p>Constructs and plots the orbit type parabolas.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#gcmotion.Plot.time_evolution" title="gcmotion.Plot.time_evolution"><code class="xref py py-obj docutils literal notranslate"><span class="pre">time_evolution</span></code></a>([percentage])</p></td>
+<td><p>Plots the time evolution of all the dynamical variables and canonical momenta.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#gcmotion.Plot.tokamak_profile" title="gcmotion.Plot.tokamak_profile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tokamak_profile</span></code></a>([zoom])</p></td>
+<td><p>Plots the electric field, potential, and q factor, with respect to <span class="math notranslate nohighlight">\(\psi/\psi_{wall}\)</span>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#gcmotion.Plot.torus2d" title="gcmotion.Plot.torus2d"><code class="xref py py-obj docutils literal notranslate"><span class="pre">torus2d</span></code></a>([percentage, truescale])</p></td>
+<td><p>Plots the poloidal and toroidal view of the orbit.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#gcmotion.Plot.torus3d" title="gcmotion.Plot.torus3d"><code class="xref py py-obj docutils literal notranslate"><span class="pre">torus3d</span></code></a>([percentage, truescale, hd, bold, ...])</p></td>
+<td><p>Creates a 3d transparent torus and the particle's orbit.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="gcmotion.Plot.tokamak_profile">
+<span class="sig-name descname"><span class="pre">tokamak_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">zoom</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[0,</span> <span class="pre">1.1]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gcmotion.Plot.tokamak_profile" title="Link to this definition">#</a></dt>
+<dd><p>Plots the electric field, potential, and q factor,
+with respect to <span class="math notranslate nohighlight">\(\psi/\psi_{wall}\)</span>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>zoom</strong> (<em>list</em><em>, </em><em>optional</em>) – zoom to specific area in the x-axis of the electric field
+and potential plots. Defaults to [0, 1.1].</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gcmotion.Plot.time_evolution">
+<span class="sig-name descname"><span class="pre">time_evolution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">percentage</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gcmotion.Plot.time_evolution" title="Link to this definition">#</a></dt>
+<dd><p>Plots the time evolution of all the dynamical variables and
+canonical momenta.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>percentage</strong> (<em>int</em><em>, </em><em>optional</em>) – The percentage of the orbit to be plotted.
+Defaults to 100.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gcmotion.Plot.drifts">
+<span class="sig-name descname"><span class="pre">drifts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta_lim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[-3.141592653589793,</span> <span class="pre">3.141592653589793]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gcmotion.Plot.drifts" title="Link to this definition">#</a></dt>
+<dd><p>Draws 2 plots: 1] <span class="math notranslate nohighlight">\(\theta-P_\theta\)</span>
+and 2] <span class="math notranslate nohighlight">\(\zeta-P_\zeta\)</span>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>theta_lim</strong> (<em>list</em><em>, </em><em>optional</em>) – Plot xlim. Must be either [0,2π] or [-π,π].
+Defaults to [-π,π].</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gcmotion.Plot.drift">
+<span class="sig-name descname"><span class="pre">drift</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">angle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'zeta'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'theta'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'theta'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[-3.141592653589793,</span> <span class="pre">3.141592653589793]</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gcmotion.Plot.drift" title="Link to this definition">#</a></dt>
+<dd><p>Draws <span class="math notranslate nohighlight">\(\theta - P_\theta\)</span> plot.</p>
+<p>This method is called internally by <code class="docutils literal notranslate"><span class="pre">countour_energy()</span></code>
+as well.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>theta_lim</strong> (<em>list</em><em>, </em><em>optional</em>) – Plot xlim. Must be either [0,2π] or [-π,π].
+Defaults to [-π,π].</p></li>
+<li><p><strong>ax</strong> (<em>pyplot ax</em><em>, </em><em>optional</em>) – The pyplot <code class="docutils literal notranslate"><span class="pre">ax</span></code> object to plot upon.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gcmotion.Plot._calcW_grid">
+<span class="sig-name descname"><span class="pre">_calcW_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">psi</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Pz</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contour_Phi</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gcmotion.Plot._calcW_grid" title="Link to this definition">#</a></dt>
+<dd><p>Returns a single value or a grid of the calculated Hamiltonian.</p>
+<p>Only to be called internally, by <code class="docutils literal notranslate"><span class="pre">contour_energy()</span></code>..</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>theta</strong> (<em>np.array</em>) – The <span class="math notranslate nohighlight">\(\theta\)</span> values.</p></li>
+<li><p><strong>psi</strong> (<em>np.array</em>) – The <span class="math notranslate nohighlight">\(\psi\)</span> values.</p></li>
+<li><p><strong>Pz</strong> (<em>float</em>) – The <span class="math notranslate nohighlight">\(P_\zeta\)</span> value.</p></li>
+<li><p><strong>contour_Phi</strong> (<em>bool</em>) – Whether or not to add the electric potential term
+<span class="math notranslate nohighlight">\(e\Phi\)</span>.</p></li>
+<li><p><strong>units</strong> (<em>str</em>) – The energy units.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gcmotion.Plot.contour_energy">
+<span class="sig-name descname"><span class="pre">contour_energy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta_lim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[-3.141592653589793,</span> <span class="pre">3.141592653589793]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">psi_lim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_drift</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contour_Phi</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'normal'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'eV'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'keV'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'keV'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">levels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wall_shade</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gcmotion.Plot.contour_energy" title="Link to this definition">#</a></dt>
+<dd><p>Draws a 2D contour plot of the Hamiltonian.</p>
+<p>Can also plot the current particle’s <span class="math notranslate nohighlight">\(\theta-P_\theta\)</span> drift.
+Should be False when running with multiple initial conditions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>theta_lim</strong> (<em>list</em><em>, </em><em>optional</em>) – Plot xlim. Must be either [0,2π] or [-π,π].
+Defaults to [-π,π].</p></li>
+<li><p><strong>psi_lim</strong> (<em>list</em><em> | </em><em>str</em><em>, </em><em>optional</em>) – If a list is passed, it plots between the
+2 values relative to <span class="math notranslate nohighlight">\(\psi_{wall}\)</span>. Defaults to ‘auto’.</p></li>
+<li><p><strong>plot_drift</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to plot <span class="math notranslate nohighlight">\(\theta-P_\theta\)</span>
+drift on top. Defaults to True.</p></li>
+<li><p><strong>contour_Phi</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to add the Φ term in the
+energy contour. Defaults to True.</p></li>
+<li><p><strong>units</strong> (<em>str</em><em>, </em><em>optional</em>) – The energy units. Must be ‘normal’, ‘eV’ or ‘keV’. Defaults
+to <cite>keV</cite>. Defaults to “keV”.</p></li>
+<li><p><strong>levels</strong> (<em>int</em><em>, </em><em>optional</em>) – The number of contour levels. Defaults to Config setting.</p></li>
+<li><p><strong>wall_shade</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to shade the region
+<span class="math notranslate nohighlight">\(\psi/\psi_{wall} &gt; 1\)</span>. Defaults to True.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gcmotion.Plot.parabolas">
+<span class="sig-name descname"><span class="pre">parabolas</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gcmotion.Plot.parabolas" title="Link to this definition">#</a></dt>
+<dd><p>Constructs and plots the orbit type parabolas.</p>
+<p>Returns early if there is no Electric field.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gcmotion.Plot.orbit_point">
+<span class="sig-name descname"><span class="pre">orbit_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">different_colors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gcmotion.Plot.orbit_point" title="Link to this definition">#</a></dt>
+<dd><p>Plots the particle point on the <span class="math notranslate nohighlight">\(\mu-P_\zeta\)</span> (normalized) plane.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gcmotion.Plot._toruspoints">
+<span class="sig-name descname"><span class="pre">_toruspoints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">percentage</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">truescale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="headerlink" href="#gcmotion.Plot._toruspoints" title="Link to this definition">#</a></dt>
+<dd><p>Calculates the toroidal coordionates of the particles orbit,
+<span class="math notranslate nohighlight">\((r, \theta, \zeta)\)</span>.</p>
+<p><span class="math notranslate nohighlight">\(r = \sqrt{2\psi}\)</span> rather than <span class="math notranslate nohighlight">\(\psi\)</span> itself is used for
+the plot, since it is a better representation of the actual orbit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>percentage</strong> (<em>int</em><em>, </em><em>optional</em>) – The percentage of the orbit to be plotted.
+Defaults to 100.</p></li>
+<li><p><strong>truescale</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to use the actual tokamak
+dimensions, or fit them around the orbit for better visibility.
+Defaults to True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The major and minor radii of the (possibly scaled) tokamak and the toroidal coordionates of the particles orbit.
+<span class="math notranslate nohighlight">\((r, \theta, \zeta)\)</span>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>5-tuple of np.arrays</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gcmotion.Plot.torus2d">
+<span class="sig-name descname"><span class="pre">torus2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">percentage</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">truescale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gcmotion.Plot.torus2d" title="Link to this definition">#</a></dt>
+<dd><p>Plots the poloidal and toroidal view of the orbit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>percentage</strong> (<em>int</em><em>, </em><em>optional</em>) – 0-100: the percentage of the orbit
+to be plotted. Defaults to 100.</p></li>
+<li><p><strong>truescale</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to construct the torus and orbit
+with the actual units of R and r. Defaults to True.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gcmotion.Plot.torus3d">
+<span class="sig-name descname"><span class="pre">torus3d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">percentage</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">truescale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hd</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">white_background</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gcmotion.Plot.torus3d" title="Link to this definition">#</a></dt>
+<dd><p>Creates a 3d transparent torus and the particle’s orbit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>percentage</strong> (<em>int</em><em>, </em><em>optional</em>) – 0-100: the percentage of the orbit
+to be plotted. Defaults to 100.</p></li>
+<li><p><strong>truescale</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether or not to construct the torus and orbit
+with the actual units of R and r. Defaults to True.</p></li>
+<li><p><strong>hd</strong> (<em>bool</em><em>, </em><em>optional</em>) – High definition image (dpi = 900). Defaults to False
+(dpi = 300).</p></li>
+<li><p><strong>bold</strong> (<em>str</em><em>, </em><em>optional</em>) – The “boldness” level. Levels are “bold”, “BOLD”, or any.
+Defaults to Config settings.</p></li>
+<li><p><strong>white_background</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to paint the background white or not.
+Overwrites the default plt.style(). Defaults to True.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gcmotion.Plot.fft">
+<span class="sig-name descname"><span class="pre">fft</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gcmotion.Plot.fft" title="Link to this definition">#</a></dt>
+<dd><p>Plots the timeseries and its FFT results.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Even though the time evolution plot only shows a few periods
+for clarity, the FFT is calculated across the full orbit.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="gcmotion.Collection.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">gcmotion.Collection</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="gcmotion.Plots.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">gcmotion.Plots</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gcmotion.Plot"><code class="docutils literal notranslate"><span class="pre">Plot</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gcmotion.Plot.__init__"><code class="docutils literal notranslate"><span class="pre">Plot.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gcmotion.Plot.tokamak_profile"><code class="docutils literal notranslate"><span class="pre">Plot.tokamak_profile()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gcmotion.Plot.time_evolution"><code class="docutils literal notranslate"><span class="pre">Plot.time_evolution()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gcmotion.Plot.drifts"><code class="docutils literal notranslate"><span class="pre">Plot.drifts()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gcmotion.Plot.drift"><code class="docutils literal notranslate"><span class="pre">Plot.drift()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gcmotion.Plot._calcW_grid"><code class="docutils literal notranslate"><span class="pre">Plot._calcW_grid()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gcmotion.Plot.contour_energy"><code class="docutils literal notranslate"><span class="pre">Plot.contour_energy()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gcmotion.Plot.parabolas"><code class="docutils literal notranslate"><span class="pre">Plot.parabolas()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gcmotion.Plot.orbit_point"><code class="docutils literal notranslate"><span class="pre">Plot.orbit_point()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gcmotion.Plot._toruspoints"><code class="docutils literal notranslate"><span class="pre">Plot._toruspoints()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gcmotion.Plot.torus2d"><code class="docutils literal notranslate"><span class="pre">Plot.torus2d()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gcmotion.Plot.torus3d"><code class="docutils literal notranslate"><span class="pre">Plot.torus3d()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gcmotion.Plot.fft"><code class="docutils literal notranslate"><span class="pre">Plot.fft()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024, George Tsiamasiotis.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.0.2.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.4.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
