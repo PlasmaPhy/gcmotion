@@ -178,25 +178,17 @@ class Hypergeometric(QFactor):
         self.psi_wall = (self.r_wall) ** 2 / 2
         self.q0 = q0
         self.q_wall = q_wall
-        self.psi_knee = 0.28 * self.psi_wall
         self.n = n
 
     def q_of_psi(self, psi):
-        # return self.q0 * (1 + (psi / (self.psi_knee)) ** self.n) ** (
-        #     1 / self.n
-        # )
         return self.q0 * (
-            1
-            + ((self.q_wall / self.q0) ** self.n - 1)
-            * (psi / self.psi_wall) ** self.n
+            1 + ((self.q_wall / self.q0) ** self.n - 1) * (psi / self.psi_wall) ** self.n
         ) ** (1 / self.n)
 
     def psip_of_psi(self, psi):
         a = b = 1 / self.n
         c = 1 + 1 / self.n
-        z = (1 - (self.q_wall / self.q0) ** self.n) * (
-            psi / self.psi_wall
-        ) ** self.n
+        z = (1 - (self.q_wall / self.q0) ** self.n) * (psi / self.psi_wall) ** self.n
         if type(psi) is float:
             return psi / self.q0 * float(hyp2f1(a, b, c, z))
         else:
