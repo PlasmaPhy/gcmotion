@@ -78,9 +78,8 @@ def energy_contour(
         Whether or not to add the Φ term in the energy contour.
         Defaults to True.
     plot_fixed_points : bool, optional
-        Whether or not to calculate and include the systems fixed points
-        in the energy contour.
-        Defaults to False.
+        Whether or not to calculate and include the system's fixed points
+        in the energy contour. Defaults to False.
     units : str, optional
         The energy units. Must be 'NU', 'eV' or 'keV'. Defaults to "keV".
     levels : int, optional

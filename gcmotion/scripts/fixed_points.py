@@ -4,28 +4,28 @@ complicated system of equations :math:`\dot{\theta} = 0 \& \dot{P_{\theta}} = 0`
 Example
 -------
 
-This is how ``fixed_points`` can be called inside the function :py:func:`fixed_points_plot`:
+This is how :py:func:`fixed_points` can be called inside the function :py:func:`fixed_points_plot`:
 
 .. code-block:: python
 
-from gcmotion.scripts.fixed_points import fixed_points as fp
+    from gcmotion.scripts.fixed_points import fixed_points as fp
 
-    constants = {"mu": cwp.mu, "mass": cwp.mi, "qi": cwp.qi, "Pzeta0": cwp.Pzeta0}
+        constants = {"mu": cwp.mu, "mass": cwp.mi, "qi": cwp.qi, "Pzeta0": cwp.Pzeta0}
 
-    profile = {
-        "qfactor": cwp.qfactor,
-        "Bfield": cwp.Bfield,
-        "Efield": cwp.Efield,
-        "Volts_to_NU": cwp.Volts_to_NU,
-    }
+        profile = {
+            "qfactor": cwp.qfactor,
+            "Bfield": cwp.Bfield,
+            "Efield": cwp.Efield,
+            "Volts_to_NU": cwp.Volts_to_NU,
+        }
 
-    _, fixed_points = fp(
-        constants,
-        profile,
-        theta_lim=[theta_min, theta_max],
-        P_theta_lim=[P_theta_min, P_theta_max],
-        info=info,
-    )
+        _, fixed_points = fp(
+            constants,
+            profile,
+            theta_lim=[theta_min, theta_max],
+            P_theta_lim=[P_theta_min, P_theta_max],
+            info=info,
+        )
 
 
 
