@@ -64,7 +64,7 @@ def torus3d(
     Rtorus, atorus, r_torus, theta_torus, z_torus = canonical_to_toroidal(
         cwp, percentage=percentage, truescale=truescale
     )
-    custom_kw = config["torus3d_orbit_kw"]
+    custom_kw = dict(config["torus3d_orbit_kw"])
 
     if hd:
         dpi = 900
@@ -75,10 +75,10 @@ def torus3d(
 
     if bold == "bold":
         custom_kw["alpha"] = 0.8
-        custom_kw["linewidth"] *= 2
+        custom_kw["linewidth"] = 2 * config["torus3d_orbit_kw"]["linewidth"]
     elif bold == "BOLD":
         custom_kw["alpha"] = 1
-        custom_kw["linewidth"] *= 3
+        custom_kw["linewidth"] = 3 * config["torus3d_orbit_kw"]["linewidth"]
     logger.debug(
         f"\tOrbit plot size: {bold} (linewidth = {custom_kw["linewidth"]}, alpha = {custom_kw["alpha"]})."
     )

@@ -14,6 +14,7 @@ gcm.collection_energy_contour(
     units="keV",
     levels=30,
     different_colors=False,
+    adjust_cbar=False,
 )
 
 # gcm.collection_poloidal_cut(collection)
