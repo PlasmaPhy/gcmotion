@@ -109,6 +109,19 @@ class Particle:
         """
         logger.info("--------Initializing particle--------")
 
+        def setup_constants():
+            """Grabs particle's constants from ``physical_constants.py``"""
+
+            logger.info("Setting up particle's constants...")
+
+            self.species = parameters["species"].lower()
+            self.mNU = physical_constants[self.species + "_mNU"]
+            self.qNU = physical_constants[self.species + "_qNU"]
+            self.mp = physical_constants["mp"]
+
+            logger.debug(f"\tParticle is of species '{self.species}'.")
+            logger.info("--> Particle's constants setup successful")
+
         def setup_tokamak():
             """Sets up tokamak-related attributes."""
 
@@ -122,6 +135,7 @@ class Particle:
             # Objects
             self.qfactor = tokamak["qfactor"]
             self.Bfield = tokamak["Bfield"]
+            self.Bfield.B0 = self.mNU / self.qNU
             Efield = tokamak["Efield"]
             if Efield is None or isinstance(Efield, Nofield):
                 self.Efield = Nofield()
@@ -152,20 +166,6 @@ class Particle:
             )
 
             logger.info("--> Tokamak setup successful.")
-
-        def setup_constants():
-            """Grabs particle's constants from ``physical_constants.py``"""
-
-            logger.info("Setting up particle's constants...")
-
-            self.species = parameters["species"].lower()
-            self.mi = physical_constants[self.species + "_mi"]
-            self.mass_kg = physical_constants[self.species + "_mass_kg"]
-            self.qi = physical_constants[self.species + "_qi"]
-            self.e = physical_constants["elementary_charge"]
-
-            logger.debug(f"\tParticle is of species '{self.species}'.")
-            logger.info("--> Particle's constants setup successful")
 
         def setup_parameters():
             """Sets up the particles initial condition and parameters, as well as the solver's S0."""
@@ -213,8 +213,8 @@ class Particle:
 
             logger.info("--> Logic flags setup successful.")
 
-        setup_tokamak()
         setup_constants()
+        setup_tokamak()
         setup_parameters()
         setup_logic_flags()
 
@@ -337,8 +337,8 @@ class Particle:
 
         logger.info("Calculating conversion factors...")
 
-        qp = physical_constants["elementary_charge"]  # 1.6*10**(-19)C
-        mp = physical_constants["proton_mass"]  # kg
+        qp = physical_constants["qp"]  # 1.6*10**(-19)C
+        mp = physical_constants["mp"]  # kg
         B = self.Bfield.B0  # Tesla
         R = self.R  # meters
 
@@ -364,9 +364,9 @@ class Particle:
         Phi_init_NU = Phi_init * self.Volts_to_NU
 
         self.E_NU = (
-            self.qi**2 / (2 * self.mi) * self.rho0**2 * B_init**2
+            self.qNU**2 / (2 * self.mNU) * self.rho0**2 * B_init**2
             + self.mu * B_init**2
-            + self.qi * Phi_init_NU
+            + self.qNU * Phi_init_NU
         )
 
         # self.E_NU = (  # Normalized Energy from initial conditions
@@ -476,8 +476,8 @@ class Particle:
 
         constants = {
             "mu": self.mu,
-            "mi": self.mi,
-            "qi": self.qi,
+            "mi": self.mNU,
+            "qi": self.qNU,
         }
 
         profile = {

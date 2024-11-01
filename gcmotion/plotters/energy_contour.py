@@ -157,9 +157,7 @@ def energy_contour(
     )
     values = _calcW_grid(cwp, theta, psi, Pzeta0, contour_Phi, units)
     span = np.array([values.min(), values.max()])
-    logger.debug(
-        f"\tEnergy values span from {span[0]:.4g}{units} to {span[1]:.4g}{units}."
-    )
+    logger.debug(f"\tEnergy values span from {span[0]:.4g}{units} to {span[1]:.4g}{units}.")
 
     # Configure contour plot
     if levels is None:  # If non is given
@@ -217,9 +215,7 @@ def energy_contour(
             units=units,
         )
         return (
-            "theta={theta:.4f},\tpsi={psi:.4f},\tE={E:.4f} ".format(
-                theta=theta, psi=psi, E=E
-            )
+            "theta={theta:.4f},\tpsi={psi:.4f},\tE={E:.4f} ".format(theta=theta, psi=psi, E=E)
             + units
         )
 
@@ -269,8 +265,8 @@ def _calcW_grid(
     logger.debug(f"\tCalculating energy values in a {theta.shape} grid.")
 
     # Get all needed attributes first
-    mi = cwp.mi
-    qi = cwp.qi
+    mNU = cwp.mNU
+    qNU = cwp.qNU
     mu = cwp.mu
     NU_to_eV = cwp.NU_to_eV
     Volts_to_NU = cwp.Volts_to_NU
@@ -283,13 +279,13 @@ def _calcW_grid(
     psip = qfactor.psip_of_psi(psi)
 
     rho = (Pzeta + psip) / Bfield.g
-    W = (qi**2 / (2 * mi)) * rho**2 * B**2 + mu * B  # Without Φ
+    W = (qNU**2 / (2 * mNU)) * rho**2 * B**2 + mu * B  # Without Φ
 
     # Add Φ if asked
     if contour_Phi:
         Phi = Efield.Phi_of_psi(psi)
         Phi *= Volts_to_NU
-        W += qi * Phi  # all normalized
+        W += qNU * Phi  # all normalized
 
     if units == "eV":
         W *= NU_to_eV
