@@ -166,9 +166,7 @@ class Nofield(ElectricField):
 class Parabolic(ElectricField):
     r"""Initializes an electric field of the form: :math:`E(r) = ar^2 + b`"""
 
-    def __init__(
-        self, R: float, a: float, qfactor: QFactor, alpha: float, beta: float
-    ):
+    def __init__(self, R: float, a: float, qfactor: QFactor, alpha: float, beta: float):
         r"""Initializes the field's parameters.
 
         Parameters
@@ -256,7 +254,7 @@ class Radial(ElectricField):
         }
 
         self.qfactor = qfactor
-        self.r_wall = a / R
+        self.r_wall = a  # / R
         self.psi_wall = (self.r_wall) ** 2 / 2  # normalized to R
         self.psip_wall = qfactor.psip_of_psi(self.psi_wall)
         self.minimum = minimum
@@ -292,9 +290,6 @@ class Radial(ElectricField):
         Phi = (
             self.Ea
             * np.sqrt(np.pi * self.psiw / 2)
-            * (
-                erf((np.sqrt(psi) - self.sr_psia) / self.sr_psiw)
-                + erf(self.sr_psia / self.sr_psiw)
-            )
+            * (erf((np.sqrt(psi) - self.sr_psia) / self.sr_psiw) + erf(self.sr_psia / self.sr_psiw))
         )
         return Phi

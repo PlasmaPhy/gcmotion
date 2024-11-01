@@ -123,19 +123,18 @@ def tokamak_profile(cwp, zoom: list = [0, 1.1]):
         box.y0 = box.y0 - 0.1
         box.y1 = box.y1 - 0.1
         ax_B.set_position(box)
-        ax_B.set_title(
-            "LAR Magnetic Field Profile", c="b", loc="center", pad=5
-        )
+        ax_B.set_title("LAR Magnetic Field Profile", c="b", loc="center", pad=5)
         ax_B.set_rlabel_position(30)
-        ax_B.set_yticks(psi_wall * np.array(zoom))
+        yticks = np.array([max(0, zoom[0]), psi_wall * zoom[1], psi_wall]) / psi_wall
+        ax_B.set_yticks(yticks)
 
-        rs = np.linspace(zoom[0] * psi_wall, zoom[1] * psi_wall, 100)
+        psis = np.linspace(zoom[0] * psi_wall, zoom[1] * psi_wall, 100)
         thetas = np.linspace(0, 2 * np.pi, 100)
-        r, theta = np.meshgrid(rs, thetas)
-        B = Bfield.B(r, theta)
+        psi, theta = np.meshgrid(psis, thetas)
+        B = Bfield.B(psi, theta)
         levels = config["contour_params"]["levels"]
         cmap = config["contour_params"]["cmap"]
-        ax_B.contourf(theta, r, B, levels=levels, cmap=cmap)
+        ax_B.contourf(theta, psi / psi_wall, B, levels=levels, cmap=cmap)
 
         logger.debug("\t-> Magnetic field profile successfully plotted.")
 

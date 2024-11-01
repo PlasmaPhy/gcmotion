@@ -56,7 +56,7 @@ def canonical_to_toroidal(cwp, percentage: int = 100, truescale: bool = True) ->
     points = int(np.floor(theta.shape[0] * percentage / 100) - 1)
     theta_torus = theta[:points]
     z_torus = zeta[:points]
-    r_torus = np.sqrt(2 * psi[:points]) * R  # Since r is normalized
+    r_torus = np.sqrt(2 * psi[:points])
 
     # Torus shape parameters
     r_span = [r_torus.min(), r_torus.max()]

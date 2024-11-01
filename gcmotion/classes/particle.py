@@ -41,7 +41,7 @@ class Particle:
     #. Time evolution arrays:
         theta, psi, zeta, rho, psip, Ptheta, Pzeta
     #. Configuration objects and parameters:
-        R, a, qfactor, Bfield, Efield, psi_wall, psip_wall, r_wall
+        R, a, qfactor, Bfield, Efield, psi_wall, psip_wall
     #. Conversion factors and physical properties
         mass_amu, mass_kg, w0, E_unit,
         Volts_to_NU, NU_to_J, NU_to_eV
@@ -133,15 +133,10 @@ class Particle:
             logger.debug(
                 f"\t'{self.qfactor.id}' qfactor used with parameters {self.qfactor.params}"
             )
-            logger.debug(
-                f"\t'{self.Bfield.id}' Bfield used with parameters {self.Bfield.params}"
-            )
-            logger.debug(
-                f"\t'{self.Efield.id}' Efield used with parameters {self.Efield.params}"
-            )
+            logger.debug(f"\t'{self.Bfield.id}' Bfield used with parameters {self.Bfield.params}")
+            logger.debug(f"\t'{self.Efield.id}' Efield used with parameters {self.Efield.params}")
 
-            self.r_wall = self.a / self.R
-            self.psi_wall = (self.r_wall) ** 2 / 2  # normalized to R
+            self.psi_wall = (self.a) ** 2 / 2  # normalized to R
             self.psip_wall = self.qfactor.psip_of_psi(self.psi_wall)
 
             # psi_p > 0.5 warning
@@ -152,7 +147,7 @@ class Particle:
                 )
 
             logger.debug(
-                f"\tDerivative quantities: r_wall = {self.r_wall:.5g}, psi_wall = {self.psi_wall:.5g}"
+                f"\tDerivative quantities: psi_wall = {self.psi_wall:.5g}"
                 + f" (CAUTION: normalised to R), psip_wall = {self.psip_wall:.5g}"
             )
 
@@ -180,15 +175,11 @@ class Particle:
             self.t_eval = parameters["t_eval"]
             self.mu = parameters["mu"]
             self.theta0 = parameters["theta0"]
-            self.psi0 = (
-                parameters["psi0"] * self.psi_wall
-            )  # CAUTION! Normalize it to psi_wall
+            self.psi0 = parameters["psi0"] * self.psi_wall  # CAUTION! Normalize it to psi_wall
             self.zeta0 = parameters["zeta0"]
             self.Pzeta0 = parameters["Pzeta0"]
             self.psip0 = self.qfactor.psip_of_psi(self.psi0)
-            self.rho0 = (
-                self.Pzeta0 + self.psip0
-            ) / self.Bfield.g  # Pz0 + psip0
+            self.rho0 = (self.Pzeta0 + self.psip0) / self.Bfield.g  # Pz0 + psip0
             self.Ptheta0 = self.psi0 + self.rho0 * self.Bfield.I  # psi + rho*I
 
             logger.debug(
@@ -218,9 +209,7 @@ class Particle:
             self.percentage_calculated = 0
 
             # Stored initially to avoid attribute errors
-            self.z_0freq = self.z_freq = self.theta_0freq = self.theta_freq = (
-                None
-            )
+            self.z_0freq = self.z_freq = self.theta_0freq = self.theta_freq = None
 
             logger.info("--> Logic flags setup successful.")
 
@@ -306,8 +295,7 @@ class Particle:
             duration = f"{end-start:.4f}"
             self.calculated_orbit = True
             self.solver_output = (
-                f"Solver output: {self.message}\n"
-                + f"Orbit calculation time: {duration}s."
+                f"Solver output: {self.message}\n" + f"Orbit calculation time: {duration}s."
             )
             logger.info(f"Orbit calculation completed. Took {duration}s")
         else:
@@ -416,19 +404,17 @@ class Particle:
         logger.info("Calculating particle's orbit type:")
 
         if (self.has_efield) or (not self.Bfield.is_lar):
-            self.orbit_type_str = "Cannot calculate (Electric field is present, or Magnetic field is not LAR.)"
+            self.orbit_type_str = (
+                "Cannot calculate (Electric field is present, or Magnetic field is not LAR.)"
+            )
             logger.warning(
                 "\tElectric field is present, or Magnetic field is not LAR. Orbit type calculation is skipped."
             )
             return
 
         # Calculate Bmin and Bmax. In LAR, B decreases outwards.
-        Bmin = self.Bfield.B(
-            self.r_wall, 0
-        )  # "Bmin occurs at psi_wall, θ = 0"
-        Bmax = self.Bfield.B(
-            self.r_wall, np.pi
-        )  # "Bmax occurs at psi_wall, θ = π"
+        Bmin = self.Bfield.B(self.a, 0)  # "Bmin occurs at psi_wall, θ = 0"
+        Bmax = self.Bfield.B(self.a, np.pi)  # "Bmax occurs at psi_wall, θ = π"
 
         # Find if trapped or passing from rho (White page 83)
         sqrt1 = 2 * self.E_NU - 2 * self.mu * Bmin
@@ -447,16 +433,8 @@ class Particle:
 
         # Recalculate y by reconstructing the parabola (there might be a better way
         # to do this)
-        upper_y = (
-            foo.abcs[0][0] * self.orbit_x**2
-            + foo.abcs[0][1] * self.orbit_x
-            + foo.abcs[0][2]
-        )
-        lower_y = (
-            foo.abcs[1][0] * self.orbit_x**2
-            + foo.abcs[1][1] * self.orbit_x
-            + foo.abcs[1][2]
-        )
+        upper_y = foo.abcs[0][0] * self.orbit_x**2 + foo.abcs[0][1] * self.orbit_x + foo.abcs[0][2]
+        lower_y = foo.abcs[1][0] * self.orbit_x**2 + foo.abcs[1][1] * self.orbit_x + foo.abcs[1][2]
 
         if self.orbit_y < upper_y and self.orbit_y > lower_y:
             self.l_or_c = "Confined"
@@ -467,9 +445,7 @@ class Particle:
         self.orbit_type_str = self.t_or_p + "-" + self.l_or_c
 
         self.calculated_orbit_type = True
-        logger.info(
-            f"--> Orbit type completed. Result: {self.orbit_type_str}."
-        )
+        logger.info(f"--> Orbit type completed. Result: {self.orbit_type_str}.")
 
     def _orbit(self, events: list = []):
         """Groups the particle's initial conditions and passes the to the solver Script
