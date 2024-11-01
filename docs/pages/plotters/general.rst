@@ -17,5 +17,6 @@ Particle) as their first arguement.
     Poloidal and Toroidal drifts <drifts>
     Energy contour <energy_contour>
     Orbit type Parabolas <parabolas>
+    Poloidal Cut <poloidal_cut>
     2D Torus Sections <torus2d>
     3D Torus <torus3d>

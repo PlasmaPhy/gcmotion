@@ -167,7 +167,7 @@ class Hypergeometric(QFactor):
         q0 : int, float
             q-value at the magnetic axis.
         q_wall : int, float
-            q_value at the wall
+            q_value at the wall.
         n : int
             Order of equillibrium (1: peaked, 2: round, 4: flat).
         """
@@ -182,13 +182,17 @@ class Hypergeometric(QFactor):
 
     def q_of_psi(self, psi):
         return self.q0 * (
-            1 + ((self.q_wall / self.q0) ** self.n - 1) * (psi / self.psi_wall) ** self.n
+            1
+            + ((self.q_wall / self.q0) ** self.n - 1)
+            * (psi / self.psi_wall) ** self.n
         ) ** (1 / self.n)
 
     def psip_of_psi(self, psi):
         a = b = 1 / self.n
         c = 1 + 1 / self.n
-        z = (1 - (self.q_wall / self.q0) ** self.n) * (psi / self.psi_wall) ** self.n
+        z = (1 - (self.q_wall / self.q0) ** self.n) * (
+            psi / self.psi_wall
+        ) ** self.n
         if type(psi) is float:
             return psi / self.q0 * float(hyp2f1(a, b, c, z))
         else:

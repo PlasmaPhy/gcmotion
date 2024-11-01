@@ -20,7 +20,7 @@ from matplotlib.cm import get_cmap, colors
 
 from gcmotion.utils._logger_setup import logger
 
-from gcmotion.configuration.plot_parameters import torus2d as config
+from gcmotion.configuration.plot_parameters import poloidal_cut as config
 
 from gcmotion.utils.canonical_to_toroidal import canonical_to_toroidal
 
@@ -37,7 +37,7 @@ def poloidal_cut(
     cwp : :py:class:`~gcmotion.classes.particle.Particle`
         The current working particle.
     wall_shade : bool, optional
-        Whether or not to shade the area :math:`r>r_\wall`.
+        Whether or not to shade the area  close to:math:`r>r_{wall}`.
         Defaults to True
     plot_axis : bool, optional
         Whether or not to plot the magnetic axis. Defaults to True.
@@ -67,7 +67,8 @@ def poloidal_cut(
 
     if canvas is None:
         fig, ax = plt.subplots(
-            figsize=(12, 12), subplot_kw={"projection": "polar"}
+            figsize=(12, 12),
+            subplot_kw={"projection": "polar"},
         )
         canvas = (fig, ax)
         logger.debug("\tCreating a new canvas.")
@@ -81,13 +82,9 @@ def poloidal_cut(
         cwp, percentage=100, truescale=True
     )
 
-    Rin = Rtorus - atorus
-    Rout = Rtorus + atorus
-    logger.debug(f"Calculated Rin = {Rin:.4g}, Rout = {Rout:.4g}.")
-
     r_plot1 = r_torus
 
-    orbit_kw = config["torus2d_orbit_kw"].copy()
+    orbit_kw = config["orbit_kw"].copy()
     if different_colors:
         orbit_kw.pop("color", None)
 
@@ -95,8 +92,8 @@ def poloidal_cut(
         ax.scatter(theta_torus[0], r_plot1[0], c="k", s=10, zorder=3)
 
     if plot_axis:
-        kwargs = {"facecolor": "r", "edgecolor": "k", "linewidths": 2}
-        ax.scatter(0, 0, s=60, **kwargs)
+        s = config["axis_size"]
+        ax.scatter(0, 0, s=s, **config["axis_kwargs"])
 
     # Orbits
     ax.scatter(theta_torus, r_plot1, **orbit_kw, zorder=-1)
@@ -143,7 +140,7 @@ def _wall(canvas, atorus, wall_shade):
     ax.scatter(
         np.linspace(0, 2 * np.pi, wall_points),
         atorus * np.ones(wall_points),
-        **config["torus2d_wall_kw"],
+        **config["wall_kw"],
     )
 
     # Shade
@@ -161,4 +158,5 @@ def _wall(canvas, atorus, wall_shade):
                 y[i + 1],
                 color=cmap(norm(y[i])),
                 alpha=0.1,
+                zorder=-1,
             )

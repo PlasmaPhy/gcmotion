@@ -37,7 +37,7 @@ class Particle:
     #. Initial conditions:
         theta0, psi0, zeta0, rho0, psip0, Ptheta0, Pzeta0
     #. Constants of motion:
-        E, E_J, E_eV, mu, Pzeta
+        E_NU, E_J, E_eV, mu, Pzeta
     #. Time evolution arrays:
         theta, psi, zeta, rho, psip, Ptheta, Pzeta
     #. Configuration objects and parameters:
@@ -57,28 +57,7 @@ class Particle:
     Example
     -------
 
-    Here is a way to initialize a particle:
-
-    .. code-block:: python
-        :linenos:
-
-        R, a = 6.2, 2
-        qfactor = gcm.qfactor.Hypergeometric(R, a)
-        Bfield = gcm.bfield.LAR(i=0, g=1, B0=5)
-        Efield = gcm.efield.Radial(R, a, qfactor, Ea=75000, minimum=0.9, waist_width=50)
-
-        species = "p"
-        mu = 1e-6
-        theta0 = np.pi / 3
-        psi0 = 0.5  # times psi_wall
-        zeta0 = np.pi
-        Pzeta0 = -0.025
-        t_eval = np.linspace(0, 100000, 10000)  # t0, tf, steps
-
-        tokamak     = {"R": R, "a": a, "qfactor": qfactor, "Bfield": Bfield, "Efield":Efield}
-        init_cond   = {"theta0": theta0, "psi0": psi0, "zeta0": zeta0, "Pzeta0": Pzeta0}
-
-        particle1 = gcm.Particle(tokamak, t_eval, init_cond, mu, species)
+    See :ref:`Creating a particle <user_guide_particle_creation>`
 
     .. rubric:: Methods
         :heading-level: 1
@@ -87,10 +66,7 @@ class Particle:
     def __init__(
         self,
         tokamak: dict,
-        t_eval: np.array,
-        init_cond: dict,
-        mu: float,
-        species: str,
+        parameters: dict,
     ):
         r"""Initializes particle and grabs configuration.
 
@@ -115,17 +91,20 @@ class Particle:
                 Efield : :py:class:`~gcmotion.tokamak.efield.ElectricField`
                     Electric Field Object that supports query methods for getting values of the
                     field itself and the derivatives of its potential.
-        t_eval : np.array
-            The ODE time interval return values, [:math:`t_0, t_f`, steps], in normalised
-            time units [NU].
-        init_cond : np.array
-            1x4 initial conditions array
-            [:math:`\theta_0, \psi_0, \psi_{p0}, \zeta_0, P_{\zeta_0}`]) [NU]
-        mu : float
-            The magnetic moment in [NU].
-        species : str
-            The particle species, used to later set charge and mass automatically
-            (from :py:mod:`~gcmotion.configuration.physical_constants`)
+        parameters : dict
+            A dict containing all the particle-specific parameters.
+
+            t_eval : np.array
+                The ODE time interval return values, [:math:`t_0, t_f`, steps], in normalised
+                time units [NU].
+            theta0, psi0, zeta0, Pzeta0 : floats
+                The particle's initial conditions:
+                [:math:`\theta_0, \psi_0, \zeta_0, P_{\zeta_0}`]) [NU]
+            mu : float
+                The magnetic moment in [NU].
+            species : str
+                The particle species, used to later set charge and mass automatically
+                (from :py:mod:`~gcmotion.configuration.physical_constants`)
 
         """
         logger.info("--------Initializing particle--------")
@@ -184,7 +163,7 @@ class Particle:
 
             logger.info("Setting up particle's constants...")
 
-            self.species = species.lower()
+            self.species = parameters["species"].lower()
             self.mi = physical_constants[self.species + "_mi"]
             self.mass_kg = physical_constants[self.species + "_mass_kg"]
             self.qi = physical_constants[self.species + "_qi"]
@@ -193,21 +172,23 @@ class Particle:
             logger.debug(f"\tParticle is of species '{self.species}'.")
             logger.info("--> Particle's constants setup successful")
 
-        def setup_init_cond():
+        def setup_parameters():
             """Sets up the particles initial condition and parameters, as well as the solver's S0."""
 
             logger.info("Setting up particle's initial conditions...")
 
-            self.t_eval = t_eval
-            self.mu = mu
-            self.theta0 = init_cond["theta0"]
+            self.t_eval = parameters["t_eval"]
+            self.mu = parameters["mu"]
+            self.theta0 = parameters["theta0"]
             self.psi0 = (
-                init_cond["psi0"] * self.psi_wall
+                parameters["psi0"] * self.psi_wall
             )  # CAUTION! Normalize it to psi_wall
-            self.zeta0 = init_cond["zeta0"]
-            self.Pzeta0 = init_cond["Pzeta0"]
+            self.zeta0 = parameters["zeta0"]
+            self.Pzeta0 = parameters["Pzeta0"]
             self.psip0 = self.qfactor.psip_of_psi(self.psi0)
-            self.rho0 = self.Pzeta0 + self.psip0  # Pz0 + psip0
+            self.rho0 = (
+                self.Pzeta0 + self.psip0
+            ) / self.Bfield.g  # Pz0 + psip0
             self.Ptheta0 = self.psi0 + self.rho0 * self.Bfield.I  # psi + rho*I
 
             logger.debug(
@@ -245,7 +226,7 @@ class Particle:
 
         setup_tokamak()
         setup_constants()
-        setup_init_cond()
+        setup_parameters()
         setup_logic_flags()
 
         logger.info("--------Particle Initialization Completed--------\n")
@@ -253,7 +234,7 @@ class Particle:
     def __str__(self):
         info_str = (
             "Constants of motion:\n"
-            + "\tParticle Energy (normalized):\tE = {:e}\n".format(self.E)
+            + "\tParticle Energy (normalized):\tE = {:e}\n".format(self.E_NU)
             + "\tParticle Energy (eV):\t\tE = {:e} eV\n".format(self.E_eV)
             + "\tParticle Energy (J):\t\tE = {:e} J\n".format(self.E_J)
             + f"\tToroidal Momenta:\t\tPζ = {self.Pzeta0}\n\n"
@@ -394,17 +375,23 @@ class Particle:
         Phi_init = float(self.Efield.Phi_of_psi(self.psi0))
         Phi_init_NU = Phi_init * self.Volts_to_NU
 
-        self.E = (  # Normalized Energy from initial conditions
-            (self.Pzeta0 + self.psip0) ** 2
-            * B_init**2
-            / (2 * self.Bfield.g**2 * self.mi)
-            + self.mu * B_init
+        self.E_NU = (
+            self.qi**2 / (2 * self.mi) * self.rho0**2 * B_init**2
+            + self.mu * B_init**2
             + self.qi * Phi_init_NU
         )
 
-        self.E_eV = self.E * self.NU_to_eV
+        # self.E_NU = (  # Normalized Energy from initial conditions
+        #     (self.Pzeta0 + self.psip0) ** 2
+        #     * B_init**2
+        #     / (2 * self.Bfield.g**2 * self.mi)
+        #     + self.mu * B_init
+        #     + self.qi * Phi_init_NU
+        # )
+
+        self.E_eV = self.E_NU * self.NU_to_eV
         self.E_keV = self.E_eV / 1000
-        self.E_J = self.E * self.NU_to_J
+        self.E_J = self.E_NU * self.NU_to_J
 
         self.calculated_energies = True
         logger.info("Calculated particle's energies(NU, eV, J).")
@@ -444,8 +431,8 @@ class Particle:
         )  # "Bmax occurs at psi_wall, θ = π"
 
         # Find if trapped or passing from rho (White page 83)
-        sqrt1 = 2 * self.E - 2 * self.mu * Bmin
-        sqrt2 = 2 * self.E - 2 * self.mu * Bmax
+        sqrt1 = 2 * self.E_NU - 2 * self.mu * Bmin
+        sqrt2 = 2 * self.E_NU - 2 * self.mu * Bmax
         if sqrt1 * sqrt2 < 0:
             self.t_or_p = "Trapped"
         else:
@@ -454,7 +441,7 @@ class Particle:
 
         # Find if lost or confined
         self.orbit_x = self.Pzeta0 / self.psip0
-        self.orbit_y = self.mu / self.E
+        self.orbit_y = self.mu / self.E_NU
         logger.debug("\tCallling Construct class...")
         foo = Construct(self, get_abcs=True)
 
@@ -513,7 +500,7 @@ class Particle:
 
         constants = {
             "mu": self.mu,
-            "mass": self.mi,
+            "mi": self.mi,
             "qi": self.qi,
         }
 

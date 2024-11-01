@@ -31,9 +31,7 @@ import matplotlib.pyplot as plt
 
 from gcmotion.plotters.collection_drift import collection_drift
 from gcmotion.plotters.energy_contour import energy_contour
-from gcmotion.plotters.energy_contour import _cbar_energy, _calcW_grid
-
-from gcmotion.configuration.plot_parameters import energy_contour as config
+from gcmotion.plotters.energy_contour import _cbar
 
 from gcmotion.utils._logger_setup import logger
 
@@ -121,7 +119,7 @@ def collection_energy_contour(
             "Efield",
             "species",
             "mu",
-            "Pz0",
+            "Pzeta0",
         ]
         can_be_different = [
             key
@@ -142,14 +140,6 @@ def collection_energy_contour(
         logger.info("Plotting Collection energy contour...")
 
         nonlocal psi_lim, _internal_call, canvas, different_colors, plot_initial
-
-        Eunit = f"E_{units}"
-        energies = np.sort(
-            [
-                collection.particles[_].__getattribute__(Eunit)
-                for _ in range(collection.n)
-            ]
-        )
 
         if canvas is None:
             fig = plt.figure(figsize=(12, 8))
@@ -195,52 +185,20 @@ def collection_energy_contour(
         logger.enable("gcmotion")
         logger.info("\t-->Single energy contour successfully plotted.")
 
-        # Colorbar and labels
-        boundaries = [min(energies), max(energies)]
-        cbar = fig.colorbar(
-            C,
-            ax=canvas[1],
-            fraction=0.03,
-            pad=0.1,
-            label=f"E[{units}]",
-            format="{x:.3g}",
+        # Plot colorbar
+        energies = np.array(
+            [
+                collection.particles[_].__getattribute__(f"E_{units}")
+                for _ in range(collection.n)
+            ]
         )
-        cbar_kw = {"linestyle": "-", "zorder": 3}
-        if not different_colors:
-            cbar_kw["color"] = config["cbar_color"]
-
-        for p in collection.particles:
-            E_cbar = _cbar_energy(p, units)
-            cbar.ax.plot([0, 1], [E_cbar, E_cbar], **cbar_kw)
+        cbar = _cbar(energies=energies, units=units, canvas=canvas, C=C)
 
         if adjust_cbar:
+            boundaries = [min(energies), max(energies)]
             cbar.ax.set_yticks(energies)
             cbar.ax.set_ylim(boundaries)
-
-        # Energy labels on contour lines
-        plt.clabel(C, inline=1, fontsize=10, zorder=10)
-
-        # Cursor
-        cwp = collection.particles[0]
-        Pzeta = cwp.Pzeta0
-
-        def fmt(theta, psi):
-            E = _calcW_grid(
-                cwp,
-                theta,
-                psi * cwp.psi_wall,
-                Pzeta,
-                contour_Phi=contour_Phi,
-                units=units,
-            )
-            return (
-                "theta={theta:.4f},\tpsi={psi:.4f},\tE={E:.4f} ".format(
-                    theta=theta, psi=psi, E=E
-                )
-                + units
-            )
-
-        plt.gca().format_coord = fmt
+            cbar.extendfrac = "auto"
 
         logger.debug("\tCollection call. Adding energy labels...")
 

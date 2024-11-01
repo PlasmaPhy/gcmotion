@@ -32,6 +32,7 @@ Example
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
+from matplotlib import ticker  # for contour plot locator
 
 from gcmotion.utils._logger_setup import logger
 
@@ -62,7 +63,8 @@ def energy_contour(
 
     Parameters
     ----------
-
+    cwp : :py:class:`~gcmotion.classes.particle.Particle`
+        The current working particle.
     lim : list, optional
         Plot xlim. Must be either [0,2π] or [-π,π]. Defaults to [-π,π].
     psi_lim : list | str, optional
@@ -107,8 +109,9 @@ def energy_contour(
     psi_wall = cwp.psi_wall
     psi = cwp.psi.copy()
 
+    # Grab or create canvas
     if canvas is None:
-        fig = plt.figure(figsize=(6, 4))
+        fig = plt.figure(figsize=(12, 9))
         ax = fig.add_subplot(111)
         canvas = (fig, ax)
         logger.debug("\tCreating a new canvas.")
@@ -119,6 +122,7 @@ def energy_contour(
     # Set theta lim.
     theta_min, theta_max = lim
 
+    # Plot drift if requested
     if plot_drift:
         drift(
             cwp,
@@ -157,18 +161,24 @@ def energy_contour(
         f"\tEnergy values span from {span[0]:.4g}{units} to {span[1]:.4g}{units}."
     )
 
-    # Configure
+    # Configure contour plot
     if levels is None:  # If non is given
         levels = config["contour_levels"]
         logger.debug("\tUsing default number of levels.")
     else:
         logger.debug(f"\tOverwritting default levels number to {levels}")
+
+    if config["locator"] == "log":
+        locator = ticker.LogLocator(base=1.05, numticks=levels)
+    else:
+        locator = ticker.MaxNLocator(nbins=levels)
+
     contour_kw = {
         "vmin": span[0],
         "vmax": span[1],
         "levels": levels,
         "cmap": config["contour_cmap"],
-        "locator": config["locator"],
+        "locator": locator,
         "zorder": 1,
     }
 
@@ -181,6 +191,7 @@ def energy_contour(
     ax.set(xlim=[theta_min, theta_max], ylim=np.array(psi_lim) / psi_wall)
     ax.set_facecolor("white")
 
+    # Wall shade
     if wall_shade:  # ψ_wall boundary rectangle
         rect = Rectangle(
             (lim[0], 1),
@@ -192,24 +203,34 @@ def energy_contour(
         ax.add_patch(rect)
         logger.debug("\tAdding wall shade.")
 
-    if not _internal_call:
-        cbar = fig.colorbar(
-            C,
-            ax=ax,
-            fraction=0.03,
-            pad=0.1,
-            label=f"E[{units}]",
-            format="{x:.3g}",
-        )
-        cbar_kw = {
-            "linestyle": "-",
-            "zorder": 3,
-            "color": config["cbar_color"],
-        }
-        E_cbar = _cbar_energy(cwp, units)
-        cbar.ax.plot([0, 1], [E_cbar, E_cbar], **cbar_kw)
-        logger.debug(f"\tSingle particle call. Adding energy label at {E_cbar:.4g}{units}")  # fmt:skip
+    # Energy labels on contour lines (creates gaps to the contour for some reason)
+    # plt.clabel(C, inline=1, fontsize=10, zorder=10)
 
+    # Cursor
+    def fmt(theta, psi):
+        E = _calcW_grid(
+            cwp,
+            theta,
+            psi * cwp.psi_wall,
+            cwp.Pzeta0,
+            contour_Phi=contour_Phi,
+            units=units,
+        )
+        return (
+            "theta={theta:.4f},\tpsi={psi:.4f},\tE={E:.4f} ".format(
+                theta=theta, psi=psi, E=E
+            )
+            + units
+        )
+
+    plt.gca().format_coord = fmt
+
+    # Color bar Plotting
+    if not _internal_call:
+        energies = cwp.__getattribute__(f"E_{units}")
+        _ = _cbar(energies=energies, units=units, canvas=canvas, C=C)
+
+    # Make plot interactive if requested
     if not _internal_call:
         fig.set_tight_layout(True)
         plt.ion()
@@ -267,8 +288,8 @@ def _calcW_grid(
     # Add Φ if asked
     if contour_Phi:
         Phi = Efield.Phi_of_psi(psi)
-        Phi *= Volts_to_NU * qi
-        W += Phi  # all normalized
+        Phi *= Volts_to_NU
+        W += qi * Phi  # all normalized
 
     if units == "eV":
         W *= NU_to_eV
@@ -285,25 +306,44 @@ def _calcW_grid(
 # ---------------------------------------------------------------------------
 
 
-def _cbar_energy(cwp, units):
+def _cbar(energies, units, canvas, C):
     """Returns the height of the energy colorbar label.
 
-    Args:
-        units (str): The energy units.
+    Parameters
+    ----------
+    energies : np.ndarray
+        The particle's energies in the correct unit.
+    units : str
+        The energy units.
+    canvas : 2-tuple
+        2-tuple containing (fig, ax).
+    C : contour object
+        The object returned from plt.contour().
 
-    Returns:
-        float: The energy value.
+    Returns
+    -------
+        The colorbar object.
     """
     logger.debug("Calling _cbar_energy()")
 
-    if units == "NU":
-        E_cbar = cwp.E
-    elif units == "eV":
-        E_cbar = cwp.E_eV
-    elif units == "keV":
-        E_cbar = cwp.E_eV / 1000
-    else:
-        print('units must be either "NU", "eV" or "keV"')
-        return 0
+    fig, ax = canvas
+    energies = list([energies])
 
-    return E_cbar
+    cbar = fig.colorbar(
+        C,
+        ax=ax,
+        fraction=0.03,
+        pad=0.1,
+        label=f"E[{units}]",
+        format="{x:.4g}",
+        extendrect="auto",
+    )
+    cbar_kw = {
+        "linestyle": "-",
+        "zorder": 3,
+        "color": config["cbar_color"],
+    }
+    for E in energies:
+        cbar.ax.plot([0, 1], [E, E], **cbar_kw)
+
+    return cbar

@@ -20,8 +20,8 @@ params = {
     "mu"          :   0.0000019173,
     "theta0"      :   np.concat((np.repeat(0, 6), np.repeat(np.pi, 2))),
     "psi0"        :   np.concat((np.linspace(0.81, 1.1, 6), np.linspace(0.9, 1, 2))), #times psi_wall
-    "z0"          :   0,
-    "Pz0"         :   -0.0272,
+    "zeta0"       :   0,
+    "Pzeta0"      :   -0.0272,
     "t_eval"      :   np.linspace(0, 100000, 1000000) # t0, tf, steps
 
     

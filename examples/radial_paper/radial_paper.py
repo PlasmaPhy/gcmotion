@@ -17,4 +17,4 @@ gcm.collection_energy_contour(
     adjust_cbar=False,
 )
 
-# gcm.collection_poloidal_cut(collection)
+gcm.collection_poloidal_cut(collection)

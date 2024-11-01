@@ -159,44 +159,31 @@ class Collection:
 
         logger.disable("gcmotion")
         for i in range(self.n):
-            R, a = params["R"][i], params["a"][i]  # Major/Minor Radius in [m]
-            qfactor = params["qfactor"][i]
-            Bfield = params["Bfield"][i]
-            Efield = params["Efield"][i]
-
-            # Create Particle
-            species = params["species"][i]
-            mu = params["mu"][i]  # Magnetic moment
-            theta0 = params["theta0"][i]
-            psi0 = params["psi0"][i]  # times psi_wall
-            zeta0 = params["z0"][i]
-            Pzeta0 = params["Pz0"][i]
-            t_eval = params["t_eval"][i]  # t0, tf, steps
-
             tokamak = {
-                "R": R,
-                "a": a,
-                "qfactor": qfactor,
-                "Bfield": Bfield,
-                "Efield": Efield,
+                "R": float(params["R"][i]),
+                "a": float(params["a"][i]),
+                "qfactor": params["qfactor"][i],
+                "Bfield": params["Bfield"][i],
+                "Efield": params["Efield"][i],
             }
-            init_cond = {
-                "theta0": theta0,
-                "psi0": psi0,
-                "zeta0": zeta0,
-                "Pzeta0": Pzeta0,
+            parameters = {
+                "species": params["species"][i],
+                "mu": float(params["mu"][i]),
+                "theta0": float(params["theta0"][i]),
+                "psi0": float(params["psi0"][i]),
+                "zeta0": float(params["zeta0"][i]),
+                "Pzeta0": float(params["Pzeta0"][i]),
+                "t_eval": params["t_eval"][i],
             }
 
             # Particle Creation
             try:
-                p = Particle(tokamak, t_eval, init_cond, mu, species)
+                p = Particle(tokamak, parameters)
             except:  # noqa: E722
                 error_str = (
                     f"Error initialzing Particle #{i+1}. Dumping:\n"
                     + f"Tokamak condifuration: {tokamak}\n"
-                    + f"t_eval(t0, tf, step): {t_eval[0], t_eval[-1], t_eval[1]-t_eval[0]}\n"
-                    + f"Initial conditions: {init_cond}\n"
-                    + f"mu, species: {mu, species}\n"
+                    + f"Parameters: {parameters}\n"
                 )
                 print(error_str)
                 logger.enable("gcmotion")

@@ -21,3 +21,5 @@ easier:
     :maxdepth: 1
 
     particle_creation
+    plotting
+    collection

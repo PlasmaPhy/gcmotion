@@ -47,7 +47,7 @@ def drift(
     lim : list, optional
         Plot xlim. Must be either [0,2π] or [-π,π]. Defaults to [-π,π].
     params : dict, optional
-        Extra arguements if called for many particles:
+        Extra arguements.
 
             #. plot_initial : bool, optional
                 Whether or not to plot the initial point. Defaults to True

@@ -71,7 +71,9 @@ def torus3d(
         logger.debug(f"\tPlotting image in HD ({int(dpi)}dpi).")
     else:
         dpi = 300
-        logger.debug(f"\tPlotting image in default definition ({int(dpi)}dpi).")
+        logger.debug(
+            f"\tPlotting image in default definition ({int(dpi)}dpi)."
+        )
 
     if bold == "bold":
         custom_kw["alpha"] = 0.8

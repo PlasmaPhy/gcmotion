@@ -1,3 +1,5 @@
+.. _user_guide_particle_creation:
+
 ===================
 Creating a Particle
 ===================
@@ -9,10 +11,10 @@ First we need to configure our tokamak:
 
 .. code-block:: python
     
-    >>> R, a = 6, 2  # Major/Minor Radius in [m]
-    >>> qfactor = gcm.qfactor.Hypergeometric(R, a)
-    >>> Bfield = gcm.bfield.LAR(i=0, g=1, B0=5)
-    >>> Efield = gcm.efield.Radial(R, a, qfactor, Ea=75000, minimum=0.9, waist_width=50)
+   >>> R, a = 1.65, 0.5  # Major/Minor Radius in [m]
+   >>> qfactor = gcm.qfactor.Hypergeometric(R, a, q0=1.1, q_wall=3.5, n=2)
+   >>> Bfield = gcm.bfield.LAR(i=0, g=1, B0=1)
+   >>> Efield = gcm.efield.Radial(R, a, qfactor, Ea=75000, minimum=0.9, r_w=1 / 50)
 
 
 #. In the first line, we set the tokamak's major and minor radii in [m]. Note that 
@@ -54,24 +56,25 @@ Setting up particle's initial conditions
 
 .. code-block:: python
     
-    >>> species = "p"
-    >>> mu = 1e-5
-    >>> theta0 = 0
-    >>> psi0 = 0.5  # times psi_wall
-    >>> zeta0 = np.pi
-    >>> Pzeta0 = -0.027
-    >>> t_eval = np.linspace(0, 1000000, 100000)  # t0, tf, steps
+   >>> species = "d"
+   >>> mu = 1e-5
+   >>> theta0 = 0
+   >>> psi0 = 0.533  # times psi_wall
+   >>> zeta0 = np.pi
+   >>> Pzeta0 = -0.022
+   >>> t_eval = np.linspace(0, 1000000, 100000)  # t0, tf, steps
 
 
 #. First we must setup the particle's species. This is needed since all calculations 
    are normalized to the protons mass, so if we want to study other particles, we 
    need to account for that. The availiable particle species are "p" (proton), "e" (electron),
-   "D" (deuterium), "T" (Tritium), "He3" and "He4".
+   "D" (deuterium), "T" (Tritium), "He3" and "He4". The species string is case-insensitive.
 
 #. The rest are pretty straight forward, with the exception of :math:`\psi_0`. Since 
    :math:`\psi_{wall}` is directly dependant on the tokamak's :math:`R` and :math:`\alpha` 
    through :math:`\psi_{wall} = \dfrac{r_{wall}^2}{2} = \dfrac{1}{2}\bigg(\dfrac{\alpha}{R}\bigg)^2`, 
-   it is usually a weird number (in our example, it is 0.05). Therefore, we set up $\psi_0$ **with respect to $\psi_{wall}$**, and the actual $\psi_0$ is calculated upon particle initialization.
+   it is usually a weird number (in our example, it is 0.05). Therefore, we set up $\psi_0$ **with respect to $\psi_{wall}$**, 
+   and the actual $\psi_0$ is calculated upon particle initialization.
   
 #. :code:`teval` contains the times for which we want to now the orbit. As with all solvers, 
    the stepsize of :code:`teval` is not the actual step size of the solver, since it uses 
@@ -82,14 +85,41 @@ Initializing particle
 
 .. code-block:: python
 
-   >>> tokamak = {"R": R, "a": a, "qfactor": qfactor, "Bfield": Bfield, "Efield": Efield}
-   >>> init_cond = {"theta0": theta0, "psi0": psi0, "zeta0": zeta0, "Pzeta0": Pzeta0}
+   >>> R, a = 1.65, 0.5  # Major/Minor Radius in [m]
+   >>> qfactor = gcm.qfactor.Hypergeometric(R, a, q0=1.1, q_wall=3.5, n=2)
+   >>> Bfield = gcm.bfield.LAR(i=0, g=1, B0=1)
+   >>> Efield = gcm.efield.Radial(R, a, qfactor, Ea=75000, minimum=0.9, r_w=1 / 50)
 
-   >>> particle1 = gcm.Particle(tokamak, t_eval, init_cond, mu, species)
+   >>> species = "d"
+   >>> mu = 1e-5
+   >>> theta0 = 0
+   >>> psi0 = 0.533  # times psi_wall
+   >>> zeta0 = np.pi
+   >>> Pzeta0 = -0.022
+   >>> t_eval = np.linspace(0, 1000000, 100000)  # t0, tf, steps
+
+   >>> tokamak = {
+   >>>    "R": R,
+   >>>    "a": a,
+   >>>    "qfactor": qfactor,
+   >>>    "Bfield": Bfield,
+   >>>    "Efield": Efield,
+   >>> }
+   >>> parameters = {
+   >>>    "species": species,
+   >>>    "mu": mu,
+   >>>    "theta0": theta0,
+   >>>    "psi0": psi0,
+   >>>    "zeta0": zeta0,
+   >>>    "Pzeta0": Pzeta0,
+   >>>    "t_eval": t_eval,
+   >>> }
+
+   >>> particle1 = gcm.Particle(tokamak, parameters)
    >>> cwp = particle1
 
 Here we instantiate a single particle from the :py:class:`~gcmotion.classes.particle.Particle` 
-class. We then set it as :code:`cwp` (current working particle), to avoid confusion.
+class. We then set it as :code:`cwp` (current working particle), to avoid later confusion.
 
 As we can see, we simply create it by passing the parameters we created above. We can 
 create multiple particles that way, which are all stored in memory until we restart 
@@ -144,16 +174,16 @@ The :code:`run()` method also accepts 3 optional parameters:
 #. :code:`info:bool`:  Whether or not to print the information message after the orbit 
    is calculated. Defaults to True.
 
-#. :code:`events:list`: a list with events to provide to the solver's *event locator*. 
+#. :code:`events:list`: a list with :py:mod:`~gcmotion.scripts.events` to provide to the solver's *event locator*. 
    Defaults to an empty list.
 
-For example, if we want to calculate the particles orbit up until :math:`\theta` returns
-to its initial value 10 times, but not print the info message, we can run:
+.. For example, if we want to calculate the particles orbit up until :math:`\theta` returns
+.. to its initial value 10 times, but not print the info message, we can run:
 
-.. code-block:: python
+.. .. code-block:: python
    
-   >>> events = [gcm.events.when_theta(theta0, 10)]
-   >>> cwp.run(events=events, info=False)s
+..    >>> events = [gcm.events.when_theta(theta0, 10)]
+..    >>> cwp.run(events=events, info=False)
 
 .. note::
    

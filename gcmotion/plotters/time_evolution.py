@@ -41,7 +41,7 @@ def time_evolution(cwp, percentage: int = 100, units: str = "s"):
     percentage : int, optional
         The percentage of the orbit to be plotted. Defaults to 100.
     units : str, optional
-        The time units. Can be either 's' for seconds or 'normal' for
+        The time units. Can be either 's' for seconds or 'NU' for
         normalized units. Defauls to "s".
     """
     logger.info("Plotting time evolutions...")
@@ -89,8 +89,8 @@ def time_evolution(cwp, percentage: int = 100, units: str = "s"):
     ax[6].set_ylabel(r"$P_\zeta(t)$", **config["ylabel_args"])
     ax[6].set_ylim([-psip_wall, psip_wall])
 
-    if units == "normal":
-        fig.supxlabel("t [normalised units]", **config["ylabel_args"])
+    if units == "NU":
+        fig.supxlabel("t [NU]", **config["ylabel_args"])
     elif units == "s":
         fig.supxlabel("t [s]", **config["ylabel_args"])
 

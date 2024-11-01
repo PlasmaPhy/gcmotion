@@ -1,5 +1,3 @@
-from matplotlib import ticker  # for contour plot locator
-
 # fmt: off
 
 time_evolution = {
@@ -10,7 +8,7 @@ time_evolution = {
     },
 
     "scatter_args": {
-        "s" : 0.5,
+        "s" : 0.2,
         "color" : "blue",
         "marker" : "o",
     },
@@ -42,10 +40,10 @@ drift = {
 
 energy_contour = {
 
-    "contour_grid_density" : 300,
+    "contour_grid_density" : 100,
     "contour_levels" : 15,
     "contour_cmap" : "plasma",
-    "locator": ticker.LogLocator(base = 1.05, numticks=30),
+    "locator": "log", # "log" or anything else for default
     "cbar_color": "red",
 }
 
@@ -102,5 +100,28 @@ torus3d = {
         "color" : "red",
         "alpha" : 0.6,
         "linewidth" : 0.2,
+    },
+}
+
+poloidal_cut = {
+    "ylim": 1.1, #times the minor radius
+    "wall_points": 2000,
+
+    "orbit_kw": {
+        "color" : "blue",
+        "s" : 0.05,
+        "marker": "."
+    },
+
+    "axis_size": 60,
+    "axis_kwargs": {
+        "facecolor": "r",
+        "edgecolor": "k",
+        "linewidths": 2,
+    },
+
+    "wall_kw": {
+        "color" : "k",
+        "s" : 0.5,
     },
 }
