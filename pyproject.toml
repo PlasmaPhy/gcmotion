@@ -19,6 +19,7 @@ dependencies = [
   #"vpython~=7.6",
   "tqdm~=4.66",
   "loguru~=0.7",
+  "pint~=0.24",
 ]
 
 

@@ -69,11 +69,11 @@ class Construct:
         logger.debug("Setting up parabolas...")
 
         Bfield = self.cwp.Bfield
-        r_wall = self.cwp.r_wall
+        a = self.cwp.a
         mu, psi_wall, g = self.cwp.mu, self.cwp.psi_wall, Bfield.g
 
-        Bmin = Bfield.B(r_wall, 0)  # "Bmin occurs at psi_wall, θ = 0"
-        Bmax = Bfield.B(r_wall, np.pi)  # "Bmax occurs at psi_wall, θ = π"
+        Bmin = Bfield.B(a, 0)  # "Bmin occurs at psi_wall, θ = 0"
+        Bmax = Bfield.B(a, np.pi)  # "Bmax occurs at psi_wall, θ = π"
 
         # Parabolas constants [a, b, c]
         # __________________________________________________________

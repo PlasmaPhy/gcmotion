@@ -23,6 +23,7 @@ The general structure is this::
     class MyMagneticField(MagneticField):
 
         def __init__(self, *<parameters>):
+            self.B0NU = None # Must be reassigned as "m/q" during particle initiation
             self.id = "foo" # Simple id used only for logging.
             self.params = {} # Tweakable parameters, used only for logging.
             <set parameters>
@@ -63,11 +64,14 @@ class MagneticField(ABC):
 
     def __init__(self):
         r"""Contains all the needed parameters"""
+        self.B0NU = None
         self.id = "Base Class"
         self.params = {}
 
     @abstractmethod
-    def B(self, r: float | np.ndarray, theta: float | np.ndarray) -> float | np.ndarray:
+    def B(
+        self, r: float | np.ndarray, theta: float | np.ndarray
+    ) -> float | np.ndarray:
         r"""Returns the magnetic field strength.
 
         Used inside the solver (input and return type must be float),
@@ -141,17 +145,18 @@ class LAR(MagneticField):
         self.params = {"I": i, "g": g, "B0": B0}
 
         self.I, self.g, self.B0 = i, g, B0
+        self.B0NU = None
         self.is_lar = True
 
     def B(self, r: float | np.ndarray, theta: float | np.ndarray):
         if isinstance(r, (int, float)):
-            return 1 - r * cos(theta)
+            return self.B0NU * (1 - r * cos(theta))
         else:
-            return 1 - r * np.cos(theta)
+            return self.B0NU * (1 - r * np.cos(theta))
 
     def B_der(self, psi: float, theta: float):
         root = sqrt(2 * psi)
-        B_der_psi = cos(theta) / root
-        B_der_theta = root * sin(theta)
+        B_der_psi = self.B0NU * cos(theta) / root
+        B_der_theta = self.B0NU * root * sin(theta)
 
         return (B_der_psi, B_der_theta)

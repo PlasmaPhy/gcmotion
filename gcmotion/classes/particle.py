@@ -135,7 +135,7 @@ class Particle:
             # Objects
             self.qfactor = tokamak["qfactor"]
             self.Bfield = tokamak["Bfield"]
-            self.Bfield.B0 = self.mNU / self.qNU
+            self.Bfield.B0NU = self.mNU / self.qNU
             Efield = tokamak["Efield"]
             if Efield is None or isinstance(Efield, Nofield):
                 self.Efield = Nofield()
@@ -147,8 +147,12 @@ class Particle:
             logger.debug(
                 f"\t'{self.qfactor.id}' qfactor used with parameters {self.qfactor.params}"
             )
-            logger.debug(f"\t'{self.Bfield.id}' Bfield used with parameters {self.Bfield.params}")
-            logger.debug(f"\t'{self.Efield.id}' Efield used with parameters {self.Efield.params}")
+            logger.debug(
+                f"\t'{self.Bfield.id}' Bfield used with parameters {self.Bfield.params}"
+            )
+            logger.debug(
+                f"\t'{self.Efield.id}' Efield used with parameters {self.Efield.params}"
+            )
 
             self.psi_wall = (self.a) ** 2 / 2  # normalized to R
             self.psip_wall = self.qfactor.psip_of_psi(self.psi_wall)
@@ -175,11 +179,15 @@ class Particle:
             self.t_eval = parameters["t_eval"]
             self.mu = parameters["mu"]
             self.theta0 = parameters["theta0"]
-            self.psi0 = parameters["psi0"] * self.psi_wall  # CAUTION! Normalize it to psi_wall
+            self.psi0 = (
+                parameters["psi0"] * self.psi_wall
+            )  # CAUTION! Normalize it to psi_wall
             self.zeta0 = parameters["zeta0"]
             self.Pzeta0 = parameters["Pzeta0"]
             self.psip0 = self.qfactor.psip_of_psi(self.psi0)
-            self.rho0 = (self.Pzeta0 + self.psip0) / self.Bfield.g  # Pz0 + psip0
+            self.rho0 = (
+                self.Pzeta0 + self.psip0
+            ) / self.Bfield.g  # Pz0 + psip0
             self.Ptheta0 = self.psi0 + self.rho0 * self.Bfield.I  # psi + rho*I
 
             logger.debug(
@@ -209,7 +217,9 @@ class Particle:
             self.percentage_calculated = 0
 
             # Stored initially to avoid attribute errors
-            self.z_0freq = self.z_freq = self.theta_0freq = self.theta_freq = None
+            self.z_0freq = self.z_freq = self.theta_0freq = self.theta_freq = (
+                None
+            )
 
             logger.info("--> Logic flags setup successful.")
 
@@ -295,7 +305,8 @@ class Particle:
             duration = f"{end-start:.4f}"
             self.calculated_orbit = True
             self.solver_output = (
-                f"Solver output: {self.message}\n" + f"Orbit calculation time: {duration}s."
+                f"Solver output: {self.message}\n"
+                + f"Orbit calculation time: {duration}s."
             )
             logger.info(f"Orbit calculation completed. Took {duration}s")
         else:
@@ -306,11 +317,6 @@ class Particle:
             logger.info("Printing Particle.__str__() to stdout.")
             print(self.__str__())
         logger.info("Printing Particle.__str__():\n\t\t\t" + self.__str__())
-
-        # logger.info("Initializing composite class 'Plot'...")
-        # self.plot = Plot(self)
-        # logger.info("Composite class 'Plot' successfully initialized.")
-        logger.info("---------Particle's 'run' routine completed--------\n")
 
     def _conversion_factors(self):
         r"""
@@ -369,14 +375,6 @@ class Particle:
             + self.qNU * Phi_init_NU
         )
 
-        # self.E_NU = (  # Normalized Energy from initial conditions
-        #     (self.Pzeta0 + self.psip0) ** 2
-        #     * B_init**2
-        #     / (2 * self.Bfield.g**2 * self.mi)
-        #     + self.mu * B_init
-        #     + self.qi * Phi_init_NU
-        # )
-
         self.E_eV = self.E_NU * self.NU_to_eV
         self.E_keV = self.E_eV / 1000
         self.E_J = self.E_NU * self.NU_to_J
@@ -404,9 +402,7 @@ class Particle:
         logger.info("Calculating particle's orbit type:")
 
         if (self.has_efield) or (not self.Bfield.is_lar):
-            self.orbit_type_str = (
-                "Cannot calculate (Electric field is present, or Magnetic field is not LAR.)"
-            )
+            self.orbit_type_str = "Cannot calculate (Electric field is present, or Magnetic field is not LAR.)"
             logger.warning(
                 "\tElectric field is present, or Magnetic field is not LAR. Orbit type calculation is skipped."
             )
@@ -433,8 +429,16 @@ class Particle:
 
         # Recalculate y by reconstructing the parabola (there might be a better way
         # to do this)
-        upper_y = foo.abcs[0][0] * self.orbit_x**2 + foo.abcs[0][1] * self.orbit_x + foo.abcs[0][2]
-        lower_y = foo.abcs[1][0] * self.orbit_x**2 + foo.abcs[1][1] * self.orbit_x + foo.abcs[1][2]
+        upper_y = (
+            foo.abcs[0][0] * self.orbit_x**2
+            + foo.abcs[0][1] * self.orbit_x
+            + foo.abcs[0][2]
+        )
+        lower_y = (
+            foo.abcs[1][0] * self.orbit_x**2
+            + foo.abcs[1][1] * self.orbit_x
+            + foo.abcs[1][2]
+        )
 
         if self.orbit_y < upper_y and self.orbit_y > lower_y:
             self.l_or_c = "Confined"
@@ -445,7 +449,9 @@ class Particle:
         self.orbit_type_str = self.t_or_p + "-" + self.l_or_c
 
         self.calculated_orbit_type = True
-        logger.info(f"--> Orbit type completed. Result: {self.orbit_type_str}.")
+        logger.info(
+            f"--> Orbit type completed. Result: {self.orbit_type_str}."
+        )
 
     def _orbit(self, events: list = []):
         """Groups the particle's initial conditions and passes the to the solver Script
