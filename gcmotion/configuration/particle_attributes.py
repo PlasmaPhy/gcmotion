@@ -1,10 +1,6 @@
 # fmt: off
 
-physical_constants = {
-
-    "qp" : 1.602176634e-19,      # Proton Charge [C]
-    "mp": 1.6726219237e-27,      # Proton mass [kg]
-
+particle_attributes = {
     # Particle specific constants
     "e_mNU" : 0.0005446623,      # Units of proton mass
     "e_qNU" : -1,                # Charge

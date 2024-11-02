@@ -144,19 +144,18 @@ class LAR(MagneticField):
         self.id = "LAR"
         self.params = {"I": i, "g": g, "B0": B0}
 
-        self.I, self.g, self.B0 = i, g, B0
-        self.B0NU = None
+        self.i, self.g, self.B0 = i, g, B0
         self.is_lar = True
 
     def B(self, r: float | np.ndarray, theta: float | np.ndarray):
         if isinstance(r, (int, float)):
-            return self.B0NU * (1 - r * cos(theta))
+            return 1 - r * cos(theta)
         else:
-            return self.B0NU * (1 - r * np.cos(theta))
+            return 1 - r * np.cos(theta)
 
     def B_der(self, psi: float, theta: float):
         root = sqrt(2 * psi)
-        B_der_psi = self.B0NU * cos(theta) / root
-        B_der_theta = self.B0NU * root * sin(theta)
+        B_der_psi = cos(theta) / root
+        B_der_theta = root * sin(theta)
 
         return (B_der_psi, B_der_theta)

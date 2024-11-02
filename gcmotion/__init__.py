@@ -3,6 +3,8 @@
 # Import the logger first
 from gcmotion.utils import _logger_setup
 
+from gcmotion.utils.setup_pint import setup_pint
+
 from gcmotion.classes.particle import Particle
 from gcmotion.classes.collection import Collection
 from gcmotion.scripts import events
@@ -31,6 +33,7 @@ from gcmotion.plotters.collection_parabolas import collection_parabolas
 
 __all__ = [
     "_logger_setup",
+    "setup_pint",
     "Particle",
     "Collection",
     "qfactor",

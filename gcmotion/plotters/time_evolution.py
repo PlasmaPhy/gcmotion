@@ -25,6 +25,8 @@ import matplotlib.pyplot as plt
 
 from gcmotion.utils._logger_setup import logger
 
+from gcmotion.utils.setup_pint import setup_pint
+
 from gcmotion.configuration.plot_parameters import time_evolution as config
 
 
@@ -57,6 +59,9 @@ def time_evolution(cwp, percentage: int = 100, units: str = "s"):
     Pzeta = cwp.Pzeta
     psip_wall = cwp.psip_wall
 
+    # Get Q
+    _, Q = setup_pint(cwp.R, cwp.Bfield.B0)
+
     if percentage < 1 or percentage > 100:
         percentage = 100
         print("Invalid percentage. Plotting the whole thing.")
@@ -65,7 +70,7 @@ def time_evolution(cwp, percentage: int = 100, units: str = "s"):
     points = int(np.floor(t.shape[0] * percentage / 100) - 1)
 
     if units == "s":
-        t /= cwp.w0
+        t = t.to("seconds")
 
     # Plotting
     fig, ax = plt.subplots(7, 1, **config["fig_parameters"])
@@ -87,7 +92,7 @@ def time_evolution(cwp, percentage: int = 100, units: str = "s"):
     ax[4].set_ylabel(r"$\rho(t)$", **config["ylabel_args"])
     ax[5].set_ylabel(r"$P_\theta(t)\quad$", **config["ylabel_args"])
     ax[6].set_ylabel(r"$P_\zeta(t)$", **config["ylabel_args"])
-    ax[6].set_ylim([-psip_wall, psip_wall])
+    ax[6].set_ylim([-psip_wall.magnitude, psip_wall.magnitude])
 
     if units == "NU":
         fig.supxlabel("t [NU]", **config["ylabel_args"])

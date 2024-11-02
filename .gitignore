@@ -15,6 +15,3 @@ usr/
 # log files
 log.txt
 
-# TEMP
-gcmotion/freq.py
-gcmotion/tokamak/foo__init__.py

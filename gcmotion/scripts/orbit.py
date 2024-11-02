@@ -130,21 +130,21 @@ def orbit(
     qfactor = profile["qfactor"]
     Bfield = profile["Bfield"]
     Efield = profile["Efield"]
-    Volts_to_NU = float(profile["Volts_to_NU"])
 
     # Constants of motion
     # E = float(constants["E"]) # Not used
-    mu = float(constants["mu"])
-    mi = float(constants["mi"])
-    qi = int(constants["qi"])
+    mu = float(constants["mu"].magnitude)
+    mi = float(constants["mi"].magnitude)
+    qi = float(constants["qi"].magnitude)
+    VtoVNU = float(constants["VtoVNU"].magnitude)
     # Pzeta0 = float(constants["Pzeta0"]) # Not used
 
     # Initial Conditions
     S0 = [
-        float(init_cond["theta0"]),
-        float(init_cond["psi0"]),
-        float(init_cond["zeta0"]),
-        float(init_cond["rho0"]),
+        float(init_cond["theta0"].magnitude),
+        float(init_cond["psi0"].magnitude),
+        float(init_cond["zeta0"].magnitude),
+        float(init_cond["rho0"].magnitude),
     ]
 
     def dSdt(t, S):
@@ -154,31 +154,32 @@ def orbit(
         """
 
         theta, psi, z, rho = S
+        print(psi)
 
         # Intermediate values
         phi_der_psip, phi_der_theta = Efield.Phi_der(psi)
-        phi_der_psip *= Volts_to_NU
-        phi_der_theta *= Volts_to_NU
+        phi_der_psip *= VtoVNU
+        phi_der_theta *= VtoVNU
         B_der_psi, B_der_theta = Bfield.B_der(psi, theta)
         q = qfactor.q_of_psi(psi)
         r = sqrt(2 * psi)
-        B = Bfield.B(r, theta)
+        B = Bfield.B0 * Bfield.B(r, theta)
         par = mu + (qi**2 / mi) * rho**2 * B
-        bracket1 = -par * q * B_der_psi + qi * phi_der_psip
+        bracket1 = par * q * B_der_psi + qi * phi_der_psip
         bracket2 = par * B_der_theta + qi * phi_der_theta
-        D = Bfield.g * q + Bfield.I
+        D = Bfield.g * q + Bfield.i
 
         # Canonical Equations
         theta_dot = (qi / mi) / D * rho * B**2 + Bfield.g / (D * qi) * bracket1
         psi_dot = -Bfield.g * q / (D * qi) * bracket2
         rho_dot = psi_dot / (Bfield.g * q)
         z_dot = q * (
-            (qi / mi) * rho * B**2 / D - Bfield.I / (D * qi) * bracket1
+            (qi / mi) * rho * B**2 / D - Bfield.i / (D * qi) * bracket1
         )
 
         return [theta_dot, psi_dot, z_dot, rho_dot]
 
-    t_span = (t[0], t[-1])
+    t_span = (t[0].magnitude, t[-1].magnitude)
     sol = solve_ivp(
         dSdt,
         t_span=t_span,
@@ -203,7 +204,7 @@ def orbit(
 
     # Calculate psip and Canonical Momenta
     psip = qfactor.psip_of_psi(psi)
-    Ptheta = psi + rho * Bfield.I
+    Ptheta = psi + rho * Bfield.i
     Pzeta = rho * Bfield.g - psip
 
     solution = {
