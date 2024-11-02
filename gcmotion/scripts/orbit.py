@@ -82,10 +82,10 @@ from gcmotion.configuration.solver_configuration import (
 
 def orbit(
     t: np.ndarray,
-    init_cond: list,
-    constants: dict,
+    parameters: dict,
     profile: dict,
-    events: list,
+    units: str = "SI",
+    events: list = [],
 ):
     r"""Wrapper function around SciPy's solve_ivp().
 
@@ -94,16 +94,19 @@ def orbit(
 
     t : np.ndarray
         The evaluation times array.
-    init_cond : list
-        List containing the initial conditions
+    parameters : dict
+        Dict containing the initial conditions and constants in SI units:
         :math:`\theta_0, \psi_0, \zeta_0, \rho_{||,0}`.
-    constants : dict
-        Dict containing the constants of motion. Currently only :math:`\mu`
-        is used.
+        :math:`\mu, m, q, B_0` and the conversion factor VtoVNU
     profile : dict
         Dict containing the tokamak configuration objects.
+    units : str
+        The units of the parameters as they are passed to the solver. If "SI",
+        then the units are left as is, since the solver expects the input
+        parameters to be in SI. If "NU", the input parameters are converted to
+        NU first.
     events : list
-        List containing the independed events to track.
+        List containing the independed events to track. Defaults to "SI"
 
     Returns
     -------
@@ -125,27 +128,34 @@ def orbit(
 
     """
     logger.info(f"Calculating orbit with events {events}")
+    # # Convert to NU
+    # if units == "NU":
+    #     t = t.toNU()
+    #     for key, value in parameters.items():
+    #         parameters[key] = value.toNU()
+
+    # Time array
+    t = t.magnitude
+
+    # Constants of motion
+    mu = parameters["mu"].magnitude
+    mi = parameters["mi"].magnitude
+    qi = parameters["qi"].magnitude
+    B0 = parameters["B0"].magnitude
+    VtoVNU = parameters["VtoVNU"].magnitude
+
+    # Initial Conditions
+    S0 = [
+        parameters["theta0"].magnitude,
+        parameters["psi0"].magnitude,
+        parameters["zeta0"].magnitude,
+        parameters["rho0"].magnitude,
+    ]
 
     # Tokamak profile
     qfactor = profile["qfactor"]
     Bfield = profile["Bfield"]
     Efield = profile["Efield"]
-
-    # Constants of motion
-    # E = float(constants["E"]) # Not used
-    mu = float(constants["mu"].magnitude)
-    mi = float(constants["mi"].magnitude)
-    qi = float(constants["qi"].magnitude)
-    VtoVNU = float(constants["VtoVNU"].magnitude)
-    # Pzeta0 = float(constants["Pzeta0"]) # Not used
-
-    # Initial Conditions
-    S0 = [
-        float(init_cond["theta0"].magnitude),
-        float(init_cond["psi0"].magnitude),
-        float(init_cond["zeta0"].magnitude),
-        float(init_cond["rho0"].magnitude),
-    ]
 
     def dSdt(t, S):
         """Sets the diff equations system to pass to scipy.
@@ -154,7 +164,6 @@ def orbit(
         """
 
         theta, psi, z, rho = S
-        print(psi)
 
         # Intermediate values
         phi_der_psip, phi_der_theta = Efield.Phi_der(psi)
@@ -163,7 +172,7 @@ def orbit(
         B_der_psi, B_der_theta = Bfield.B_der(psi, theta)
         q = qfactor.q_of_psi(psi)
         r = sqrt(2 * psi)
-        B = Bfield.B0 * Bfield.B(r, theta)
+        B = B0 * Bfield.B(r, theta)
         par = mu + (qi**2 / mi) * rho**2 * B
         bracket1 = par * q * B_der_psi + qi * phi_der_psip
         bracket2 = par * B_der_theta + qi * phi_der_theta
@@ -179,7 +188,7 @@ def orbit(
 
         return [theta_dot, psi_dot, z_dot, rho_dot]
 
-    t_span = (t[0].magnitude, t[-1].magnitude)
+    t_span = (t[0], t[-1])
     sol = solve_ivp(
         dSdt,
         t_span=t_span,

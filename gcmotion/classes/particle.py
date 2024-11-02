@@ -1,5 +1,7 @@
 import numpy as np
+import pint
 from time import time
+from pprint import pprint
 
 from gcmotion.tokamak.efield import Nofield
 
@@ -119,11 +121,11 @@ class Particle:
             M = particle_attributes[self.species + "_mNU"]
             Z = particle_attributes[self.species + "_qNU"]
 
-            self.mNU = self.Q(M, "mp")
-            self.qNU = self.Q(Z, "qp")
+            self.mNU = self.Q(M, "Proton_mass")
+            self.qNU = self.Q(Z, "Proton_charge")
 
             self.mi = self.mNU.to("kilogram")
-            self.qi = self.qNU.to("C")
+            self.qi = self.qNU.to("Coulomb")
 
             logger.debug(f"\tParticle is of species '{self.species}'.")
             logger.info("--> Particle's constants setup successful")
@@ -144,10 +146,11 @@ class Particle:
 
             self.Bfield = tokamak["Bfield"]
             self.B0 = self.Q(self.Bfield.B0, "Tesla")
-            self.g = self.Q(self.Bfield.g, "Plasma_current")
-            self.i = self.Q(self.Bfield.i, "Plasma_current")
-            self.B0NU = self.mNU / self.qNU
-            # self.Bfield.B0NU = self.B0NU.magnitude
+            self.g = self.Q(self.Bfield.g, "Tesla * m")
+            self.i = self.Q(self.Bfield.i, "Tesla * m")
+            self.B0NU = self.Q(
+                self.mNU.magnitude / self.qNU.magnitude, "NUTesla"
+            )
 
             Efield = tokamak["Efield"]
             if Efield is None or isinstance(Efield, Nofield):
@@ -164,7 +167,7 @@ class Particle:
             self.psi_wall = self.B0 * self.a**2 / 2  # Tesla * m^2
             self.psip_wall = self.Q(
                 self.qfactor.psip_of_psi(self.psi_wall.magnitude),
-                "Magnetic_flux",
+                self.psi_wall.units,
             )  # Tesla * m^2
 
             logger.info("--> Tokamak setup successful.")
@@ -177,22 +180,25 @@ class Particle:
             muB = self.Q(parameters["muB"], "keV")
             self.mu = muB / self.B0  # keV / Tesla
 
-            self.theta0 = self.Q(parameters["theta0"], "rads")
-            self.zeta0 = self.Q(parameters["zeta0"], "rads")
+            self.theta0 = self.Q(parameters["theta0"], "radians")
+            self.zeta0 = self.Q(parameters["zeta0"], "radians")
 
-            self.Pzeta0 = self.Q(parameters["Pzeta0"], "Canonical_momentum")
+            self.Pzeta0 = self.Q(
+                parameters["Pzeta0"], "NUCanonical_momentum"
+            ).to("Tesla * meter ** 2")
 
-            # CAUTION! Normalize psi to psi_wall
+            # CAUTION! psi was difined with respect to psi_wall
             self.psi0 = parameters["psi0"] * self.psi_wall  # Tesla * m^2
             self.psip0 = self.Q(
-                self.qfactor.psip_of_psi(self.psi0.magnitude), "Magnetic_flux"
-            )
+                self.qfactor.psip_of_psi(self.psi0.magnitude),
+                self.psi0.units,
+            )  # Tesla * m^2
 
             # [rho] = Magnetic_flux / Plasma_current = meters
             self.rho0 = (self.Pzeta0 + self.psip0) / self.g
             self.rho0 = self.rho0.to_base_units()
 
-            self.Ptheta0 = self.psi0 + self.rho0 * self.i
+            self.Ptheta0 = self.psi0 + self.rho0 * self.i  # Tesla * meter ** 2
 
             self.t_eval = self.Q(parameters["t_eval"], "seconds")
 
@@ -206,10 +212,6 @@ class Particle:
 
             logger.info("Setting up logic flags...")
 
-            self.calculated_conversion_factors = False
-            self.calculated_energies = False
-            self.calculated_orbit_type = False
-            self.calculated_orbit = False
             self.t_or_p = "Unknown"
             self.l_or_c = "Unknown"
 
@@ -256,6 +258,20 @@ class Particle:
         out = f"{formal_species[self.species]} with energy E = {self.E_eV/1000:.4g}keV."
         return out
 
+    def quantities(self):
+        """Prints the pint Quantities of the object"""
+        d = self.__dict__.copy()
+        del d["t_eval"]
+        d["t_eval_start"] = self.t_eval[:5]
+        d["t_eval_end"] = self.t_eval[-5:]
+        pprint(
+            [
+                f"{key} = {value:.4g~}"
+                for key, value in d.items()
+                if isinstance(value, pint.Quantity)
+            ]
+        )
+
     def run(
         self,
         orbit=True,
@@ -287,7 +303,7 @@ class Particle:
         """
         logger.info("--------Particle's 'run' routine is called.---------")
 
-        self._conversion_factors()
+        # self._conversion_factors()
         self._energies()
         self._orbit_type()
 
@@ -324,47 +340,6 @@ class Particle:
             print(self.__str__())
         logger.info("Printing Particle.__str__():\n\t\t\t" + self.__str__())
 
-    def _conversion_factors(self):
-        r"""
-        Calculates the conversion coeffecient needed to convert from lab to NU
-        and vice versa.
-
-        Specifically:
-
-        * :math:`\omega_0[s^{-1}] = \dfrac{|Z|e[C]B_0[T]}{m[kg]}`
-
-        * :math:`E_{unit} [J] = m[kg]\omega_0^2[s^{-2}]R^2[m^2]`
-
-        The attributes [NU_to_eV, NU_to_J, Volts_to_NU] are also calculated:
-
-        * To convert from [NU] to [eV], we multiply by
-            NU_to_eV = :math:`\dfrac{1}{E_{unit}}`.`
-
-        * To convert from [NU] to [J], we multiply by
-            NU_to_J = :math:`\dfrac{e}{E_{unit}}`.`
-
-        * To convert Volts to [NU], we multiply by
-            Volts_to_NU = :math:`Z E_{unit}`.`
-        """
-
-        logger.info("Calculating conversion factors...")
-
-        # mp = self.Q(1, "mp")  # kg
-        # qp = self.Q(1, "qp")  # 1.6*10**(-19)C
-
-        # # Same thing, just to avoid calculating it twice
-        # self.w0 = self.Q(1, "NUsecond^-1").to("s^-1")  # s^-1
-        # self.E_unit = self.Q(1, "NUEnergy").to("Joule")  # [J]
-
-        # # Conversion Factors
-        # self.NU_to_eV = self.E_unit / qp
-        # self.NU_to_J = self.E_unit
-        # self.Volts_to_NU = qp / self.E_unit
-
-        # self.calculated_conversion_factors = True
-        pass
-        logger.info("--> Calculated conversion factors.")
-
     def _energies(self):
         r"""
         Calculates the particle's energy in [NU], [eV] and [J], using
@@ -378,12 +353,10 @@ class Particle:
             self.qi**2 / (2 * self.mi) * self.rho0**2 * B_init**2
             + self.mu * B_init
             + self.qi * Phi_init
-        )
+        ).to("Joule")
 
         self.EeV = self.E.to("eV")
         self.EkeV = self.E.to("keV")
-
-        self.calculated_energies = True
         logger.info("Calculated particle's energies(NU, eV, J).")
 
     def _orbit_type(self):
@@ -477,33 +450,34 @@ class Particle:
             The ``solution`` dictionary returned by the solver
         """
 
-        t = self.t_eval if units == "SI" else self.t_eval.to("NUseconds")
+        t = self.t_eval.to("NUsecond")
 
         # fmt: off
-        init_cond = {
+        parameters = {
             "theta0" : self.theta0,
             "zeta0"  : self.zeta0,
-            "psi0"   : self.psi0    if units == "SI" else self.psi0.to("NUMagnetic_flux"),            
-            "rho0"   : self.rho0    if units == "SI" else self.rho0.to("NUmeters"),
-        }
-
-        constants = {
-            "mu"     : self.mu      if units == "SI" else self.mu.to("NUMagnetic_moment"),
-            "mi"     : self.mi      if units == "SI" else self.mi.to("NUmass"),
-            "qi"     : self.qi      if units == "SI" else self.qi.to("NUcharge"),
-            "B0"     : self.B0      if units == "SI" else self.B0NU,
-            "VtoVNU" : self.Q("1V") if units == "SI" else self.Q("Volt").to("NUVolts"),
+            "psi0"   : self.psi0.to("NUMagnetic_flux"),            
+            "rho0"   : self.rho0.to("NUmeter"),
+            "mu"     : self.mu.to("NUMagnetic_moment"),
+            "mi"     : self.mi.to("Proton_mass"),
+            "qi"     : self.qi.to("Proton_charge"),
+            "B0"     : self.B0.to("NUTesla"),
+            "VtoVNU" : self.Q("1V").to("NUVolts"),
         }
 
         profile = {
             "qfactor": self.qfactor,
             "Bfield": self.Bfield,
             "Efield": self.Efield,
-            
         }
         # fmt: on
 
-        print(init_cond)
-        print(constants)
+        pprint(
+            [
+                f"{key} = {value:.4g~}"
+                for key, value in parameters.items()
+                if isinstance(value, pint.Quantity)
+            ]
+        )
 
-        return orbit(t, init_cond, constants, profile, events)
+        return orbit(t, parameters, profile, units=units, events=events)
