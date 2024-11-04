@@ -21,6 +21,10 @@ def bifurcation_plot(
         info=info,
     )
 
+    particles = collection.particles
+    p1 = particles[0]
+    psi_wall = p1.psi_wall
+
     fig, ax = plt.subplots(3, 1, figsize=(6, 4), sharex=True)
     plt.xlabel(r"$P_{\zeta}$")
 
@@ -54,9 +58,12 @@ def bifurcation_plot(
         P_zeta_plot.extend([P_zeta] * len(y_list))
         P_theta_plot.extend(y_list)
 
+    P_theta_plot = [P_theta / psi_wall for P_theta in P_theta_plot]
+
     # ax_P_theta.set_title(r"$P_{theta}$ Bifurcation Diagram")
-    ax_P_theta.set_ylabel(r"$P_{\theta_s}$")
+    ax_P_theta.set_ylabel(r"$P_{\theta_s}/P_{\theta_w}$")
     ax_P_theta.scatter(P_zeta_plot, P_theta_plot, s=2)
+    ax_P_theta.axhline(y=1, color="black", linestyle="-", linewidth=2)
 
     # Number of distinct fixed points Diagram
     # ax_ndfp.set_title("Number of Fixed Points Bifurcation Diagram")
