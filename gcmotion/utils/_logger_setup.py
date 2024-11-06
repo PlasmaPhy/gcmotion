@@ -24,14 +24,11 @@ from loguru import logger
 logger.remove()  # Removes the default one which prints on sys.stderr
 
 
-# Format templates
-# fmt = "{time:HH:mm:ss:SSS} | {function: ^25} |  {level: ^7} | {message}"
-# fmt = "{time:HH:mm:ss:SSS} | {name: <18} |  {level: >6} | {message}"
-fmt = "{time:HH:mm:ss:SSS} |  {level: ^7} | {message}"
+# Format template
+fmt = "{time:HH:mm:ss:SSS} |{level: ^7}| {message}"
 
 level = "DEBUG"
 
-logger.add("log.txt", format=fmt, level=level, mode="w")
+logger.add("log.log", format=fmt, level=level, mode="w")
 
 logger.info(f"Logger added on {level} level.")
-logger.info("---------------------------------")

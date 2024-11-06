@@ -47,7 +47,7 @@ def energy_contour(
     psi_lim: str | list = "auto",
     plot_drift: bool = True,
     contour_Phi: bool = True,
-    units: str = "keV",
+    units: str = "SI",
     levels: int = None,
     wall_shade: bool = True,
     **params,
@@ -78,7 +78,7 @@ def energy_contour(
         Whether or not to add the Φ term in the energy contour.
         Defaults to True.
     units : str, optional
-        The energy units. Must be 'NU', 'eV' or 'keV'. Defaults to "keV".
+        The unit system. Can be either 'SI' or 'NU'. Defauls to "SI".
     levels : int, optional
         The number of contour levels. Defaults to Config setting.
     wall_shade : bool, optional
@@ -94,6 +94,14 @@ def energy_contour(
                 Whether or not to plot the starting points of each drift.
                 Defaults to True.
     """
+    suffix = "NU" if units == "NU" else "" if units == "SI" else ""
+    logger.info(f"Plotting contour plot in {"NU" if suffix=="NU" else "SI"}...")  # fmt: skip
+
+    # Get all needed attributes first
+    psi_wall = getattr(cwp, "psi_wallNU").copy()
+    cwp_psi = getattr(cwp, "psiNU").copy()
+    Q = getattr(cwp, "Q")
+
     # Unpack params
     _internal_call = params.pop("_internal_call", False)  # POP!
     canvas = params.pop("canvas", None)  # POP!
@@ -102,25 +110,16 @@ def energy_contour(
         logger.disable("gcmotion")
     else:
         logger.enable("gcmotion")
-    logger.info("Plotting energy contour:")
-
-    # Get all needed attributes first
-    Pzeta0 = cwp.Pzeta0
-    psi_wall = cwp.psi_wall
-    psi = cwp.psi.copy()
 
     # Grab or create canvas
     if canvas is None:
         fig = plt.figure(figsize=(12, 9))
         ax = fig.add_subplot(111)
         canvas = (fig, ax)
-        logger.debug("\tCreating a new canvas.")
+        logger.debug("\tContour: Creating a new canvas.")
     else:
         fig, ax = canvas
-        logger.debug("\tUsing existing canvas.")
-
-    # Set theta lim.
-    theta_min, theta_max = lim
+        logger.debug("\tContour: Using existing canvas.")
 
     # Plot drift if requested
     if plot_drift:
@@ -132,22 +131,26 @@ def energy_contour(
             canvas=canvas,
             **params,
         )
-        logger.debug("\tPlotting particle's Pθ drift.")
+        logger.debug("\tContour: Plotting particle's Pθ drift.")
 
     # Set psi limits (Normalised to psi_wall)
     if type(psi_lim) is str:
         if psi_lim == "auto":
-            psi_diff = psi.max() - psi.min()
-            psi_mid = (psi.max() + psi.min()) / 2
+            psi_diff = cwp_psi.max() - cwp_psi.min()
+            psi_mid = (cwp_psi.max() + cwp_psi.min()) / 2
+            psi_diff, psi_mid = psi_diff.magnitude, psi_mid.magnitude
             psi_lower = max(0, psi_mid - 0.6 * psi_diff)
             psi_higher = psi_mid + 0.6 * psi_diff
             psi_lim = np.array([psi_lower, psi_higher])
-            logger.debug("\tUsing automatic ψ limits.")
     else:
         psi_lim = np.array(psi_lim) * psi_wall
-        logger.debug("\tUsing user-defined ψ limits.")
-    psi_min = psi_lim[0]
-    psi_max = psi_lim[1]
+
+    psi_lim = Q(psi_lim, "NUMagnetic_flux")
+    psi_min = psi_lim[0].magnitude
+    psi_max = psi_lim[1].magnitude
+
+    # Set theta lim.
+    theta_min, theta_max = lim
 
     # Calculate Energy values
     grid_density = config["contour_grid_density"]
@@ -155,16 +158,17 @@ def energy_contour(
         np.linspace(theta_min, theta_max, grid_density),
         np.linspace(psi_min, psi_max, grid_density),
     )
-    values = _calcW_grid(cwp, theta, psi, Pzeta0, contour_Phi, units)
-    span = np.array([values.min(), values.max()])
-    logger.debug(f"\tEnergy values span from {span[0]:.4g}{units} to {span[1]:.4g}{units}.")
+    WNU = Q(_calcWNU_grid(cwp, theta, psi, contour_Phi, units),"NUJoule")  # fmt: skip
+    W = (
+        WNU.to("keV")
+        if units == "SI"
+        else WNU if units == "NU" else WNU.to("keV")
+    )
+    span = np.array([W.magnitude.min(), W.magnitude.max()])
 
     # Configure contour plot
     if levels is None:  # If non is given
         levels = config["contour_levels"]
-        logger.debug("\tUsing default number of levels.")
-    else:
-        logger.debug(f"\tOverwritting default levels number to {levels}")
 
     if config["locator"] == "log":
         locator = ticker.LogLocator(base=1.05, numticks=levels)
@@ -181,12 +185,15 @@ def energy_contour(
     }
 
     # Contour plot
-    C = ax.contourf(theta, psi / psi_wall, values, **contour_kw)
+    C = ax.contourf(theta, psi / psi_wall.magnitude, W.magnitude, **contour_kw)
     ax.set_xlabel(r"$\theta$")
     ax.set_ylabel(r"$\psi/\psi_{wall}$", rotation=90)
     ticks = ["-2π", "-3π/2", "-π", "-π/2", "0", "π/2", "π", "3π/2", "2π"]
     plt.xticks(np.linspace(-2 * np.pi, 2 * np.pi, 9), ticks)
-    ax.set(xlim=[theta_min, theta_max], ylim=np.array(psi_lim) / psi_wall)
+    ax.set(
+        xlim=[theta_min, theta_max],
+        ylim=np.array(psi_lim.magnitude) / psi_wall.magnitude,
+    )
     ax.set_facecolor("white")
 
     # Wall shade
@@ -194,19 +201,18 @@ def energy_contour(
         rect = Rectangle(
             (lim[0], 1),
             2 * np.pi,
-            psi_max / psi_wall,
+            psi_max / psi_wall.magnitude,
             alpha=0.2,
             color="k",
         )
         ax.add_patch(rect)
-        logger.debug("\tAdding wall shade.")
 
     # Energy labels on contour lines (creates gaps to the contour for some reason)
     # plt.clabel(C, inline=1, fontsize=10, zorder=10)
 
     # Cursor
     def fmt(theta, psi):
-        E = _calcW_grid(
+        E = _calcWNU_grid(
             cwp,
             theta,
             psi * cwp.psi_wall,
@@ -215,7 +221,9 @@ def energy_contour(
             units=units,
         )
         return (
-            "theta={theta:.4f},\tpsi={psi:.4f},\tE={E:.4f} ".format(theta=theta, psi=psi, E=E)
+            "theta={theta:.4f},\tpsi={psi:.4f},\tE={E:.4f} ".format(
+                theta=theta, psi=psi, E=E
+            )
             + units
         )
 
@@ -223,7 +231,7 @@ def energy_contour(
 
     # Color bar Plotting
     if not _internal_call:
-        energies = cwp.__getattribute__(f"E_{units}")
+        energies = cwp.__getattribute__("E" + suffix).magnitude
         _ = _cbar(energies=energies, units=units, canvas=canvas, C=C)
 
     # Make plot interactive if requested
@@ -240,11 +248,10 @@ def energy_contour(
 # ---------------------------------------------------------------------------
 
 
-def _calcW_grid(
+def _calcWNU_grid(
     cwp,
     theta: np.array,
     psi: np.array,
-    Pzeta: float,
     contour_Phi: bool,
     units: str,
 ):
@@ -255,46 +262,30 @@ def _calcW_grid(
     Args:
         theta (np.array): The :math:`\theta` values.
         psi (np.array): The :math:`\psi` values.
-        Pzeta (float): The :math:`P_\zeta` value.
         contour_Phi (bool): Whether or not to add the electric potential term
             :math:`e\Phi`.
         units (str): The energy units.
     """
-    if contour_Phi:
-        logger.debug("\tAdding Φ term to the contour.")
-    logger.debug(f"\tCalculating energy values in a {theta.shape} grid.")
-
     # Get all needed attributes first
-    mNU = cwp.mNU
-    qNU = cwp.qNU
-    mu = cwp.mu
-    NU_to_eV = cwp.NU_to_eV
-    Volts_to_NU = cwp.Volts_to_NU
+    mu = cwp.muNU.magnitude
+    Pzeta = cwp.Pzeta0NU.magnitude
     qfactor = cwp.qfactor
-    Bfield = cwp.Bfield
-    Efield = cwp.Efield
+    bfield = cwp.bfield
+    efield = cwp.efield
+    g = bfield.gNU.magnitude
 
     r = np.sqrt(2 * psi)
-    B = Bfield.B(r, theta)
+    B = bfield.b(r, theta)
     psip = qfactor.psip_of_psi(psi)
 
-    rho = (Pzeta + psip) / Bfield.g
-    W = (qNU**2 / (2 * mNU)) * rho**2 * B**2 + mu * B  # Without Φ
+    rho = (Pzeta + psip) / g**2
+    W = (1 / 2) * rho**2 * B**2 + mu * B  # Without Φ
 
     # Add Φ if asked
     if contour_Phi:
-        Phi = Efield.Phi_of_psi(psi)
-        Phi *= Volts_to_NU
-        W += qNU * Phi  # all normalized
-
-    if units == "eV":
-        W *= NU_to_eV
-        logger.debug("\tPlotting energy levels in [eV]")
-    elif units == "keV":
-        W *= NU_to_eV / 1000
-        logger.debug("\tPlotting energy levels in [keV]")
-    else:
-        logger.debug("\tPlotting energy levels in [NU]")
+        Phi = efield.Phi_of_psi(psi)
+        W += Phi  # all normalized
+        logger.debug("\tContour: Adding Φ term to the contour.")
 
     return W
 

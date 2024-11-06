@@ -29,6 +29,7 @@ def drift(
     cwp,
     angle: str = "theta",
     lim: list = [-np.pi, np.pi],
+    units: str = "SI",
     **params,
 ):
     r"""Draws :math:`\theta - P_\theta` plot.
@@ -52,6 +53,13 @@ def drift(
             #. plot_initial : bool, optional
                 Whether or not to plot the initial point. Defaults to True
     """
+    logger.info(f"Plotting {angle}-P_{angle} drift...")
+
+    # Get all needed attributes first
+    q = getattr(cwp, angle).copy()
+    P_plot = getattr(cwp, "P" + angle).copy()
+    psi_wall = getattr(cwp, "psi_wall")
+
     # Unpack params
     _internal_call = params.pop("_internal_call", False)  # POP!
     canvas = params.pop("canvas", None)  # POP!
@@ -63,24 +71,22 @@ def drift(
     else:
         logger.enable("gcmotion")
 
-    logger.info(f"Plotting {angle}-P_{angle} drift...")
-
-    # Get all needed attributes first
-    q = getattr(cwp, angle)
-    P_plot = getattr(cwp, "P" + angle).copy()
-    psi_wall = cwp.psi_wall
-
+    # Setup canvas
     if canvas is None:
         fig = plt.figure(figsize=(12, 8))
         ax = fig.add_subplot(111)
         canvas = (fig, ax)
-        logger.debug("\tCreating a new canvas.")
+        logger.debug("\tDrift: Creating a new canvas.")
     else:
         fig, ax = canvas
-        logger.debug("\tUsing existing canvas.")
+        logger.debug("\tDrift: Using existing canvas.")
 
+    # Normalize Ptheta and set ylables
     if angle == "theta":  # Normalize to psi_wall
-        P_plot /= psi_wall
+        P_plot /= psi_wall  # Dimensionless
+        ylabel = rf"$P_\{angle}/\psi_w$"
+    else:
+        ylabel = rf"$P_\{angle}$" + f" [{P_plot.units:~P}]"
 
     # Set theta lim. Mods all thetas or zetas to 2π or [-π,π]
     q_plot, ax_lim = pi_mod(q, lim)
@@ -89,14 +95,16 @@ def drift(
     if different_colors:
         scatter_kw.pop("color", None)
 
+    # Scatter plot
     ax.scatter(q_plot, P_plot, **scatter_kw, zorder=2)
-    ax.set_xlabel(rf"$\{angle}$", fontsize=config["xfontsize"])
-    ax.set_ylabel(rf"$P_\{angle}/\psi_w$", fontsize=config["yfontsize"])
+    ax.set_xlabel(rf"$\{angle}$[{q.units:~P}s]", fontsize=config["xfontsize"])
+    ax.set_ylabel(ylabel, fontsize=config["yfontsize"])
 
     if plot_initial:
         ax.scatter(q[0], P_plot[0], c="k", s=10, zorder=3)
 
-    if angle == "zeta":  # Zoom out Pzeta y-axis
+    # Zoom out Pzeta y-axis
+    if angle == "zeta":
         current_ylim = np.array(ax.get_ylim())
         ax.set_ylim([current_ylim[0] / 5, current_ylim[1] * 5])
 
@@ -110,5 +118,5 @@ def drift(
         plt.ion()
         plt.show(block=True)
 
-    logger.info(f"{angle}-P_{angle} drift successfully plotted.")
+    logger.info(f"--> {angle}-P_{angle} drift successfully plotted.")
     logger.enable("gcmotion")

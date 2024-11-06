@@ -9,3 +9,6 @@ Utilites
 
 .. automodule:: gcmotion.utils.pi_mod
     :members: pi_mod
+
+.. automodule:: gcmotion.utils.get_size
+    :members: get_size

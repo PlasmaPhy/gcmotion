@@ -1,7 +1,6 @@
 import numpy as np
 import pint
 from time import time
-from pprint import pprint
 
 from gcmotion.tokamak.efield import Nofield
 
@@ -9,10 +8,15 @@ from gcmotion.utils._logger_setup import logger
 
 from gcmotion.configuration.particle_attributes import particle_attributes
 from gcmotion.utils.setup_pint import setup_pint
+from gcmotion.utils.pprint_dict import pprint_dict
+from gcmotion.utils.get_size import get_size
 
 from gcmotion.scripts.orbit import orbit
 
 # from gcmotion.classes.parabolas import Construct
+
+# Quantity alias for type annotations
+type Quantity = pint.UnitRegistry.Quantity
 
 
 class Particle:
@@ -43,7 +47,7 @@ class Particle:
     #. Time evolution arrays:
         theta, psi, zeta, rho, psip, Ptheta, Pzeta
     #. Configuration objects and parameters:
-        R, a, qfactor, Bfield, Efield, psi_wall, psip_wall
+        R, a, qfactor, bfield, efield, psi_wall
     #. Conversion factors and physical properties
         mass_amu, mass_kg, w0, E_unit,
         Volts_to_NU, NU_to_J, NU_to_eV
@@ -76,207 +80,208 @@ class Particle:
 
         Parameters
         ----------
-
         tokamak : dict
             A dict containing the tokamak's configuration:
 
-                R : float
-                    The tokamak's major radius in [m].
-                a : float
-                    The tokamak's minor radius in [m].
+                R : Quantity
+                    The tokamak's major radius dimensions of [length].
+                a : Quantity
+                    The tokamak's minor radius dimensions of [length].
+                B0 : Quantity
+                    The Magnetic field strength on the magnetic axis in dimensions of
+                    [Magnetic field strength].
                 qfactor : :py:class:`~gcmotion.tokamak.qfactor.QFactor`
                     Qfactor object that supports query methods for getting values
                     of :math:`q(\psi)` and :math:`\psi_p(\psi)`.
-                Bfield : :py:class:`~gcmotion.tokamak.bfield.MagneticField`
+                bfield : :py:class:`~gcmotion.tokamak.bfield.MagneticField`
                     Magnetic Field Object that supports query methods for getting values of the
                     field magnitude and its derivatives.
-                Efield : :py:class:`~gcmotion.tokamak.efield.ElectricField`
+                efield : :py:class:`~gcmotion.tokamak.efield.ElectricField`
                     Electric Field Object that supports query methods for getting values of the
                     field itself and the derivatives of its potential.
         parameters : dict
             A dict containing all the particle-specific parameters.
 
-            t_eval : np.array
-                The ODE time interval return values, [:math:`t_0, t_f`, steps], in normalised
-                time units [NU].
-            theta0, psi0, zeta0, Pzeta0 : floats
-                The particle's initial conditions:
-                [:math:`\theta_0, \psi_0, \zeta_0, P_{\zeta_0}`]) [NU]
-            mu : float
-                The magnetic moment in [NU].
-            species : str
-                The particle species, used to later set charge and mass automatically
-                (from :py:mod:`~gcmotion.configuration.particle_attributes`)
+                species : str
+                    The particle species, used to later set charge and mass automatically
+                    (from :py:mod:`~gcmotion.configuration.particle_attributes`)
+                mu : Quantity
+                    The magnetic moment in dimensions of [magnetic moment].
+                theta0, zeta0 : float
+                    The :math:`\theta_0, \zeta_0` initial conditions (radians-dimensionless).
+                psi0, Pzeta0 : Quantity
+                    The :math:`\psi_0, P_{\zeta_0}` initial conditons in dimensions of [Magnetic flux].
+                t_eval : Quantity (np.ndarray)
+                    The ODE time interval return values, [:math:`t_0, t_f`, steps], in dimensions
+                    of [time].
 
         """
-        logger.info("--------Initializing particle--------")
+        logger.info(f"--------Initializing {particle_attributes[parameters["species"]+"_name"]}--------")  # fmt: skip
 
-        def setup_constants():
+        def setup_input():
+            r"""Parses input and sets all parameters  as attributes in both SI and NU units"""
+            logger.info("Setting up input parameters in SI and NU...")
+            # SI attributes
+            self.R = tokamak["R"].to("meters")
+            self.a = tokamak["a"].to("meters")
+            self.B0 = tokamak["B0"].to("Tesla")
+            self.theta0 = parameters["theta0"]
+            self.zeta0 = parameters["zeta0"]
+
+            # CAUTION! psi was defined with respect to psi_wall
+            self.psi_wall = (self.B0 * self.a**2 / 2).to("Magnetic_flux")
+            self.psi0 = parameters["psi0"] * self.psi_wall
+            self.Pzeta0 = parameters["Pzeta0"].to("Magnetic_flux")
+            self.t_eval = parameters["t_eval"].to("seconds")
+
+            # Corresponding NU attributes
+            self.RNU = self.R.to("NUmeters")
+            self.aNU = self.a.to("NUmeters")
+            self.B0NU = self.B0.to("NUTesla")
+
+            self.psi_wallNU = self.psi_wall.to("NUMagnetic_flux")
+            self.psi0NU = self.psi0.to("NUMagnetic_flux")
+            self.Pzeta0NU = self.Pzeta0.to("NUmagnetic_flux")
+            self.t_evalNU = self.t_eval.to("NUseconds")
+
+        def setup_species():
             """Grabs particle's constants from ``particle_attributes.py``"""
-
             logger.info("Setting up particle's constants...")
 
             self.species = parameters["species"].lower()
+            M = particle_attributes[self.species + "_M"]  # Purely numeric
+            Z = particle_attributes[self.species + "_Z"]  # Purely numeric
 
-            M = particle_attributes[self.species + "_mNU"]
-            Z = particle_attributes[self.species + "_qNU"]
+            self.miNU = self.Q(M, "Proton_mass")
+            self.qiNU = self.Q(Z, "Proton_charge")
 
-            self.mNU = self.Q(M, "Proton_mass")
-            self.qNU = self.Q(Z, "Proton_charge")
-
-            self.mi = self.mNU.to("kilogram")
-            self.qi = self.qNU.to("Coulomb")
-
-            logger.debug(f"\tParticle is of species '{self.species}'.")
-            logger.info("--> Particle's constants setup successful")
+            self.mi = self.miNU.to("kilogram")
+            self.qi = self.qiNU.to("Coulomb")
 
         def setup_tokamak():
             """Sets up tokamak-related attributes."""
-
             logger.info("Setting up Tokamak...")
 
-            # Dimensions
-            self.R = self.Q(tokamak["R"], "meters")
-            self.a = self.Q(tokamak["a"], "meters")
-
-            logger.debug(f"\tTokamak dimensions: R = {self.R}, a = {self.a}")
-
-            # Objects
             self.qfactor = tokamak["qfactor"]
+            self.bfield = tokamak["bfield"]
 
-            self.Bfield = tokamak["Bfield"]
-            self.B0 = self.Q(self.Bfield.B0, "Tesla")
-            self.g = self.Q(self.Bfield.g, "Tesla * m")
-            self.i = self.Q(self.Bfield.i, "Tesla * m")
-            self.B0NU = self.Q(
-                self.mNU.magnitude / self.qNU.magnitude, "NUTesla"
-            )
-
-            Efield = tokamak["Efield"]
-            if Efield is None or isinstance(Efield, Nofield):
-                self.Efield = Nofield()
+            efield = tokamak["efield"]
+            if efield is None or isinstance(efield, Nofield):
+                self.efield = Nofield()
                 self.has_efield = False
             else:
-                self.Efield = Efield
+                self.efield = efield
                 self.has_efield = True
 
-            logger.debug(f"\t'{self.qfactor.id}' qfactor used with parameters {self.qfactor.params}")  # fmt: skip
-            logger.debug(f"\t'{self.Bfield.id}' Bfield used with parameters {self.Bfield.params}")  # fmt: skip
-            logger.debug(f"\t'{self.Efield.id}' Efield used with parameters {self.Efield.params}")  # fmt: skip
-
-            self.psi_wall = self.B0 * self.a**2 / 2  # Tesla * m^2
             self.psip_wall = self.Q(
                 self.qfactor.psip_of_psi(self.psi_wall.magnitude),
                 self.psi_wall.units,
-            )  # Tesla * m^2
-
-            logger.info("--> Tokamak setup successful.")
+            )
+            self.psip_wallNU = self.psip_wall.to("NUmagnetic_flux")
 
         def setup_parameters():
             """Sets up the particles initial condition and parameters, as well as the solver's S0."""
-
             logger.info("Setting up particle's initial conditions...")
 
-            muB = self.Q(parameters["muB"], "keV")
-            self.mu = muB / self.B0  # keV / Tesla
+            # Mu parsing
+            r0 = ((self.psi0 / self.B0) ** (1 / 2)).to("meters")
+            B_init = (self.B0 * self.bfield.b(r0.magnitude, self.theta0)).to(
+                "Tesla"
+            )
+            if "mu" in parameters.keys():
+                self.mu = parameters["mu"].to("Magnetic_moment")
+                self.muB = (self.mu * B_init).to("keV")
+            elif "muB" in parameters.keys():
+                self.muB = parameters["muB"].to("keV")
+                self.mu = self.muB / B_init
 
-            self.theta0 = self.Q(parameters["theta0"], "radians")
-            self.zeta0 = self.Q(parameters["zeta0"], "radians")
-
-            self.Pzeta0 = self.Q(
-                parameters["Pzeta0"], "NUCanonical_momentum"
-            ).to("Tesla * meter ** 2")
-
-            # CAUTION! psi was difined with respect to psi_wall
-            self.psi0 = parameters["psi0"] * self.psi_wall  # Tesla * m^2
+            # SI attributes
             self.psip0 = self.Q(
-                self.qfactor.psip_of_psi(self.psi0.magnitude),
-                self.psi0.units,
-            )  # Tesla * m^2
+                self.qfactor.psip_of_psi(self.psi0NU.magnitude),
+                self.psi0NU.units,
+            ).to("Magnetic_flux")
 
-            # [rho] = Magnetic_flux / Plasma_current = meters
-            self.rho0 = (self.Pzeta0 + self.psip0) / self.g
-            self.rho0 = self.rho0.to_base_units()
-
-            self.Ptheta0 = self.psi0 + self.rho0 * self.i  # Tesla * meter ** 2
-
-            self.t_eval = self.Q(parameters["t_eval"], "seconds")
-
-            logger.debug("ODE initial conditions:\n"+ f"\ttheta0 = {self.theta0:.5g}, psi0 = {self.psi0:.5g}, zeta0 = {self.zeta0:.5g}, Pzeta0 = {self.Pzeta0:.5g}.")  # fmt: skip
-            logger.debug("\tOther initial conditions:\n"+ f"\tPtheta0 = {self.Ptheta0:.5g}, psip0 = {self.psip0:.5g}, rho0 = {self.rho0:.5g}, mu = {self.mu:.5g}")  # fmt: skip
-            logger.debug(f"\tTime span (t0, tf, steps): ({self.t_eval[0]}, {self.t_eval[-1]}, {len(self.t_eval)})")  # fmt: skip
-            logger.info("--> Initial conditions setup successful.")
-
-        def setup_logic_flags():
-            """Sets up logic flags and initializes variables that must have an initial value"""
-
-            logger.info("Setting up logic flags...")
-
-            self.t_or_p = "Unknown"
-            self.l_or_c = "Unknown"
-
-            # Stored initially to avoid attribute errors
-            self.z_0freq = self.z_freq = self.theta_0freq = self.theta_freq = (
-                None
+            self.rho0 = ((self.Pzeta0 + self.psip0) / self.bfield.g).to(
+                "meters"  # Note: [rho] = Magnetic_flux / Plasma_current = meters
             )
 
-            logger.info("--> Logic flags setup successful.")
+            self.Ptheta0 = (self.psi0 + self.rho0 * self.bfield.i).to(
+                "Magnetic_flux"
+            )
 
-        _, self.Q = setup_pint(tokamak["R"], tokamak["Bfield"].B0)
-        setup_constants()
+            # Corresponding NU attributes
+            self.muNU = self.mu.to("NUMagnetic_moment")
+            self.muBNU = self.muB.to("NUkeV")
+            self.psip0NU = self.psip0.to("NUMagnetic_flux")
+            self.rho0NU = self.rho0.to("NUMeters")
+            self.Ptheta0NU = self.Ptheta0.to("NUMagnetic_flux")
+
+        self.ureg, self.Q = setup_pint(
+            R=tokamak["R"].magnitude,
+            B0=tokamak["bfield"].B0.magnitude,
+            species=parameters["species"],
+        )
+
+        setup_input()
+        setup_species()
+        self.input_vars = vars(self).copy()  # Store input values
         setup_tokamak()
         setup_parameters()
-        setup_logic_flags()
+        self.clean_size = self.Q(get_size(self), "bytes")
 
         logger.info("--------Particle Initialization Completed--------\n")
 
     def __str__(self):
-        # info_str = (
-        #     "Constants of motion:\n"
-        #     + "\tParticle Energy (normalized):\tE = {:e}\n".format(self.ENU)
-        #     + "\tParticle Energy (eV):\t\tE = {:e} eV\n".format(self.E_eV)
-        #     + "\tParticle Energy (J):\t\tE = {:e} J\n".format(self.E_J)
-        #     + f"\tToroidal Momenta:\t\tPζ = {self.Pzeta0}\n\n"
-        #     + "Other Quantities:\n"
-        #     + f'\tParticle of Species:\t\t"{self.species}"\n'
-        #     + f"\tOrbit Type:\t\t\t{self.orbit_type_str}\n"
-        #     + f"\tMajor Radius:\t\t\tR = {self.R} meters\n"
-        #     + f"\tMinor Radius:\t\t\tα = {self.a} meters\n"
-        #     + "\tToroidal Flux at wall:\t\tψ = {:n}\n".format(self.psi_wall)
-        #     + "\tTime unit:\t\t\tω = {:e} Hz \n".format(self.w0)
-        #     + "\tEnergy unit:\t\t\tE = {:e} J \n\n".format(self.E_unit)
-        #     + self.solver_output
-        # )
+        particle_name = particle_attributes[self.species + "_name"]
+        size = self.Q(get_size(self), "bytes")
+        EkeV = f"{self.EkeV:.4g~#P}" if hasattr(self, "EkeV") else "Unknown"
 
-        info_str = "foo"
+        solver_output = getattr(self, "solver_output", "")
 
-        return info_str
-
-    def __repr__(self):
-        formal_species = {"p": "Proton", "e": "Electron"}
-
-        out = f"{formal_species[self.species]} with energy E = {self.E_eV/1000:.4g}keV."
-        return out
-
-    def quantities(self):
-        """Prints the pint Quantities of the object"""
-        d = self.__dict__.copy()
-        del d["t_eval"]
-        d["t_eval_start"] = self.t_eval[:5]
-        d["t_eval_end"] = self.t_eval[-5:]
-        pprint(
-            [
-                f"{key} = {value:.4g~}"
-                for key, value in d.items()
-                if isinstance(value, pint.Quantity)
-            ]
+        # fmt: off
+        tokamak = (
+            "Tokamak:\n"
+            + f"{'R':>25} : " + f"{self.R:.4g~P}" + "\n"
+            + f"{'a':>25} : " + f"{self.a:.4g~P}" + "\n"
+            + f"{'B0':>25} : " + f"{self.B0:.4g~P}" + "\n"
+            + f"{'q-factor':>25} : " + f"{self.qfactor}" + "\n"
+            + f"{'Magnetic Field':>25} : " + f"{self.bfield}" + "\n"
+            + f"{'Electric Field':>25} : " + f"{self.efield}" + "\n"
         )
+
+        particle = (
+            "Particle:\n"
+            + f"{'Particle species':>25} : " + particle_name +"\n"
+            + f"{'Energy (keV)':>25} : "+ f"{EkeV}\n"
+        )
+
+        diagnostics = (
+            "\nDiagnostics:\n"
+            + f"{'Init particle size':>25} : " + f"{self.clean_size:.3g~#P}\n"
+            + f"{'Full particle size':>25} : " + f"{size:.3g~#P}\n"
+        )
+        # fmt: on
+
+        return tokamak + particle + diagnostics + solver_output
+
+    def quantities(
+        self,
+        which="",
+        everything=False,
+    ):
+        """Prints the pint Quantities of the object"""
+
+        units = "NU" if "NU" in which else "SI" if "SI" in which else ""
+
+        if "input" in which:
+            pprint_dict(self.input_vars, everything=everything, units=units)
+        else:
+            pprint_dict(self.__dict__, everything=everything, units=units)
 
     def run(
         self,
         orbit=True,
-        units: str = "SI",
-        info: bool = True,
+        info: bool = False,
         events: list = [],
     ):
         r"""
@@ -296,59 +301,81 @@ class Particle:
             when studying particle properties that only depend on initial conditions.
             Defaults to True.
         info : bool
-            Whether or not to print the particle's calculated attributes. Defaults to True.
+            Whether or not to print the particle's calculated attributes. Defaults to False.
         events : list
             The list of :py:mod:`~gcmotion.scripts.events` to be passed to the solver. Defaults to [].
 
         """
         logger.info("--------Particle's 'run' routine is called.---------")
 
-        # self._conversion_factors()
         self._energies()
-        self._orbit_type()
+        # self._orbit_type()
 
         if orbit:
+            logger.info("Calculating orbit in NU...")
             start = time()
-            solution = self._orbit(events=events, units=units)
+            solution = self._orbit(events=events)
             end = time()
+            solve_time = self.Q(end - start, "seconds")
+            logger.info(f"Calculation complete. Took {solve_time:.4g~#P}.")  # fmt: skip
 
-            self.theta = solution["theta"]
-            self.psi = solution["psi"]
-            self.zeta = solution["zeta"]
-            self.rho = solution["rho"]
-            self.psip = solution["psip"]
-            self.Ptheta = solution["Ptheta"]
-            self.Pzeta = solution["Pzeta"]
-            self.t_eval_sol = solution["t_eval"]  # Returns them dimensionless
-            self.t_events = solution["t_events"]
-            self.y_events = solution["y_events"]
-            self.message = solution["message"]
+            # fmt: off
+            self.theta      = self.Q(solution["theta"], "radians")
+            self.zeta       = self.Q(solution["zeta"], "radians")
+            self.psiNU      = self.Q(solution["psi"], "NUMagnetic_flux")
+            self.rhoNU      = self.Q(solution["rho"], "NUmeters")
+            self.psipNU     = self.Q(solution["psip"], "NUMagnetic_flux")
+            self.PthetaNU   = self.Q(solution["Ptheta"], "NUMagnetic_flux")
+            self.PzetaNU    = self.Q(solution["Pzeta"], "NUMagnetic_flux")
+            self.t_evalNU   = self.Q(solution["t_eval"], "NUseconds")
+            self.t_eventsNU = self.Q(solution["t_events"], "NUseconds")
+            self.y_events   = solution["y_events"]
+            message         = solution["message"]
 
-            duration = f"{end-start:.4f}"
-            self.calculated_orbit = True
+            # Converting back to SI
+            logger.info("Converting results to SI...")
+            start = time()
+            self.psi        = self.psiNU.to("Magnetic_flux")
+            self.rho        = self.rhoNU.to("meters")
+            self.psip       = self.psipNU.to("Magnetic_flux")
+            self.Ptheta     = self.PthetaNU.to("Magnetic_flux")
+            self.Pzeta      = self.PzetaNU.to("Magnetic_flux")
+            self.t_eval     = self.t_evalNU.to("seconds")
+            self.t_events   = self.t_eventsNU.to("seconds")
+            end = time()
+            conversion_time = self.Q(end-start, "seconds")
+
+            logger.info(f"Conversion completed. Took {conversion_time:.4g~#P}.")  # fmt: skip
+
             self.solver_output = (
-                f"Solver output: {self.message}\n"
-                + f"Orbit calculation time: {duration}s."
+                "\nSolver output:\n"
+                + f"{'Message':>25} : " + f"{message}\n" 
+                + f"{'Orbit calculation time':>25} : " + f"{solve_time:.4g~#P}\n"
+                + f"{'Conversion to SI time':>25} : " + f"{conversion_time:.4g~#P}"
             )
-            logger.info(f"Orbit calculation completed. Took {duration}s")
+            # fmt: on
         else:
-            self.solver_output = ""
+            self.solver_output = (
+                "\nSolver output: Orbit Calculation deliberately skipped.\n"
+            )
             logger.info("\tOrbit calculation deliberately skipped.")
 
         if info:
-            logger.info("Printing Particle.__str__() to stdout.")
             print(self.__str__())
-        logger.info("Printing Particle.__str__():\n\t\t\t" + self.__str__())
 
     def _energies(self):
         r"""
         Calculates the particle's energy in [NU], [eV] and [J], using
         its initial conditions and the conversion factors.
         """
-        r0 = (2 * self.psi0 / self.B0) ** (1 / 2)  # math.sqrt doesn't work
+        logger.info("Calculating Energies...")
+        # SI Energies
+        r_init = (2 * self.psi0 / self.B0) ** (1 / 2)
 
-        B_init = self.B0 * self.Bfield.B(r0.magnitude, self.theta0.magnitude)
-        Phi_init = self.Q(self.Efield.Phi_of_psi(self.psi0.magnitude), "Volts")
+        b_init = self.bfield.b(r_init.magnitude, self.theta0)
+        B_init = self.B0 * b_init
+        Phi_init = self.Q(self.efield.Phi_of_psi(self.psi0.magnitude), "Volts")
+
         self.E = (
             self.qi**2 / (2 * self.mi) * self.rho0**2 * B_init**2
             + self.mu * B_init
@@ -357,7 +384,9 @@ class Particle:
 
         self.EeV = self.E.to("eV")
         self.EkeV = self.E.to("keV")
-        logger.info("Calculated particle's energies(NU, eV, J).")
+
+        # Corresponding NU Energy
+        self.ENU = self.E.to("NUJoule")
 
     def _orbit_type(self):
         r"""
@@ -378,7 +407,7 @@ class Particle:
         """
         logger.info("Calculating particle's orbit type:")
 
-        if (self.has_efield) or (not self.Bfield.is_lar):
+        if (self.has_efield) or (not self.bfield.is_lar):
             self.orbit_type_str = "Cannot calculate (Electric field is present, or Magnetic field is not LAR.)"
             logger.warning(
                 "\tElectric field is present, or Magnetic field is not LAR. Orbit type calculation is skipped."
@@ -387,9 +416,9 @@ class Particle:
 
         # Calculate Bmin and Bmax. In LAR, B decreases outwards.
         # "Bmin occurs at psi_wall, θ = 0"
-        Bmin = self.B0 * self.Bfield.B(self.a.magnitude, 0)
+        Bmin = self.B0 * self.bfield.B(self.a.magnitude, 0)
         # "Bmax occurs at psi_wall, θ = π"
-        Bmax = self.B0 * self.Bfield.B(self.a.magnitude, np.pi)
+        Bmax = self.B0 * self.bfield.B(self.a.magnitude, np.pi)
 
         # Find if trapped or passing from rho (White page 83)
         sqrt1 = 2 * self.E - 2 * self.mu * Bmin
@@ -432,7 +461,7 @@ class Particle:
             f"--> Orbit type completed. Result: {self.orbit_type_str}."
         )
 
-    def _orbit(self, events: list = [], units: str = "NU"):
+    def _orbit(self, events: list = [], units: str = "SI"):
         """Groups the particle's initial conditions and passes the to the solver Script
         :py:mod:`~gcmotion.scripts.orbit`. The unpacking takes place in
         :py:mod:`~gcmotion.classes.particle.Particle.run`.
@@ -459,25 +488,13 @@ class Particle:
             "psi0"   : self.psi0.to("NUMagnetic_flux"),            
             "rho0"   : self.rho0.to("NUmeter"),
             "mu"     : self.mu.to("NUMagnetic_moment"),
-            "mi"     : self.mi.to("Proton_mass"),
-            "qi"     : self.qi.to("Proton_charge"),
-            "B0"     : self.B0.to("NUTesla"),
-            "VtoVNU" : self.Q("1V").to("NUVolts"),
         }
 
         profile = {
             "qfactor": self.qfactor,
-            "Bfield": self.Bfield,
-            "Efield": self.Efield,
+            "bfield" : self.bfield,
+            "efield" : self.efield,
         }
         # fmt: on
 
-        pprint(
-            [
-                f"{key} = {value:.4g~}"
-                for key, value in parameters.items()
-                if isinstance(value, pint.Quantity)
-            ]
-        )
-
-        return orbit(t, parameters, profile, units=units, events=events)
+        return orbit(t, parameters, profile, events=events)

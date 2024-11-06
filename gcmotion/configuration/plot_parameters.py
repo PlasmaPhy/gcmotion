@@ -12,7 +12,8 @@ time_evolution = {
         "color" : "blue",
         "marker" : "o",
     },
-    
+
+    "labelpad" : 45,
     "ylabel_args": {
         "rotation": 0,
         "fontsize" : 15,
@@ -34,8 +35,8 @@ drift = {
         "color" : "red",
     },
 
-    "yfontsize": 20,
-    "xfontsize": 20,
+    "yfontsize": 15,
+    "xfontsize": 15,
 }
 
 energy_contour = {

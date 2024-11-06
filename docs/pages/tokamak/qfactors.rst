@@ -25,6 +25,7 @@ in :py:class:`~gcmotion.tokamak.qfactor.QFactor` are implied.
 .. autoclass:: Unity
 
 .. autoclass:: Parabolic
+   :members: __init__
 
 .. autoclass:: Hypergeometric
    :members: __init__

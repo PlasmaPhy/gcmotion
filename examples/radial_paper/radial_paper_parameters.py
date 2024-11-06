@@ -15,7 +15,7 @@ params = {
     "a"           :   a,
     "qfactor"     :   qfactor,
     "Bfield"      :   gcm.bfield.LAR(i = 0, g = 1, B0 = 1),
-    "Efield"      :   gcm.efield.Radial(R, a, qfactor, Ea = 73500, minimum = 0.98, r_w=1/50),
+    "Efield"      :   gcm.efield.Radial(R, a, qfactor, Ea = 73500, peak = 0.98, r_w=1/50),
     "species"     :   "he3",
     "mu"          :   0.0000019173,
     "theta0"      :   np.concat((np.repeat(0, 6), np.repeat(np.pi, 2))),

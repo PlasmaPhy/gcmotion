@@ -41,8 +41,8 @@ This is how ``orbit`` is called inside the class :py:class:`Particle`:
 
     profile = {
         "qfactor": self.qfactor,
-        "Bfield": self.Bfield,
-        "Efield": self.Efield,
+        "bfield": self.bfield,
+        "efield": self.efield,
         "Volts_to_NU": self.Volts_to_NU,
     }
 
@@ -84,7 +84,6 @@ def orbit(
     t: np.ndarray,
     parameters: dict,
     profile: dict,
-    units: str = "SI",
     events: list = [],
 ):
     r"""Wrapper function around SciPy's solve_ivp().
@@ -127,70 +126,69 @@ def orbit(
             #. The solver status message.
 
     """
-    logger.info(f"Calculating orbit with events {events}")
-    # # Convert to NU
-    # if units == "NU":
-    #     t = t.toNU()
-    #     for key, value in parameters.items():
-    #         parameters[key] = value.toNU()
-
-    # Time array
-    t = t.magnitude
 
     # Constants of motion
     mu = parameters["mu"].magnitude
-    mi = parameters["mi"].magnitude
-    qi = parameters["qi"].magnitude
-    B0 = parameters["B0"].magnitude
-    VtoVNU = parameters["VtoVNU"].magnitude
 
     # Initial Conditions
+    t = t.magnitude
     S0 = [
-        parameters["theta0"].magnitude,
+        parameters["theta0"],
         parameters["psi0"].magnitude,
-        parameters["zeta0"].magnitude,
+        parameters["zeta0"],
         parameters["rho0"].magnitude,
     ]
 
     # Tokamak profile
     qfactor = profile["qfactor"]
-    Bfield = profile["Bfield"]
-    Efield = profile["Efield"]
+    bfield = profile["bfield"]
+    efield = profile["efield"]
+
+    # Define quantites for the solver for clarity
+    B0 = bfield.B0NU.magnitude
+    i = bfield.iNU.magnitude
+    g = bfield.gNU.magnitude
+    q_of_psi = qfactor.q_of_psi
+    b_values = bfield.b_values
+    e_values = efield.e_values
+
+    logger.debug(f"\tSolver: Using B0 = {bfield.B0NU:.4g~P}, i={bfield.iNU:.4g~P}, g={bfield.gNU:.4g~P}")  # fmt: skip
+    logger.debug(f"\tSolver: (t0, tf, steps)=({t[0]:.4g}, {t[-1]:.4g}, {len(t)})")  # fmt: skip
+    logger.debug(f"\tSolver: theta0={S0[0]:.4g}, psi0={S0[1]:.4g}, zeta0={S0[2]:.4g}, rho0={S0[3]:.4g}")  # fmt: skip
+    logger.debug(f"\tSolver: mu={mu:.4g}")  # fmt: skip
 
     def dSdt(t, S):
         """Sets the diff equations system to pass to scipy.
 
-        All values are in normalized units (NU).
+        All values are in normalized units [NU].
         """
 
         theta, psi, z, rho = S
 
         # Intermediate values
-        phi_der_psip, phi_der_theta = Efield.Phi_der(psi)
-        phi_der_psip *= VtoVNU
-        phi_der_theta *= VtoVNU
-        B_der_psi, B_der_theta = Bfield.B_der(psi, theta)
-        q = qfactor.q_of_psi(psi)
+        phi_der_psi, phi_der_theta = e_values(psi)
+        b, b_der_psi, b_der_theta = b_values(psi, theta)
+        q = q_of_psi(psi)
+
         r = sqrt(2 * psi)
-        B = B0 * Bfield.B(r, theta)
-        par = mu + (qi**2 / mi) * rho**2 * B
-        bracket1 = par * q * B_der_psi + qi * phi_der_psip
-        bracket2 = par * B_der_theta + qi * phi_der_theta
-        D = Bfield.g * q + Bfield.i
+        B = B0 * bfield.b(r, theta)
+        par = mu + rho**2 * B
+        phi_der_psip = q * phi_der_psi
+        bracket1 = -par * q * b_der_psi + phi_der_psip
+        bracket2 = par * b_der_theta + phi_der_theta
+        D = g * q + i
 
         # Canonical Equations
-        theta_dot = (qi / mi) / D * rho * B**2 + Bfield.g / (D * qi) * bracket1
-        psi_dot = -Bfield.g * q / (D * qi) * bracket2
-        rho_dot = psi_dot / (Bfield.g * q)
-        z_dot = q * (
-            (qi / mi) * rho * B**2 / D - Bfield.i / (D * qi) * bracket1
-        )
+        theta_dot = 1 / D * rho * B**2 + g / D * bracket1
+        psi_dot = -g * q / D * bracket2
+        rho_dot = psi_dot / (g * q)
+        z_dot = q * (rho * B**2 / D - i / D * bracket1)
 
         return [theta_dot, psi_dot, z_dot, rho_dot]
 
     t_span = (t[0], t[-1])
     sol = solve_ivp(
-        dSdt,
+        fun=dSdt,
         t_span=t_span,
         y0=S0,
         t_eval=t,
@@ -209,12 +207,10 @@ def orbit(
     y_events = sol.y_events
     message = f"{sol.status}: {sol.message}"
 
-    logger.debug(f"Solver status: {message}")
-
     # Calculate psip and Canonical Momenta
     psip = qfactor.psip_of_psi(psi)
-    Ptheta = psi + rho * Bfield.i
-    Pzeta = rho * Bfield.g - psip
+    Ptheta = psi + rho * i
+    Pzeta = rho * g - psip
 
     solution = {
         "theta": theta,

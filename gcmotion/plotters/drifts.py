@@ -28,6 +28,7 @@ from gcmotion.configuration.plot_parameters import drift as config
 def drifts(
     cwp,
     theta_lim: list = [-np.pi, np.pi],
+    units: str = "SI",
     **params,
 ):
     r"""
@@ -42,14 +43,17 @@ def drifts(
         The current working particle.
     theta_lim : list, optional
         Plot xlim. Must be either [0,2π] or [-π,π]. Defaults to [-π,π].
-    params : dict
-        Extra arguements if called for many particles.
+    units : str, optional
+        The unit system. Can be either 'SI' or 'NU'. Defauls to "SI".
     params : dict, optional
         Extra arguements if called for many particles:
 
             #. plot_initial : bool, optional
                 Whether or not to plot the initial point. Defaults to True
     """
+    suffix = "NU" if units == "NU" else "" if units == "SI" else ""
+    logger.info(f"Plotting θ-Pθ and ζ-Pζ drifts in {"NU" if suffix=="NU" else "SI"}...")  # fmt: skip
+
     # Unpack params
     _internal_call = params.pop("_internal_call", False)  # POP!
     canvas = params.pop("canvas", None)  # POP!
@@ -60,23 +64,22 @@ def drifts(
         logger.disable("gcmotion")
     else:
         logger.enable("gcmotion")
-    logger.info("Plotting θ-Pθ and ζ-Pζ drifts...")
 
     # Get all needed attributes first
-    psi_wall = cwp.psi_wall
-    theta = cwp.theta
-    Ptheta = cwp.Ptheta
-    zeta = cwp.zeta
-    Pzeta = cwp.Pzeta
+    theta = getattr(cwp, "theta").copy()
+    zeta = getattr(cwp, "zeta").copy()
+    psi_wall = getattr(cwp, "psi_wall" + suffix).copy()
+    Ptheta = getattr(cwp, "Ptheta" + suffix).copy()
+    Pzeta = getattr(cwp, "Pzeta" + suffix).copy()
 
     if canvas is None:
         fig, ax = plt.subplots(1, 2, figsize=(12, 6))
         fig.tight_layout()
         canvas = (fig, ax)
-        logger.debug("\tCreating a new canvas.")
+        logger.debug("\tDrifts: Creating a new canvas.")
     else:  # Use external canvas
         fig, ax = canvas
-        logger.debug("\tUsing existing canvas.")
+        logger.debug("\tDrifts: Using existing canvas.")
 
     fig.suptitle(r"Drift orbits of $P_\theta - \theta$ and $P_\zeta - \zeta$")
 
@@ -91,16 +94,14 @@ def drifts(
     ax[0].scatter(theta_plot, Ptheta / psi_wall, **config["scatter_args"])
     ax[1].scatter(zeta, Pzeta, **config["scatter_args"])
 
-    ax[0].set_xlabel(r"$\theta$", fontsize=config["xfontsize"])
-    ax[1].set_xlabel(r"$\zeta$", fontsize=config["xfontsize"])
+    ax[0].set_xlabel(r"$\theta$" + f"[{theta.units:~P}]", fontsize=config["xfontsize"])  # fmt: skip
+    ax[1].set_xlabel(r"$\zeta$" + f"[{zeta.units:~P}]", fontsize=config["xfontsize"])  # fmt: skip
 
-    ax[0].set_ylabel(r"$P_\theta$", fontsize=config["yfontsize"])
-    ax[1].set_ylabel(r"$P_ζ$", fontsize=config["yfontsize"])
+    ax[0].set_ylabel(r"$P_\theta/\psi_{wall}$", fontsize=config["yfontsize"])  # fmt: skip
+    ax[1].set_ylabel(r"$P_ζ$" + rf"$[{Ptheta.units:~#P}]$", fontsize=config["yfontsize"])  # fmt: skip
 
     if plot_initial:
-        ax[0].scatter(
-            theta_plot[0], Ptheta[0] / psi_wall, c="k", s=10, zorder=3
-        )
+        ax[0].scatter(theta_plot[0], Ptheta[0] / psi_wall, c="k", s=10, zorder=3)  # fmt: skip
         ax[1].scatter(zeta[0], Pzeta[0], c="k", s=10, zorder=3)
 
     # Zoom out Pzeta y-axis

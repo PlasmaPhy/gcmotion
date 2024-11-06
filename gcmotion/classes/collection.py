@@ -137,9 +137,7 @@ class Collection:
             print(
                 "Error: Multiple valued parameters must all be of same length"
             )
-            logger.error(
-                "Error: Multiple valued parameters must all be of same length"
-            )
+            logger.error("Error: Multiple valued parameters must all be of same length")  # fmt: skip
             return False
 
     def _create(self):
