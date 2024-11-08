@@ -174,7 +174,8 @@ def fixed_points(
 
         return theta_solution, P_theta_solution
 
-    fixed_points = []
+    fixed_points = np.empty((3 * iterations, 2))
+    fixed_points[:] = np.nan
 
     theta_min_init = -np.pi + 0.001
     theta_max_init = np.pi - 0.001
@@ -190,6 +191,8 @@ def fixed_points(
         P_theta_min_init + (P_theta_max_init - P_theta_min_init) * P_thetas_init_mod
     )
 
+    idx = 0
+
     # Run fixed_point() for multiple initial conditions in order to locate
     # multiple fixed points
     for theta_init in thetas_init:
@@ -198,19 +201,20 @@ def fixed_points(
             initial_condition = [theta_init, P_theta_init]
 
             theta_fix, P_theta_fix = fixed_point(initial_condition=initial_condition)
-            fixed_points.append([float(theta_fix), float(P_theta_fix)])
+            fixed_points[idx] = [float(theta_fix), float(P_theta_fix)]
+            idx += 1
 
     # A lot of the fixed points that were found have identical values-->
     # find out how many distinct fixed points were located
     distinct_fixed_points = distinctify(fixed_points)
-    num_of_dfp = len(distinct_fixed_points)
+    num_of_dfp = distinct_fixed_points.shape[0]
 
     if info:
 
         print(f"\nFixed Points: {fixed_points}\n")
-        print(f"Number of Fixed Points: {len(fixed_points)}")
+        print(f"Number of Fixed Points: {fixed_points.shape[0]}")
 
         print(f"\nDistinct Fixed Points: {distinct_fixed_points}\n")
-        print(f"Number of Distinct Fixed Points: {len(distinct_fixed_points)}\n")
+        print(f"Number of Distinct Fixed Points: {distinct_fixed_points.shape[0]}\n")
 
     return num_of_dfp, distinct_fixed_points

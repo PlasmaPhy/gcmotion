@@ -42,7 +42,7 @@ def bifurcation_plot(
     for i, p in enumerate(particles):
         P_zeta = p.Pzeta0
         y_list = thetas_fixed[i]
-        P_zeta_plot.extend([P_zeta] * len(y_list))
+        P_zeta_plot.extend([P_zeta] * y_list.shape[0])
         theta_plot.extend(y_list)
 
     # ax_theta.set_title("theta Bifurcation Diagram")
@@ -55,7 +55,7 @@ def bifurcation_plot(
     for i, p in enumerate(particles):
         P_zeta = p.Pzeta0
         y_list = P_thetas_fixed[i]
-        P_zeta_plot.extend([P_zeta] * len(y_list))
+        P_zeta_plot.extend([P_zeta] * y_list.shape[0])
         P_theta_plot.extend(y_list)
 
     P_theta_plot = [P_theta / psi_wall for P_theta in P_theta_plot]

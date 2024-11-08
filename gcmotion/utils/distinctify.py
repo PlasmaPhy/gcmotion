@@ -18,13 +18,18 @@ determine which points [x,y] can be considered distinct.
 
 """
 
+import numpy as np
 
-def distinctify(points, tol=1e-2):
+
+def distinctify(points: np.ndarray, tol=1e-2):
 
     def are_considered_equal(sublist1, sublist2, tol=tol):
         return abs(sublist1[0] - sublist2[0]) <= tol and abs(sublist1[1] - sublist2[1]) <= tol
 
-    distinct_points = []
+    distinct_points = np.empty((points.shape[0], points.shape[1]))
+    distinct_points[:] = np.nan
+
+    idx = 0
 
     for point in points:
 
@@ -35,6 +40,9 @@ def distinctify(points, tol=1e-2):
                 break
 
         if is_unique:
-            distinct_points.append(point)
+            distinct_points[idx] = point
+            idx += 1
+
+    distinct_points = distinct_points[~np.isnan(distinct_points).any(axis=1)]
 
     return distinct_points

@@ -104,8 +104,8 @@ def fixed_points_plot(
         logger.debug("\tUsing existing canvas.")
 
     # Extract and plot the [theta, P_theta] fixed points
-    thetas_fixed = [fixed_point[0] for fixed_point in fixed_points]
-    P_thetas_fixed = [fixed_point[1] for fixed_point in fixed_points]
+    thetas_fixed = fixed_points[:, 0]
+    P_thetas_fixed = fixed_points[:, 1]
 
-    P_theta_plot = [P_theta / cwp.psi_wall for P_theta in P_thetas_fixed]
+    P_theta_plot = P_thetas_fixed / cwp.psi_wall
     ax.scatter(thetas_fixed, P_theta_plot, marker="x", color="green")

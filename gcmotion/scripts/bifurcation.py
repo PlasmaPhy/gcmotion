@@ -25,7 +25,6 @@ def bifurcation(
     P_thetas_fixed = []
 
     particles = collection.particles
-
     p1 = particles[0]
 
     qfactor = p1.qfactor
@@ -57,8 +56,8 @@ def bifurcation(
             info=False,
         )
 
-        current_thetas_fixed = [fixed_point[0] for fixed_point in current_fp]
-        current_P_thetas_fixed = [fixed_point[1] for fixed_point in current_fp]
+        current_thetas_fixed = current_fp[:, 0]
+        current_P_thetas_fixed = current_fp[:, 1]
 
         if info:
             print(
