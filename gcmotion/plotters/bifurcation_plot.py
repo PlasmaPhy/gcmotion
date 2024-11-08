@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from time import time
 
 from gcmotion.scripts.bifurcation import bifurcation
 from gcmotion.classes.collection import Collection
@@ -13,6 +14,7 @@ def bifurcation_plot(
     info: bool = False,
 ):
 
+    start = time()
     thetas_fixed, P_thetas_fixed, num_of_fp = bifurcation(
         collection=collection,
         theta_lim=theta_lim,
@@ -20,6 +22,8 @@ def bifurcation_plot(
         iterations=iterations,
         info=info,
     )
+
+    print(f"BIFURCATION RUN IN {(time() - start)/60:.1f} mins")
 
     particles = collection.particles
     p1 = particles[0]
@@ -47,6 +51,9 @@ def bifurcation_plot(
 
     # ax_theta.set_title("theta Bifurcation Diagram")
     ax_theta.set_ylabel(r"$\theta_s$")
+    ax_theta.set_yticks([-np.pi, 0, np.pi])
+    ax_theta.set_yticklabels([r"$-\pi$", "0", r"$\pi$"])
+    ax_theta.set_ylim([-np.pi - 0.5, np.pi + 0.5])
     ax_theta.scatter(P_zeta_plot, theta_plot, s=2)
 
     P_zeta_plot = []
@@ -63,7 +70,7 @@ def bifurcation_plot(
     # ax_P_theta.set_title(r"$P_{theta}$ Bifurcation Diagram")
     ax_P_theta.set_ylabel(r"$P_{\theta_s}/P_{\theta_w}$")
     ax_P_theta.scatter(P_zeta_plot, P_theta_plot, s=2)
-    ax_P_theta.axhline(y=1, color="black", linestyle="-", linewidth=2)
+    ax_P_theta.axhline(y=1, color="black", linestyle="--", linewidth=1, alpha=0.5)
 
     # Number of distinct fixed points Diagram
     # ax_ndfp.set_title("Number of Fixed Points Bifurcation Diagram")

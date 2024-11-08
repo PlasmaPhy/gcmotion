@@ -1,4 +1,5 @@
 import numpy as np
+from collections import deque
 
 from gcmotion.scripts.fixed_points import fixed_points
 from gcmotion.classes.collection import Collection
@@ -18,11 +19,11 @@ def bifurcation(
     P_theta_min = P_theta_lim[0]
     P_theta_max = P_theta_lim[1]
 
-    num_of_fp = []
-    fp = []
+    num_of_fp = deque([])
+    fp = deque([])
 
-    thetas_fixed = []
-    P_thetas_fixed = []
+    thetas_fixed = deque([])
+    P_thetas_fixed = deque([])
 
     particles = collection.particles
     p1 = particles[0]

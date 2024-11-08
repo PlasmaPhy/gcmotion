@@ -110,7 +110,7 @@ def fixed_points(
         def system(vars):
 
             theta, P_theta = vars
-            P_theta = max(P_theta, 0)
+            P_theta = max(P_theta, P_theta_min)
 
             # Intermediate values
             phi_der_psip, phi_der_theta = Efield.Phi_der(P_theta)
