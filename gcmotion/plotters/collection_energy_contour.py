@@ -33,13 +33,15 @@ from gcmotion.plotters.collection_drift import collection_drift
 from gcmotion.plotters.energy_contour import energy_contour
 from gcmotion.plotters.energy_contour import _cbar
 
+from gcmotion.configuration.plot_parameters import energy_contour as config
+
 from gcmotion.utils._logger_setup import logger
 
 
 def collection_energy_contour(
     collection,
     theta_lim: list = [-np.pi, np.pi],
-    psi_lim: str | list = "auto",
+    Ptheta_lim: str | list = "auto",
     plot_drift: bool = True,
     contour_Phi: bool = True,
     units: str = "keV",
@@ -61,7 +63,7 @@ def collection_energy_contour(
 
     theta_lim : list, optional
         Plot xlim. Must be either [0,2π] or [-π,π]. Defaults to [-π,π].
-    psi_lim : list | str, optional
+    Ptheta_lim : list | str, optional
         If a list is passed, it plots between the 2 values relative to
         :math:`\psi_{wall}`. If "auto" is passed, it automatically sets
         the optimal :math:`\psi` limits. Defaults to 'auto'.
@@ -91,6 +93,8 @@ def collection_energy_contour(
                 Whether or not to abjust color bar ticks and boundaries to
                 the particles' energies.
     """
+    suffix = "NU" if units == "NU" else "" if units == "SI" else ""
+
     # Unpack params
     _internal_call = params.pop("_internal_call", False)  # POP!
     canvas = params.get("canvas", None)  # POP!
@@ -115,10 +119,10 @@ def collection_energy_contour(
             "R",
             "a",
             "qfactor",
-            "Bfield",
-            "Efield",
+            "bfield",
+            "efield",
             "species",
-            "mu",
+            "mu/muB",
             "Pzeta0",
         ]
         can_be_different = [
@@ -127,11 +131,13 @@ def collection_energy_contour(
             if key not in must_be_the_same
         ]
 
-        if not collection._check_multiples(must_be_the_same):
-            error_str = f"Only the variables {can_be_different} may vary from particle to particle."
-            print(error_str)
-            logger.error(error_str)
-            return False
+        for quantity in must_be_the_same:
+            if getattr(collection, "multiple_" + quantity):
+                error_str = f"Only the variables {can_be_different} may vary from particle to particle."
+                print(error_str)
+                logger.error(error_str)
+                return False
+
         return True
 
     def plot():
@@ -139,10 +145,10 @@ def collection_energy_contour(
 
         logger.info("Plotting Collection energy contour...")
 
-        nonlocal psi_lim, _internal_call, canvas, different_colors, plot_initial
+        nonlocal Ptheta_lim, _internal_call, canvas, different_colors, plot_initial
 
         if canvas is None:
-            fig = plt.figure(figsize=(12, 8))
+            fig = plt.figure(**config["fig_parameters"])
             ax = fig.add_subplot(111)
             canvas = (fig, ax)
             logger.debug("\tCreating a new canvas.")
@@ -155,24 +161,25 @@ def collection_energy_contour(
                 collection,
                 angle="theta",
                 theta_lim=theta_lim,
+                units=units,
                 _internal_call=True,
                 canvas=canvas,
                 **params,
             )
 
-        if psi_lim == "auto":
+        if Ptheta_lim == "auto":
             plt.autoscale(axis="y")
-            psi_lim = list(plt.gca().get_ylim())
-            psi_lim[0] = max(0, psi_lim[0])
+            Ptheta_lim = list(plt.gca().get_ylim())
+            Ptheta_lim[0] = max(0, Ptheta_lim[0])
             # Hard y lim
-            psi_lim[1] = min(1.6, psi_lim[1])
+            Ptheta_lim[1] = min(1.6, Ptheta_lim[1])
 
         logger.info("\t\tPlotting single energy contour...")
         logger.disable("gcmotion")
         C = energy_contour(
-            collection.particles[int(len(collection.particles) / 2)],
+            collection.particles[0],
             theta_lim=theta_lim,
-            psi_lim=psi_lim,
+            Ptheta_lim=Ptheta_lim,
             plot_drift=False,
             contour_Phi=contour_Phi,
             units=units,
@@ -186,9 +193,10 @@ def collection_energy_contour(
         logger.info("\t-->Single energy contour successfully plotted.")
 
         # Plot colorbar
+        Esuffix = "NU" if suffix == "NU" else "keV"
         energies = np.array(
             [
-                collection.particles[_].__getattribute__(f"E_{units}")
+                getattr(collection.particles[_], "E" + Esuffix).magnitude
                 for _ in range(collection.n)
             ]
         )

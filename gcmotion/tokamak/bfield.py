@@ -6,12 +6,15 @@ A Magnetic Field object is a class instance containing all the information
 about the magnetic field of the system. It implements all the methods needed 
 buy the solver and other calculations, and is called automatically wherever required.
 
-To add a new Magnetic Field, simply copy-paste an already existing class
-(idealy the Nofield one) and fill the ``__init__()``, ``B()`` and ``B_der()``
-methods to fit your Magnetic Field.  In case your Magnetic field has extra 
-parameters you want to pass as arguments, you must also create an 
-``__init__()`` method and declare them. To avoid errors, your class should
-inherit the ``MagneticField`` class.
+To add a new magnetic field, simply copy-paste an already existing class
+and fill the :py:meth:`~gcmotion.tokamak.bfield.MagneticField.bigNU()` 
+and :py:meth:`~gcmotion.tokamak.bfield.MagneticField.solverbNU()` methods to fit
+your magnetic field. In case your field has extra parameters you want to pass 
+as arguments, you must also create an 
+:py:meth:`~gcmotion.tokamak.bfield.MagneticField.__init__()` method and declare 
+them. A ``__repr__()`` method is also recommended for representing the system's
+magnetic field, but not enforced. To avoid errors, your class should inherit 
+the :py:class:`~gcmotion.tokamak.bfield.MagneticField` class.
 
 The general structure is this::
 
@@ -19,18 +22,49 @@ The general structure is this::
 
         def __init__(self, *parameters):
             "Parameter setup."
+        
+        def bigNU(self, r, theta)
+            return (b, g, i)
     
-        def b(self, r, theta): 
-            return b
+        def solverbNU(self, psi, theta): 
 
-        def b_der(self, r, theta)
-            return (B_der_psi, B_der_theta)
+            b, g, i = self.bigNU(psi, theta)
+            
+            b_der = (b_der_psi, b_der_theta)
+            currents = (i, g)
+            currents_der = (i_der, g_der)
+            
+            return b, b_der, currents, currents_der
 
-.. note::
-    The Magnetic Field's attributes must be Quantities with units in SI so 
-    they can be referenced from anywhere in the code, but the methods input
-    **must** be purely numeric. As a result, the output is also purely 
-    numeric and in the same units as the input.
+        def __repr__():
+            "optional, but recommended"
+            return string
+
+.. note:: 
+    The Electric Fields's parameters should be Quantites. Conversions to 
+    [NU] and intermediate values must be calculated in 
+    :py:meth:`~gcmotion.tokamak.bfield.MagneticField.__init__()`.
+
+.. admonition:: For developers
+
+    For each attribute that is defined as a Quantity with SI units, another,
+    "hidden" attribite is automatically defined as its magnitude. This hidden 
+    attribute is then used for all the purely numerical calculations. 
+    For example:
+
+    .. code-block:: python
+
+        def __init__(...):
+            self.i = i.to("Plasma_Current")
+            self.iNU = i.to("NUPlasma_Current")
+            ...
+            self._i = self.i.magnitude
+            self._iNU = self.iNU.magnitude
+
+    Here, :code:`self.i` is a Quantity with units of "Plasma Current", however only
+    :code:`self._i` is used inside the methods. Also, by defining it in 
+    :code:`__init__()` we avoid having to retrieve its magnitude every time
+    a method that needs it is called.
   
 .. rubric:: The 'MagneticField' Abstract Base Class
 
@@ -39,7 +73,7 @@ This class does nothing, it is only a template.
 
 .. autoclass:: MagneticField
     :member-order: bysource
-    :members: __init__, b, b_der
+    :members: __init__, solverbNU, solverCNU, bigNU
 
 """
 
@@ -62,49 +96,54 @@ class MagneticField(ABC):
         """
 
     @abstractmethod
-    def b_values(self, psi: float, theta: float) -> tuple[float, float]:
-        r"""Derivatives of :math:`b(\psi, \theta)` with respect to
-        :math:`r, \theta`.
-
-        Intended for use only inside the ODE solver.
-
-        Parameters
-        ----------
-        psi : float
-            The :math:`\psi` coordinate.
-        theta : float
-            The :math:`\theta` coordinate.
-
-        Returns
-        -------
-        tuple
-            2-tuple containing the calculated derivatives.
-
-        """
-
-    @abstractmethod
-    def b(
-        self, r: float | np.ndarray, theta: float | np.ndarray
+    def bigNU(
+        self, phi: float | np.ndarray, theta: float | np.ndarray
     ) -> float | np.ndarray:
-        r"""Returns the magnetic field strength.Output size is the same
-        as input size.
+        r"""Calculates :math:`B(\psi, theta), i(\psi, theta), g(\psi, theta)`.
+        Input and output must can be both floats or np.ndarrays, in [NU].
 
-        When used inside the solver it returns :math:`b`, the strength
-        of the magnetic field normalized to its value on magnetic axis.
-        When used for the tokamak profile plotting, it returns an np.ndarray.
+        Used in energy contour plots.
 
         Parameters
         ----------
-        r : float | np.ndarray
-            the r position of the particle.
+        psi : float | np.ndarray
+            The :math:`\psi` value(s).
         theta : float | np.ndarray
-            the theta position of the particle
+            Value of :math:`\theta` in [NU].
 
         Returns
         -------
         float | np.ndarray
-            The magnetic field strength.
+            The Calculated :math:`\Phi` value(s).
 
+        """
+
+    @abstractmethod
+    def solverbNU(
+        self, psi: float, theta: float
+    ) -> tuple[float, float, float]:
+        r"""Calculates the **normalized** magnetic field strength
+        :math:`b = B/B_0` and its derivative with respect to
+        :math:`\psi_p` and :math:`\theta`.
+        Input and output must be floats, in [NU].
+
+        Used inside the solver.
+
+        .. warning::
+            The derivatives are calculated with respect to :math:`\psi`,
+            and **not** :math:`\psi_p`. This is accounted for inside the solver
+            by multiplying by :math:`q(\psi)`.
+
+        Parameters
+        ----------
+        psi : float
+            Value of :math:`\psi` in [NU].
+        theta : float
+            Value of :math:`\theta` in [NU].
+
+        Returns
+        3-tuple of floats
+            Calculated field strength derivatives in [NU].
         """
 
 
@@ -112,7 +151,7 @@ class MagneticField(ABC):
 
 
 class LAR(MagneticField):
-    r"""Initializes the standard Large Aspect Ration magnetic field."""
+    r"""Initializes the standard Large Aspect Ratio magnetic field."""
 
     def __init__(self, B0: Quantity, i: Quantity, g: Quantity):
         r"""Parameters initialization.
@@ -138,20 +177,43 @@ class LAR(MagneticField):
         self.iNU = i.to("NUPlasma_Current")
         self.gNU = g.to("NUPlasma_Current")
 
-    def b_values(self, psi: float, theta: float):
+        # Unitless quantities, makes it a bit faster if defined here
+        for key, value in self.__dict__.copy().items():
+            self.__setattr__("_" + key, value.magnitude)
+
+    def bigNU(self, psi: float | np.ndarray, theta: float | np.ndarray):
+
+        if isinstance(psi, (int, float)):
+            b = 1 - sqrt(2 * psi) * cos(theta)
+        elif isinstance(psi, np.ndarray):
+            b = 1 - np.sqrt(2 * psi) * np.cos(theta)
+
+        g = self._gNU
+        i = self._iNU
+
+        return (b, i, g)
+
+    def solverbNU(self, psi: float, theta: float):
+
+        # Field and currents
+        b, i, g = self.bigNU(psi, theta)
+
+        # Field derivatives
         root = sqrt(2 * psi)
         cos_theta = cos(theta)
-        b = 1 - root * cos_theta
         b_der_psi = cos_theta / root
         b_der_theta = root * sin(theta)
 
-        return (b, b_der_psi, b_der_theta)
+        # Current derivatives
+        i_der = 0
+        g_der = 0
 
-    def b(self, r: float | np.ndarray, theta: float | np.ndarray):
-        if isinstance(r, (int, float)):
-            return 1 - r * cos(theta)
-        else:
-            return 1 - r * np.cos(theta)
+        # Pack them up
+        currents = (i, g)
+        b_der = (b_der_psi, b_der_theta)
+        currents_der = (i_der, g_der)
+
+        return b, b_der, currents, currents_der
 
     def __repr__(self):
         return (

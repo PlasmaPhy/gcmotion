@@ -60,8 +60,8 @@ def tokamak_profile(cwp, zoom: list = [0, 1.1]):
         """Plots the electric field profile in subplots 321 and 322."""
         logger.debug("\tPlotting electric field profile...")
         nonlocal psis
-        Er = efield.Er_of_psi(psis.magnitude)
-        Phi = efield.Phi_of_psi(psis.magnitude)
+        Er = efield.Er(psis.magnitude)
+        Phi = efield.PhiNU(psis.magnitude)
         if np.abs(Er).max() > 1000:  # If in kV
             Er /= 1000
             Phi /= 1000
@@ -105,7 +105,7 @@ def tokamak_profile(cwp, zoom: list = [0, 1.1]):
         ax_q1.set_title(r"$\text{q factor }q(\psi)$", c="b")
 
         # ψ_π(ψ)
-        y2 = qfactor.psip_of_psi(psis.magnitude)
+        y2 = qfactor.psipNU(psis.magnitude)
         ax_q2.plot(psis / psi_wall, y2, color="b", linewidth=1.5)
         ax_q2.plot([1, 1], [y2.min(), y2.max()], color="r", linewidth=1.5)
         ax_q2.set_xlabel(r"$\psi/\psi_{wall}$")

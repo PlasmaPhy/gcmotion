@@ -3,7 +3,7 @@
 q-factor profiles
 ===========================
 
-Note that the methods :func:`q_of_psi()` and :func:`psip_of_psi()` as implemented
+Note that the methods :func:`q_of_psi()` and :func:`psipNU()` as implemented
 in :py:class:`~gcmotion.tokamak.qfactor.QFactor` are implied.
 
 .. currentmodule:: gcmotion.tokamak.qfactor
@@ -20,7 +20,7 @@ in :py:class:`~gcmotion.tokamak.qfactor.QFactor` are implied.
    Parabolic
    Hypergeometric
 
-.. rubric:: Class methods (besides q_of_psi() and psip_of_psi()):
+.. rubric:: Class methods (besides q_of_psi() and psipNU()):
 
 .. autoclass:: Unity
 

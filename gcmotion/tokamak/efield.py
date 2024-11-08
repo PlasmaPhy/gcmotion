@@ -6,12 +6,15 @@ An Electric Field object is a class instance containing all the information
 about the electric field of the system. It implements all the methods needed 
 buy the solver and other calculations, and is called automatically wherever required.
 
-To add a new Electric Field, simply copy-paste an already existing class
-(idealy the Nofield one) and fill the ``__init__()``, ``Phi_der()``,
-``Er_of_psi()``, and ``Phi_of_psi()`` methods to fit your Electric Field.  
-In case your Electric field has extra parameters you want to pass as 
-arguments, you must also create an ``__init__()`` method and declare them. 
-To avoid errors, your class should inherit the ``ElectricField`` class.
+To add a new electic field, simply copy-paste an already existing class
+and fill the :py:meth:`~gcmotion.tokamak.efield.ElectricField.solverPhiderNU()` 
+and :py:meth:`~gcmotion.tokamak.efield.ElectricField.PhiNU()` methods to fit
+your electric field. In case your field has extra parameters you want to pass 
+as arguments, you must also create an 
+:py:meth:`~gcmotion.tokamak.efield.ElectricField.__init__()` method and declare 
+them. A ``__repr__()`` method is also recommended for representing the system's
+electric field, but not enforced. To avoid errors, your class should inherit 
+the :py:class:`~gcmotion.tokamak.efield.ElectricField` class.
 
 The general structure is this::
 
@@ -20,36 +23,35 @@ The general structure is this::
         def __init__(self, *parameters):
             "Parameter setup."
     
-        def Phi_der(self, psi): 
+        def solverPhiderNU(self, psi, theta): 
             return [Phi_der_psip, Phi_der_theta]
     
-        def Er_of_psi(self, psi):
-            return E
-    
-        def Phi_of_psi(self, psi):
-            return Phi
+        def PhiNU(self, psi, theta):
+            return Phi    
 
-.. note::
-    The Electric Fields's attributes must be Quantities with units in SI 
-    so they can be referenced from anywhere in the code, but the methods
-    input **must** be purely numeric. As a result, the output is also 
-    purely numeric and in the same units as the input.
+        def Er(self, psi, theta):
+            return Er
 
-.. caution::
-    The :py:meth:`~gcmotion.tokamak.efield.ElectricField.Phi_der` method
-    uses the attributes **converted to [NU]**, since it is **only** used
-    inside the solver.
+        def __repr__():
+            "optional, but recommended"
+            return string
+
+.. note:: 
+    The Electric Fields's parameters should be Quantites. Conversions to 
+    [NU] and intermediate values must be calculated in 
+    :py:meth:`~gcmotion.tokamak.efield.ElectricField.__init__()`.
 
 .. admonition:: For developers
 
     For each attribute that is defined as a Quantity with SI units, another,
-    "hidden" attribite is also defined as its magnitude. This hidden attribute
-    is then used for all the purely numerical calculations. For example:
+    "hidden" attribite is automatically defined as its magnitude. This hidden 
+    attribute is then used for all the purely numerical calculations. 
+    For example:
 
     .. code-block:: python
 
         def __init__(...):
-            self.rpeak = self.a * self.peak
+            self.rpeak = (self.a * self.peak).to("meters")
             ...
             self._rpeak = self.rpeak.magnitude
 
@@ -65,7 +67,7 @@ This class does nothing, it is only a template.
 
 .. autoclass:: ElectricField
     :member-order: bysource
-    :members: __init__, Phi_der, Er_of_psi, Phi_of_psi
+    :members: __init__, solverPhiderNU, PhiNU, Er
 
 """
 
@@ -83,63 +85,72 @@ class ElectricField(ABC):
     r"""Electric field base class."""
 
     def __init__(self):
-        r"""Contains all the needed parameters
-
-        The parameters should be defined as Quantities with SI units.
-        """
+        r"""Contains all the needed parameters"""
 
     @abstractmethod
-    def e_values(self, psi: float) -> tuple[float, float]:
-        r"""Derivatives of :math:`\Phi(\psi)` with respect to
-        :math:`r, \theta`.
+    def solverPhiderNU(self, psi: float, theta: float) -> tuple[float, float]:
+        r"""Calculates the derivatives of :math:`\Phi` with respect to
+        :math:`\psi_p` and :math:`\theta`.
+        Input and output must be floats, in [NU].
 
-        Intended for use only inside the ODE solver.
+        Used inside the solver.
+
+        .. warning::
+            The derivatives are calculated with respect to :math:`\psi`,
+            and **not** :math:`\psi_p`. This is accounted for inside the solver
+            by multiplying by :math:`q(\psi)`.
 
         Parameters
         ----------
         psi : float
-            The :math:`\psi` coordinate.
+            Value of :math:`\psi` in [NU].
+        theta : float
+            Value of :math:`\theta` in [NU].
 
         Returns
-        -------
-        tuple
-            2-tuple containing the calculated derivatives.
+        2-tuple of floats
+            Calculated derivatives in [NU].
+
         """
 
     @abstractmethod
-    def Er_of_psi(self, psi: np.ndarray) -> np.ndarray:
-        r"""Returns the electric field strength.
+    def PhiNU(
+        self, psi: float | np.ndarray, theta: float | np.ndarray
+    ) -> float | np.ndarray:
+        r"""Calculates :math:`\Phi(\psi, theta)`.
+        Input and output must can be both floats or np.ndarrays, in [NU].
 
-        Input and output are np.ndarrays
+        Used in energy contour plots.
+
+        Parameters
+        ----------
+        psi : float | np.ndarray
+            The :math:`\psi` value(s).
+        theta : float | np.ndarray
+            Value of :math:`\theta` in [NU].
+
+        Returns
+        -------
+        float | np.ndarray
+            The Calculated :math:`\Phi` value(s).
+
+        """
+
+    @abstractmethod
+    def Er(self, psi: np.ndarray) -> np.ndarray:
+        r"""Calculates the electric field strength in [NU].
+
+        Used for plotting.
 
         Parameters
         ----------
         psi : np.ndarray
-            The ψ values.
+            The :math:`\psi` values.
 
         Returns
         -------
         np.ndarray
             1D numpy array with calculated :math:`E` values.
-
-        """
-
-    @abstractmethod
-    def Phi_of_psi(self, psi: np.ndarray) -> np.ndarray:
-        r"""Calculates Electric Potential in [V] from ψ.
-
-        Input and output are np.ndarrays
-
-        Parameters
-        ----------
-        psi : np.ndarray
-            The ψ values.
-
-        Returns
-        -------
-
-        np.ndarray
-            1D numpy array with calculated :math:`\Phi` values.
 
         """
 
@@ -156,16 +167,19 @@ class Nofield(ElectricField):
     def __init__(self):
         pass
 
-    def e_values(self, psi: float) -> tuple[float, float]:
+    def solverPhiderNU(self, psi: float, theta: float) -> tuple[float, float]:
         return (0, 0)
 
-    def e_valuesNU(self, psi: float) -> tuple[float, float]:
-        return (0, 0)
+    def PhiNU(
+        self, psi: float | np.ndarray, theta: float | np.ndarray
+    ) -> float | np.ndarray:
 
-    def Er_of_psi(self, psi: np.ndarray) -> np.ndarray:
-        return 0 * psi
+        if isinstance(psi, (int, float)):
+            return 0
+        elif isinstance(psi, np.ndarray):
+            return 0 * psi
 
-    def Phi_of_psi(self, psi: np.ndarray) -> np.ndarray:
+    def Er(self, psi: np.ndarray) -> np.ndarray:
         return 0 * psi
 
     def __repr__(self):
@@ -174,7 +188,20 @@ class Nofield(ElectricField):
 
 class Radial(ElectricField):
     r"""Initializes an electric field of the form:
-    :math:`E(r) = -E_a\exp\bigg[-\dfrac{(r-r_a)^2}{r_w^2})\bigg]`
+    :math:`E(r) = -E_{peak}\exp\bigg[-\dfrac{(r-r_{peak})^2}{r_w^2})\bigg]`
+
+    with
+
+    :math:`\Phi(\psi) = E_{peak} \sqrt{\dfrac{\pi\psi_{wall}}{2}}\
+    \bigg[ \text{erf} \bigg( \
+    \dfrac{\sqrt{\psi} - \sqrt{\psi_{peak}}}{\sqrt{\psi_w}}\bigg) \
+    + \text{erf} \bigg( \sqrt{\dfrac{\psi_{peak}}{\psi_w}} \bigg) \
+    \bigg]`
+
+    where
+
+    :math:`\psi_w = r_w^2/2` and :math:`\psi_{peak} = r_{peak}^2/2`
+
     """
 
     def __init__(
@@ -212,53 +239,54 @@ class Radial(ElectricField):
         self.B0 = B0.to("Tesla")
         self.rpeak = (self.a * peak).to("meters")
         self.rw = (self.a * rw).to("meters")  # waist, not wall
-        self.psia = (self.B0 * self.rpeak**2 / 2).to("Magnetic_flux")
-        self.psiw = (self.B0 * self.rw**2 / 2).to("Magnetic_flux")
+        self.psi_peak = (self.B0 * self.rpeak**2 / 2).to("Magnetic_flux")
+        self.psi_waist = (self.B0 * self.rw**2 / 2).to("Magnetic_flux")
 
         # [NU] Conversions for the derivatives:
         self.EaNU = self.Ea.to("NUVolts_per_NUmeter")
-        self.psiaNU = self.psia.to("NUMagnetic_flux")
-        self.psiwNU = self.psiw.to("NUMagnetic_flux")
+        self.psi_peakNU = self.psi_peak.to("NUMagnetic_flux")
+        self.psi_waistNU = self.psi_waist.to("NUMagnetic_flux")
 
         # Unitless quantities, makes it a bit faster if defined here
-        self._Ea = self.Ea.magnitude
-        self._rpeak = self.rpeak.magnitude
-        self._rw = self.rw.magnitude
-        self._psia = self.psia.magnitude
-        self._psiw = self.psiw.magnitude
-        self._sr_psia = sqrt(self._psia)
-        self._sr_psiw = sqrt(self._psiw)
-        self._EaNU = self.EaNU.magnitude
-        self._psiaNU = self.psiaNU.magnitude
-        self._sr_psiaNU = sqrt(self._psiaNU)
-        self._psiwNU = self.psiwNU.magnitude
-        self._sr_psiwNU = sqrt(self._psiwNU)
+        for key, value in self.__dict__.copy().items():
+            self.__setattr__("_" + key, value.magnitude)
 
-    def solverE(self, psi: float) -> tuple[float, float]:
+        self._sr_psi_peak = sqrt(self._psi_peak)
+        self._sr_psi_waist = sqrt(self._psi_waist)
+        self._sr_psi_peakNU = sqrt(self._psi_peakNU)
+        self._sr_psi_waistNU = sqrt(self._psi_waistNU)
+
+    def solverPhiderNU(self, psi: float, theta: float) -> tuple[float, float]:
         Phi_der_psi = (
             self._EaNU
             / (sqrt(2 * psi))
-            * exp(-((sqrt(psi) - self._sr_psiaNU) ** 2) / self._psiwNU)
+            * exp(
+                -((sqrt(psi) - self._sr_psi_peakNU) ** 2) / self._psi_waistNU
+            )
         )
         Phi_der_theta = 0
 
-        return [Phi_der_psi, Phi_der_theta]
+        return (Phi_der_psi, Phi_der_theta)
 
-    def Er_of_psi(self, psi: np.ndarray) -> np.ndarray:
-        r = np.sqrt(2 * psi)
-        E = -self._Ea * np.exp(-((r - self._rpeak) ** 2) / self._rw**2)
-        return E
-
-    def Phi_of_psi(self, psi: np.ndarray) -> np.ndarray:
+    def PhiNU(
+        self, psi: float | np.ndarray, theta: float | np.ndarray
+    ) -> float | np.ndarray:
         Phi = (
             self._EaNU
-            * np.sqrt(np.pi * self._psiwNU / 2)
+            * np.sqrt(np.pi * self._psi_waistNU / 2)
             * (
-                erf((np.sqrt(psi) - self._sr_psiaNU) / self._sr_psiwNU)
-                + erf(self._sr_psiaNU / self._sr_psiwNU)
+                erf(
+                    (np.sqrt(psi) - self._sr_psi_peakNU) / self._sr_psi_waistNU
+                )
+                + erf(self._sr_psi_peakNU / self._sr_psi_waistNU)
             )
         )
         return Phi
+
+    def Er(self, psi: np.ndarray) -> np.ndarray:
+        r = np.sqrt(2 * psi)
+        E = -self._Ea * np.exp(-((r - self._rpeak) ** 2) / self._rw**2)
+        return E
 
     def __repr__(self):
         return (

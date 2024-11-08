@@ -26,6 +26,7 @@ import matplotlib.pyplot as plt
 from gcmotion.utils._logger_setup import logger
 
 from gcmotion.configuration.plot_parameters import time_evolution as config
+from gcmotion.configuration.plot_parameters import figsize, dpi
 
 
 def time_evolution(cwp, percentage: int = 100, units: str = "SI"):
@@ -46,8 +47,7 @@ def time_evolution(cwp, percentage: int = 100, units: str = "SI"):
     suffix = "NU" if units == "NU" else "" if units == "SI" else ""
     logger.info(f"Plotting time evolutions in {"NU" if suffix=="NU" else "SI"}...")  # fmt: skip
 
-    # Get all needed attributes first (.copy() if needed!)
-
+    # Get all needed attributes first
     theta = getattr(cwp, "theta").copy()
     zeta = getattr(cwp, "zeta").copy()
     t = getattr(cwp, "t_eval" + suffix).copy()
@@ -65,11 +65,11 @@ def time_evolution(cwp, percentage: int = 100, units: str = "SI"):
     points = int(np.floor(t.shape[0] * percentage / 100) - 1)
 
     # Plotting
-    # fmt: off
     fig, ax = plt.subplots(7, 1, **config["fig_parameters"])
     ax[0].set_title("Time evolution of dynamical variables", c="b")
     ax[5].set_title("Time evolution of canonical momenta", c="b")
 
+    # fmt: off
     ax[0].scatter(t[:points], theta[:points],   **config["scatter_args"])
     ax[1].scatter(t[:points], zeta[:points],    **config["scatter_args"])
     ax[2].scatter(t[:points], psi[:points],     **config["scatter_args"])
@@ -79,13 +79,15 @@ def time_evolution(cwp, percentage: int = 100, units: str = "SI"):
     ax[6].scatter(t[:points], Pzeta[:points],   **config["scatter_args"])
 
     lp = config["labelpad"]
-    ax[0].set_ylabel(r"$\theta(t)$"   +"\n"+ rf"[${theta.units:P~}$]",  labelpad=lp, **config["ylabel_args"])
-    ax[1].set_ylabel(r"$\zeta(t)$"    +"\n"+ rf"[${zeta.units:P~}$]",   labelpad=lp, **config["ylabel_args"])
-    ax[2].set_ylabel(r"$\psi(t)$"     +"\n"+ rf"[${psi.units:P~}$]",    labelpad=lp, **config["ylabel_args"])
-    ax[3].set_ylabel(r"$\psi_p(t)$"   +"\n"+ rf"[${psip.units:P~}$]",   labelpad=lp, **config["ylabel_args"])
-    ax[4].set_ylabel(r"$\rho_{||}(t)$"     +"\n"+ rf"[${rho.units:P~}$]",    labelpad=lp, **config["ylabel_args"])
-    ax[5].set_ylabel(r"$P_\theta(t)$" +"\n"+ rf"[${Ptheta.units:P~}$]", labelpad=lp, **config["ylabel_args"])
-    ax[6].set_ylabel(r"$P_\zeta(t)$"  +"\n"+ rf"[${Pzeta.units:P~}$]",  labelpad=lp, **config["ylabel_args"])
+    lp = lp*2 if suffix == "NU" else lp # give them NUs a bit more space
+    loc = config["loc"]
+    ax[0].set_ylabel(r"$\theta(t)$"   +"\n"+ rf"[${theta.units:P~}$]",  loc=loc, labelpad=lp, **config["ylabel_args"])
+    ax[1].set_ylabel(r"$\zeta(t)$"    +"\n"+ rf"[${zeta.units:P~}$]",   loc=loc, labelpad=lp, **config["ylabel_args"])
+    ax[2].set_ylabel(r"$\psi(t)$"     +"\n"+ rf"[${psi.units:P~}$]",    loc=loc, labelpad=lp, **config["ylabel_args"])
+    ax[3].set_ylabel(r"$\psi_p(t)$"   +"\n"+ rf"[${psip.units:P~}$]",   loc=loc, labelpad=lp, **config["ylabel_args"])
+    ax[4].set_ylabel(r"$\rho_{||}(t)$"+"\n"+ rf"[${rho.units:P~}$]",    loc=loc, labelpad=lp, **config["ylabel_args"])
+    ax[5].set_ylabel(r"$P_\theta(t)$" +"\n"+ rf"[${Ptheta.units:P~}$]", loc=loc, labelpad=lp, **config["ylabel_args"])
+    ax[6].set_ylabel(r"$P_\zeta(t)$"  +"\n"+ rf"[${Pzeta.units:P~}$]",  loc=loc, labelpad=lp, **config["ylabel_args"])
     # fmt: on
 
     # Zoom out Pzeta y-axis

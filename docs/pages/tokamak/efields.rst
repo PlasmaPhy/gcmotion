@@ -3,8 +3,8 @@
 Electric field profiles
 =================================
 
-Note that the methods :func:`Phi_der()`, :func:`Er_of_psi` and 
-:func:`Phi_of_psi()` as implemented
+Note that the methods :func:`Phi_der()`, :func:`Er` and 
+:func:`PhiNU()` as implemented
 in :py:class:`~gcmotion.tokamak.efield.ElectricField` are implied.
 
 .. currentmodule:: gcmotion.tokamak.efield
@@ -18,15 +18,11 @@ in :py:class:`~gcmotion.tokamak.efield.ElectricField` are implied.
    :recursive:
 
    Nofield
-   Parabolic
    Radial
 
-.. rubric:: Class methods (besides Phi_der(), Er_of_psi() and Phi_of_psi()):
+.. rubric:: Class methods (besides Phi_der(), Er() and PhiNU()):
 
 .. autoclass:: Nofield
-
-.. autoclass:: Parabolic
-    :members: __init__
 
 .. autoclass:: Radial
     :members: __init__

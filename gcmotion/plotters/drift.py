@@ -53,12 +53,18 @@ def drift(
             #. plot_initial : bool, optional
                 Whether or not to plot the initial point. Defaults to True
     """
-    logger.info(f"Plotting {angle}-P_{angle} drift...")
+
+    if params.get("_internal_call", False):  # dont pop it yet
+        logger.disable("gcmotion")
+    else:
+        logger.enable("gcmotion")
+
+    suffix = "NU" if units == "NU" else "" if units == "SI" else ""
+    logger.info(f"Plotting {angle}-P_{angle} drift in {"NU" if suffix=="NU" else "SI"}...")  # fmt: skip
 
     # Get all needed attributes first
     q = getattr(cwp, angle).copy()
-    P_plot = getattr(cwp, "P" + angle).copy()
-    psi_wall = getattr(cwp, "psi_wall")
+    P = getattr(cwp, "P" + angle + suffix).copy()
 
     # Unpack params
     _internal_call = params.pop("_internal_call", False)  # POP!
@@ -66,27 +72,15 @@ def drift(
     different_colors = params.get("different_colors", False)
     plot_initial = params.get("plot_initial", True)
 
-    if _internal_call:
-        logger.disable("gcmotion")
-    else:
-        logger.enable("gcmotion")
-
     # Setup canvas
     if canvas is None:
-        fig = plt.figure(figsize=(12, 8))
+        fig = plt.figure(**config["fig_parameters"])
         ax = fig.add_subplot(111)
         canvas = (fig, ax)
         logger.debug("\tDrift: Creating a new canvas.")
     else:
         fig, ax = canvas
         logger.debug("\tDrift: Using existing canvas.")
-
-    # Normalize Ptheta and set ylables
-    if angle == "theta":  # Normalize to psi_wall
-        P_plot /= psi_wall  # Dimensionless
-        ylabel = rf"$P_\{angle}/\psi_w$"
-    else:
-        ylabel = rf"$P_\{angle}$" + f" [{P_plot.units:~P}]"
 
     # Set theta lim. Mods all thetas or zetas to 2π or [-π,π]
     q_plot, ax_lim = pi_mod(q, lim)
@@ -96,12 +90,15 @@ def drift(
         scatter_kw.pop("color", None)
 
     # Scatter plot
-    ax.scatter(q_plot, P_plot, **scatter_kw, zorder=2)
-    ax.set_xlabel(rf"$\{angle}$[{q.units:~P}s]", fontsize=config["xfontsize"])
-    ax.set_ylabel(ylabel, fontsize=config["yfontsize"])
+    ax.scatter(q_plot, P, **scatter_kw, zorder=2)
+    ax.set_xlabel(rf"$\{angle} [{q.units:~P}s]$", fontsize=config["xfontsize"])
+    ax.set_ylabel(
+        rf"$P_\{angle} [{P.units:P~}]$",
+        fontsize=config["yfontsize"],
+    )
 
     if plot_initial:
-        ax.scatter(q[0], P_plot[0], c="k", s=10, zorder=3)
+        ax.scatter(q[0], P[0], c="k", s=10, zorder=3)
 
     # Zoom out Pzeta y-axis
     if angle == "zeta":

@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 from gcmotion.utils._logger_setup import logger
 from gcmotion.utils.pi_mod import pi_mod
 
-from gcmotion.configuration.plot_parameters import drift as config
+from gcmotion.configuration.plot_parameters import drifts as config
 
 
 def drifts(
@@ -51,6 +51,11 @@ def drifts(
             #. plot_initial : bool, optional
                 Whether or not to plot the initial point. Defaults to True
     """
+    if params.get("_internal_call", False):  # dont pop it yet
+        logger.disable("gcmotion")
+    else:
+        logger.enable("gcmotion")
+
     suffix = "NU" if units == "NU" else "" if units == "SI" else ""
     logger.info(f"Plotting θ-Pθ and ζ-Pζ drifts in {"NU" if suffix=="NU" else "SI"}...")  # fmt: skip
 
@@ -68,12 +73,11 @@ def drifts(
     # Get all needed attributes first
     theta = getattr(cwp, "theta").copy()
     zeta = getattr(cwp, "zeta").copy()
-    psi_wall = getattr(cwp, "psi_wall" + suffix).copy()
     Ptheta = getattr(cwp, "Ptheta" + suffix).copy()
     Pzeta = getattr(cwp, "Pzeta" + suffix).copy()
 
     if canvas is None:
-        fig, ax = plt.subplots(1, 2, figsize=(12, 6))
+        fig, ax = plt.subplots(1, 2, **config["fig_parameters"])
         fig.tight_layout()
         canvas = (fig, ax)
         logger.debug("\tDrifts: Creating a new canvas.")
@@ -91,7 +95,7 @@ def drifts(
     theta_min, theta_max = theta_lim
     theta_plot, ax_lim = pi_mod(theta, theta_lim)
 
-    ax[0].scatter(theta_plot, Ptheta / psi_wall, **config["scatter_args"])
+    ax[0].scatter(theta_plot, Ptheta, **config["scatter_args"])
     ax[1].scatter(zeta, Pzeta, **config["scatter_args"])
 
     ax[0].set_xlabel(r"$\theta$" + f"[{theta.units:~P}]", fontsize=config["xfontsize"])  # fmt: skip
@@ -101,7 +105,7 @@ def drifts(
     ax[1].set_ylabel(r"$P_ζ$" + rf"$[{Ptheta.units:~#P}]$", fontsize=config["yfontsize"])  # fmt: skip
 
     if plot_initial:
-        ax[0].scatter(theta_plot[0], Ptheta[0] / psi_wall, c="k", s=10, zorder=3)  # fmt: skip
+        ax[0].scatter(theta_plot[0], Ptheta[0], c="k", s=10, zorder=3)  # fmt: skip
         ax[1].scatter(zeta[0], Pzeta[0], c="k", s=10, zorder=3)
 
     # Zoom out Pzeta y-axis

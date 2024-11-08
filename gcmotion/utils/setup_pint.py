@@ -5,7 +5,7 @@ ureg = UnitRegistry(case_sensitive=False)
 ureg.setup_matplotlib()
 
 # fmt: off
-def setup_pint(R, B0, species):
+def setup_pint(R, a, B0, species):
 
     # Additional SI quantites (= aliases, for display only)
     ureg.define("Magnetic_flux    = Tesla * m^2   = Tm^2")
@@ -39,6 +39,11 @@ def setup_pint(R, B0, species):
     ureg.define("NUMagnetic_moment    = Proton_charge / NUsecond * NUmeter^2  = NUmu")
     ureg.define("NUVolts              = NUJoule / Proton_charge               = NUV")
     ureg.define("NUVolts_per_NUmeter  = NUVolts / NUmeter                     = NUV/NUm")
+
+    # Also define psi_wall as a unit of Magnetic_flux, to assing psi initial
+    # values with respect to it
+    ureg.define(f"psi_wall = {B0 * a**2 / 2} Magnetic_flux")
+    ureg.define(f"NUpsi_wall = {(a / R)**2 / 2} NUMagnetic_flux") # not really need but sure
 
     # Assign custom values to Q
     ureg.Quantity.w0 = w0

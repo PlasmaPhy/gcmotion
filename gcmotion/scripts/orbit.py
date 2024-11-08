@@ -69,9 +69,8 @@ And this is how the solution is unpacked:
     :heading-level: 4
 """
 
-import numpy as np
 from scipy.integrate import solve_ivp
-from math import sqrt
+from collections import namedtuple
 
 from gcmotion.utils._logger_setup import logger
 
@@ -81,9 +80,8 @@ from gcmotion.configuration.solver_configuration import (
 
 
 def orbit(
-    t: np.ndarray,
-    parameters: dict,
-    profile: dict,
+    parameters: namedtuple,
+    profile: namedtuple,
     events: list = [],
 ):
     r"""Wrapper function around SciPy's solve_ivp().
@@ -91,27 +89,20 @@ def orbit(
     Parameters
     ----------
 
-    t : np.ndarray
-        The evaluation times array.
-    parameters : dict
-        Dict containing the initial conditions and constants in SI units:
-        :math:`\theta_0, \psi_0, \zeta_0, \rho_{||,0}`.
-        :math:`\mu, m, q, B_0` and the conversion factor VtoVNU
-    profile : dict
-        Dict containing the tokamak configuration objects.
-    units : str
-        The units of the parameters as they are passed to the solver. If "SI",
-        then the units are left as is, since the solver expects the input
-        parameters to be in SI. If "NU", the input parameters are converted to
-        NU first.
+    parameters : namedtuple
+        Named tuple containing the initial conditions and constants in [NU]:
+        :math:`\theta_0, \psi_0, \zeta_0, \rho_{||,0}`, as well as
+        :math:`\mu` and :math:`t`.
+    profile : namedtuple
+        Named tuple containing the tokamak configuration objects.
     events : list
         List containing the independed events to track. Defaults to "SI"
 
     Returns
     -------
 
-    solution : dict
-        A dict containing the following:
+    solution : namedtuple
+        A named tuple containing the following:
 
             #. The calculated solutions of
                 :math:`\theta, \psi, \zeta, \rho, \psi_p, P_\theta, P_\zeta`
@@ -127,32 +118,31 @@ def orbit(
 
     """
 
-    # Constants of motion
-    mu = parameters["mu"].magnitude
+    # Parameters
+    mu = parameters.mu
+    t = parameters.t
 
     # Initial Conditions
-    t = t.magnitude
     S0 = [
-        parameters["theta0"],
-        parameters["psi0"].magnitude,
-        parameters["zeta0"],
-        parameters["rho0"].magnitude,
+        parameters.theta0,
+        parameters.psi0,
+        parameters.zeta0,
+        parameters.rho0,
     ]
 
     # Tokamak profile
-    qfactor = profile["qfactor"]
-    bfield = profile["bfield"]
-    efield = profile["efield"]
+    qfactor = profile.qfactor
+    bfield = profile.bfield
+    efield = profile.efield
 
     # Define quantites for the solver for clarity
-    B0 = bfield.B0NU.magnitude
     i = bfield.iNU.magnitude
     g = bfield.gNU.magnitude
-    q_of_psi = qfactor.q_of_psi
-    b_values = bfield.b_values
-    e_values = efield.e_values
+    solverqNU = qfactor.solverqNU
+    solverbNU = bfield.solverbNU
+    solverPhiderNU = efield.solverPhiderNU
 
-    logger.debug(f"\tSolver: Using B0 = {bfield.B0NU:.4g~P}, i={bfield.iNU:.4g~P}, g={bfield.gNU:.4g~P}")  # fmt: skip
+    logger.debug(f"\tSolver: Using i={bfield.iNU:.4g~P}, g={bfield.gNU:.4g~P}")  # fmt: skip
     logger.debug(f"\tSolver: (t0, tf, steps)=({t[0]:.4g}, {t[-1]:.4g}, {len(t)})")  # fmt: skip
     logger.debug(f"\tSolver: theta0={S0[0]:.4g}, psi0={S0[1]:.4g}, zeta0={S0[2]:.4g}, rho0={S0[3]:.4g}")  # fmt: skip
     logger.debug(f"\tSolver: mu={mu:.4g}")  # fmt: skip
@@ -165,24 +155,30 @@ def orbit(
 
         theta, psi, z, rho = S
 
-        # Intermediate values
-        phi_der_psi, phi_der_theta = e_values(psi)
-        b, b_der_psi, b_der_theta = b_values(psi, theta)
-        q = q_of_psi(psi)
+        # Object methods calls
+        q = solverqNU(psi)
+        b, b_der, currents, currents_der = solverbNU(psi, theta)
+        phi_der_psi, phi_der_theta = solverPhiderNU(psi, theta)
 
-        r = sqrt(2 * psi)
-        B = B0 * bfield.b(r, theta)
-        par = mu + rho**2 * B
-        phi_der_psip = q * phi_der_psi
-        bracket1 = -par * q * b_der_psi + phi_der_psip
+        # Unpack
+        b_der_psi, b_der_theta = b_der
+        i, g = currents
+        i_der, g_der = currents_der
+        # Multiply current derivatives by q to get their derivatives with
+        # respect to psi instead of psip
+        i_der, g_der = q * i_der, q * g_der
+
+        # Intermediate values
+        par = mu + rho**2 * b
+        bracket1 = -par * b_der_psi + phi_der_psi
         bracket2 = par * b_der_theta + phi_der_theta
-        D = g * q + i
+        D = g * q + i + rho * (g * i_der - i * g_der)
 
         # Canonical Equations
-        theta_dot = 1 / D * rho * B**2 + g / D * bracket1
-        psi_dot = -g * q / D * bracket2
-        rho_dot = psi_dot / (g * q)
-        z_dot = q * (rho * B**2 / D - i / D * bracket1)
+        theta_dot = (1 - rho * g_der) / D * rho * b**2 + q * g / D * bracket1
+        psi_dot = -q * g / D * bracket2
+        rho_dot = -(1 - rho * g_der) / D * bracket2
+        z_dot = (q + rho * i_der) / D * rho * b**2 - q * i / D * bracket1
 
         return [theta_dot, psi_dot, z_dot, rho_dot]
 
@@ -208,22 +204,40 @@ def orbit(
     message = f"{sol.status}: {sol.message}"
 
     # Calculate psip and Canonical Momenta
-    psip = qfactor.psip_of_psi(psi)
+    _, i, g = bfield.bigNU(psi, theta)
+    psip = qfactor.psipNU(psi)
     Ptheta = psi + rho * i
     Pzeta = rho * g - psip
 
-    solution = {
-        "theta": theta,
-        "psi": psi,
-        "zeta": zeta,
-        "rho": rho,
-        "psip": psip,
-        "Ptheta": Ptheta,
-        "Pzeta": Pzeta,
-        "t_eval": t_eval,
-        "t_events": t_events,
-        "y_events": y_events,
-        "message": message,
-    }
+    Solution = namedtuple(
+        "Orbit_solutionNU",
+        [
+            "theta",
+            "psi",
+            "zeta",
+            "rho",
+            "psip",
+            "Ptheta",
+            "Pzeta",
+            "t_eval",
+            "t_events",
+            "y_events",
+            "message",
+        ],
+    )
 
-    return solution
+    # fmt: off
+    return Solution(
+        theta    = theta,
+        psi      = psi,
+        zeta     = zeta,
+        rho      = rho,
+        psip     = psip,
+        Ptheta   = Ptheta,
+        Pzeta    = Pzeta,
+        t_eval   = t_eval,
+        t_events = t_events,
+        y_events = y_events,
+        message  = message,
+    )
+    # fmt: on

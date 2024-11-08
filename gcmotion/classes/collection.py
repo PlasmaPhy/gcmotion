@@ -1,11 +1,14 @@
 import numpy as np
+import pint
 from time import time
 from tqdm import tqdm
 
 from gcmotion.classes.particle import Particle
-from gcmotion.scripts.events import when_theta_trapped, when_theta_passing
+
+# from gcmotion.scripts.events import when_theta_trapped, when_theta_passing
 
 from gcmotion.utils._logger_setup import logger
+from gcmotion.utils.get_size import get_size
 
 
 class Collection:
@@ -18,7 +21,7 @@ class Collection:
 
     .. code-block:: python
 
-        >>> collection.particles
+        >>> collection.particles #FIXME:
         Proton with energy E=2.723keV.,
         Proton with energy E=2.224keV.,
         Proton with energy E=1.833keV.]
@@ -72,7 +75,6 @@ class Collection:
 
         Parameters
         ----------
-
         file : .py file
             The python file containing the parameters.
 
@@ -80,7 +82,8 @@ class Collection:
 
         logger.info("----------------Initializing Collection----------------")
 
-        # Check data
+        # Import data and check them
+        self.ureg, self.Q = file.ureg, file.Q
         self.params = file.params
         self._check(file)
         self._create()
@@ -97,13 +100,11 @@ class Collection:
 
         Parameters
         ----------
-
         file : .py file
             The python file containing the parameters.
 
         Returns
         -------
-
         bool
             Truth value depending on the validity of the file
 
@@ -113,22 +114,29 @@ class Collection:
         logger.info("Checking Data...")
 
         # Store the lenghts of each parameter and find the number of particles.
+        # The "lengths" dictionary has the same keys as "params", and the values
+        # are the length of the corresponding value in "params".
         self.lengths = {x: 1 for x in self.params}
         for key, value in self.params.items():
-            if isinstance(value, (int, float)) or key == "t_eval":
-                continue
-            if isinstance(value, (list, np.ndarray)):
+            if isinstance(value, pint.Quantity) and key != "t_eval":
+                if isinstance(value.magnitude, (list, np.ndarray)):
+                    self.lengths[key] = len(value.magnitude)
+            elif isinstance(value, (list, np.ndarray)):
                 self.lengths[key] = len(value)
 
+        # Number of particles "n" is assigned to be the length of the Quantity with
+        # the most values. Whether or not every Quantity has the same number of values
+        # is checked later.
         self.n = max(self.lengths.values())
         logger.debug(f"Number of particles found: {self.n}")
 
-        # Check for multiple efields, bfields, qs, species and create flags
+        # Create a bool flag for every Quantity. True if multiple values are found, and
+        # False if single-valued
         for key, value in self.lengths.items():
-            exec("self.multiple_" + key + "=bool(" + str(value) + "-1)")
-            logger.debug(f"Flag: 'multiple_'{key} = {bool(value-1)}")
+            setattr(self, "multiple_" + key, bool(value - 1))
+            logger.debug(f"Flag: 'multiple_{key}` = {bool(getattr(self, "multiple_" + key))}")  # fmt: skip
 
-        # Check lengths and print results
+        # All Quantities must be either single-valued, or have a total of n values.
         if all((_ == self.n) or (_ == 1) for _ in self.lengths.values()):
             print(f"Data is OK. Number of particles = {self.n}")
             logger.info(f"Data is OK. Number of particles = {self.n}")
@@ -145,7 +153,8 @@ class Collection:
 
         logger.info("Initializing particles...")
 
-        # Make an iterable copy of params
+        # Make a local, iterable copy of params by expanding all the single-valued
+        # Quantities to repeat n times.
         # CAUTION! all objects of same value point to one single object.
         # Changing one of them changes all of them.
         params = self.params.copy()
@@ -158,66 +167,32 @@ class Collection:
         logger.disable("gcmotion")
         for i in range(self.n):
             tokamak = {
-                "R": float(params["R"][i]),
-                "a": float(params["a"][i]),
+                "R": params["R"][i],
+                "a": params["a"][i],
+                "B0": params["B0"][i],
                 "qfactor": params["qfactor"][i],
-                "Bfield": params["Bfield"][i],
-                "Efield": params["Efield"][i],
+                "bfield": params["bfield"][i],
+                "efield": params["efield"][i],
             }
             parameters = {
                 "species": params["species"][i],
-                "mu": float(params["mu"][i]),
-                "theta0": float(params["theta0"][i]),
-                "psi0": float(params["psi0"][i]),
-                "zeta0": float(params["zeta0"][i]),
-                "Pzeta0": float(params["Pzeta0"][i]),
+                "mu/muB": params["mu/muB"][i],
+                "theta0": params["theta0"][i],
+                "zeta0": params["zeta0"][i],
+                "psi0": params["psi0"][i],
+                "Pzeta0": params["Pzeta0"][i],
                 "t_eval": params["t_eval"][i],
             }
 
             # Particle Creation
-            try:
-                p = Particle(tokamak, parameters)
-            except:  # noqa: E722
-                error_str = (
-                    f"Error initialzing Particle #{i+1}. Dumping:\n"
-                    + f"Tokamak condifuration: {tokamak}\n"
-                    + f"Parameters: {parameters}\n"
-                )
-                print(error_str)
-                logger.enable("gcmotion")
-                logger.error(error_str)
+            p = Particle(tokamak, parameters)
 
             self.particles.append(p)
         logger.enable("gcmotion")
         logger.info("Particle Initialization complete.")
 
-        # Check for electric fields and LAR
+        # Check if at least one of the particles has an electric field.
         self.has_efield = any((p.has_efield) for p in self.particles)
-        self.is_lar = any((p.Bfield.is_lar) for p in self.particles)
-
-    def _check_multiples(self, allowed: list) -> bool:
-        r"""Checks if the given parameters are static or vary from particle to particle.
-
-        Since all the plots require some parameters to be the same and allowing only
-        certain parameters to vary from particle to particle, this check is important.
-        Otherwise the resulting plots are nonsense.
-
-        Parameters
-        ----------
-        allowed : list
-            The parameters which are alloed to vary.
-
-        Returns
-        --------
-        bool
-            Truth value depending on the result of the check.
-        """
-        for key in allowed:
-            expr = "self.multiple_" + key + " is True"
-            if eval(expr):
-                print("Error")
-                return False
-        return True
 
     def run_all(
         self, orbit=True, terminal: int = 0, pole: int | float = np.pi / 2
@@ -262,16 +237,13 @@ class Collection:
             logger.disable("gcmotion")
 
             start = time()
-            events = [
-                when_theta_trapped(p.theta0, terminal),
-                when_theta_passing(p.theta0, terminal, pole=pole),
-            ]
+            events = []  # FIXME: update events to work with Quantities
             p.run(info=False, orbit=orbit, events=events)
             times.append(time() - start)
 
             logger.enable("gcmotion")
 
-            if p.message[0] == "0":  # Reached the end of termination integral
+            if "0" in p.solver_output:  # Reached the end of integration
                 reached_end += 1
             else:  # terminated by the event
                 terminated += 1
@@ -292,3 +264,19 @@ class Collection:
         )
         print(time_str)
         logger.info(time_str)
+
+    def __repr__(self):
+        return f"Collection of {self.n} particles."
+
+    def __getitem__(self, item):
+        try:
+            return self.particles[item]
+        except TypeError:
+            raise TypeError("Index must be an integer.")
+
+    def __sizeof__(self):
+        sizes = [
+            self.Q(get_size(vars(self[_])), "bytes") for _ in range(self.n)
+        ]
+        size = sum(sizes)
+        return f"{size:.4g~#P}"

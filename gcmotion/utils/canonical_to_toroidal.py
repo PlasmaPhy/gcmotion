@@ -12,7 +12,9 @@ import numpy as np
 from gcmotion.utils._logger_setup import logger
 
 
-def canonical_to_toroidal(cwp, percentage: int = 100, truescale: bool = True) -> tuple:
+def canonical_to_toroidal(
+    cwp, percentage: int = 100, truescale: bool = True
+) -> tuple:
     r"""Calculates the toroidal coordionates of the particles orbit,
     :math:`(r, \theta, \zeta)`.
 
@@ -43,10 +45,10 @@ def canonical_to_toroidal(cwp, percentage: int = 100, truescale: bool = True) ->
     logger.info("Calculating torus plotting points...")
 
     # Get all needed attributes first
-    R, a = cwp.R, cwp.a
-    theta = cwp.theta
-    psi = cwp.psi
-    zeta = cwp.zeta
+    R, a = cwp.R.magnitude, cwp.a.magnitude
+    theta = cwp.theta.magnitude
+    psi = cwp.psi.magnitude
+    zeta = cwp.zeta.magnitude
 
     if percentage < 1 or percentage > 100:
         percentage = 100
@@ -60,7 +62,9 @@ def canonical_to_toroidal(cwp, percentage: int = 100, truescale: bool = True) ->
 
     # Torus shape parameters
     r_span = [r_torus.min(), r_torus.max()]
-    logger.debug(f"\tr-span calculated:[{r_span[0]:.4g}, {r_span[1]:.4g}]m, with a={a}m.")
+    logger.debug(
+        f"\tr-span calculated:[{r_span[0]:.4g}, {r_span[1]:.4g}]m, with a={a}m."
+    )
 
     if truescale:
         Rtorus = R

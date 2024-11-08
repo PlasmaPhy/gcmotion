@@ -4,6 +4,7 @@
 from gcmotion.utils import _logger_setup
 
 from gcmotion.utils.setup_pint import setup_pint
+from gcmotion.utils.get_size import get_size
 
 from gcmotion.classes.particle import Particle
 from gcmotion.classes.collection import Collection
@@ -34,6 +35,7 @@ from gcmotion.plotters.collection_parabolas import collection_parabolas
 __all__ = [
     "_logger_setup",
     "setup_pint",
+    "get_size",
     "Particle",
     "Collection",
     "qfactor",

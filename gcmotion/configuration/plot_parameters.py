@@ -1,9 +1,12 @@
 # fmt: off
+figsize = (16, 9) # Global window size
+dpi = 90 # Global dpi
 
 time_evolution = {
 
     "fig_parameters": {
-        "figsize": (13, 9),
+        "figsize": figsize,
+        "dpi": dpi,
         "sharex": True,
     },
 
@@ -14,6 +17,7 @@ time_evolution = {
     },
 
     "labelpad" : 45,
+    "loc" : "bottom",
     "ylabel_args": {
         "rotation": 0,
         "fontsize" : 15,
@@ -30,21 +34,47 @@ tokamak_profile = {
 
 drift = {
 
+    "fig_parameters": {
+        "figsize": figsize,
+        "dpi": dpi,
+    },
+
     "scatter_args": {
         "s" : 0.1,
         "color" : "red",
     },
 
-    "yfontsize": 15,
-    "xfontsize": 15,
+    "yfontsize": 16,
+    "xfontsize": 12,
 }
 
+drifts = {
+
+    "fig_parameters": {
+        "figsize": figsize,
+        "dpi": dpi,
+    },
+
+    "scatter_args": {
+        "s" : 0.1,
+        "color" : "red",
+    },
+
+    "yfontsize": 16,
+    "xfontsize": 12,
+}
 energy_contour = {
 
-    "contour_grid_density" : 100,
-    "contour_levels" : 15,
+    "fig_parameters": {
+        "figsize": figsize,
+        "dpi": dpi,
+    },
+    "auto_yaxis_zoom": 0.75,
+    "contour_grid_density" : 200,
+    "contour_levels" : 25,
     "contour_cmap" : "plasma",
     "locator": "log", # "log" or anything else for default
+    "log_base": 1.04, # Values closer to 1 seem to space out contour lines more evenly
     "cbar_color": "red",
 }
 
