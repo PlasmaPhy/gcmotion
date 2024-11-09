@@ -4,20 +4,20 @@ Calculates and plots the fixed points of the system.
 Example
 -------
 
-This is how ``fixed_points`` can be called inside the function :py:func:`energy_contour`:
+This is how :py:func:`fixed_points_plot` can be called inside the function :py:func:`energy_contour`:
 
 .. code-block:: python
 
-if plot_fixed_points:
-    fixed_points_plot(
-        cwp,
-        theta_lim=[theta_min, theta_max],
-        P_theta_lim=[psi_min, psi_max],
-        info=True,
-        _internal_call=True,
-        canvas=canvas,
-        **params,
-    )
+    if plot_fixed_points:
+        fixed_points_plot(
+            cwp,
+            theta_lim=[theta_min, theta_max],
+            P_theta_lim=[psi_min, psi_max],
+            info=True,
+            _internal_call=True,
+            canvas=canvas,
+            **params,
+        )
 
 
 """

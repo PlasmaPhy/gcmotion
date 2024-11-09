@@ -1,3 +1,54 @@
+r""" Function that calculates the fixed points and the number of fixed points for multiple
+particles in a Collection form :py:class:`~gcmotion.classes.collection.Collection`, where 
+each particle has a different :math:`P_{\zeta0}`.
+
+Example
+-------
+
+This is how :py:func:`bifurcation` can be called inside the function :py:func:`bifurcation_plot`:
+
+.. code-block:: python
+
+    from gcmotion.scripts.bifurcation import bifurcation
+
+        thetas_fixed, P_thetas_fixed, num_of_fp = bifurcation(
+            collection=collection,
+            theta_lim=theta_lim,
+            P_theta_lim=P_theta_lim,
+            iterations=iterations,
+            info=info,
+        )
+
+    Parameters
+    ----------
+    
+    collection : :py:class:`~gcmotion.classes.collection.Collection`
+        The collection of particles
+    theta_lim : list, optional
+        Provides the limits for the solution search area for fixed points
+        with regards to the :math:`\theta` variable. It will be passed into 
+        :py:func:`fixed_points` 
+    P_theta_lim : list, optional
+        Provides the limits (divided by psi_wall) for the solution search area with regards
+        to the :math:`P_{\theta}` variable. It will be passed into the "bounds" argument of
+        :py:func:`fixed_points`. 
+    iterations : int, optional
+        Integer that essentially dictates the number of initial conditions that will be 
+        passed into :py:func:`fixed_points`.
+    info : bool, optional
+        Boolean that dictates weather the :math:`P_{\zeta0}` of the particle whose
+        fixed points have just been calculated, will be printed alongside the fixed points
+        found.
+
+    Returns
+    -------
+
+    thetas_fixed, P_thetas_fixed, num_of_fp : tuple
+        Tuple where each element is a list containing the lists of all the :math:`theta`'s  
+        fixed, all the :math:`P_{theta}`'s fixed and the number of fixed points found for 
+        each :math:`P_{\zeta0}`.
+"""
+
 import numpy as np
 from collections import deque
 
@@ -27,6 +78,11 @@ def bifurcation(
 
     particles = collection.particles
     p1 = particles[0]
+    p_last = particles[-1]
+
+    if p1.Pzeta0 == p_last.Pzeta0:
+        print(r"Each particle in the collection must have different $P_{\zeta0}$")
+        return
 
     qfactor = p1.qfactor
     Bfield = p1.Bfield

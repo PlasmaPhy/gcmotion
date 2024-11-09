@@ -1,3 +1,25 @@
+r"""
+Calculates and plots the bifurcation diagram of the fixed points for a Collection 
+of particles.
+
+Example
+-------
+
+This is how :py:func:`bifurcation_plot` can be called inside a .py script or a .ipynb notebook:
+
+.. code-block:: python
+
+    bifurcation_plot(
+        collection=collection,
+        theta_lim=[-1.01 * np.pi, 1.01 * np.pi],
+        P_theta_lim=[0.01, 1.3],
+        iterations=30,
+        info=True,
+    )
+
+
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 from time import time
@@ -13,6 +35,32 @@ def bifurcation_plot(
     iterations: int = 250,
     info: bool = False,
 ):
+    r"""Draws the bifurcation diagrams for the :math:`theta`'s  fixed,
+    the :math:`P_{theta}`'s fixed and the number of fixed points found for
+    each :math:`P_{\zeta0}`.
+
+    :meta public:
+
+    Parameters
+    ----------
+    collection : :py:class:`~gcmotion.classes.collection.Collection`
+        The collection of particles
+    theta_lim : list, optional
+        Provides the limits for the solution search area for fixed points
+        with regards to the :math:`\theta` variable. It will be passed into
+        :py:func:`bifurcation`
+    P_theta_lim : list, optional
+        Provides the limits (divided by psi_wall) for the solution search area with regards
+        to the :math:`P_{\theta}` variable. It will be passed into the "bounds" argument of
+        :py:func:`bifurcation`.
+    iterations : int, optional
+        Integer that essentially dictates the number of initial conditions that will be
+        passed into :py:func:`bifurcation` and then :py:func:`fixed_points`.
+    info : bool, optional
+        Boolean that dictates weather the :math:`P_{\zeta0}` of the particle whose
+        fixed points have just been calculated, will be printed alongside the fixed points
+        found.
+    """
 
     start = time()
     thetas_fixed, P_thetas_fixed, num_of_fp = bifurcation(

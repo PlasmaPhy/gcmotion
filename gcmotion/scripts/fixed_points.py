@@ -1,5 +1,5 @@
-r""" Function tha uses SciPy's differential_evolution in order to solve the algebraic but
-complicated system of equations :math:`\dot{\theta} = 0 \& \dot{P_{\theta}} = 0`
+r""" Function that uses SciPy's :py:func:`differential_evolution` in order to solve 
+the algebraic but complicated system of equations :math:`\dot{\theta} = 0 \& \dot{P_{\theta}} = 0`
 
 Example
 -------
@@ -32,31 +32,36 @@ This is how :py:func:`fixed_points` can be called inside the function :py:func:`
 
     Parameters
     ----------
-
-    iterations : int
-        Integer that essentially dictates the number of initial conditions that will be fed into
-        differential_evolution, thus dictating the number of iterations the
-        afformentioned function will be executed.
-    theta_lim : list
-        Provides the limits for the solution search area with regards to the :math:`\theta`
-          variable. It will be passed into the "bounds" argument of differential_evolution 
-    P_theta_lim : list
-        Provides the limits for the solution search area with regards to the :math:`P_{\theta}` 
-        variable. It will be passed into the "bounds" argument of differential_evolution 
     constants : dict
         Dict containing the constants of motion. Currently :math:`\mu, m_i, q_i, P_{\zeta0}`
         are used.
     profile : dict
         Dict containing the tokamak configuration objects.
-    info : bool
+    iterations : int, optional
+        Integer that essentially dictates the number of initial conditions that will be fed into
+        differential_evolution, thus dictating the number of iterations the
+        afformentioned function will be executed.
+    theta_lim : list, optional
+        Provides the limits for the solution search area with regards to the :math:`\theta`
+          variable. It will be passed into the "bounds" argument of :py:func:`differential_evolution`. 
+    P_theta_lim : list, optional
+        Provides the limits (divided by psi_wall) for the solution search area with regards
+        to the :math:`P_{\theta}` variable. It will be passed into the "bounds" argument of
+        :py:func:`differential_evolution`. 
+    info : bool, optional
         Boolean that dictates weather the fixed points and distinct fixed points found 
         will be printed alongside how many where found respectively.
+    scaled_P_thetas : bool, optional
+        Boolean that dictates weather the initial conditions regarding the variable
+        :math:`P_{\theta}` (initial conditions for fixed points search) will be scaled, so
+        as to increase the density of initial :math:`P_{\theta}`'s near the lower boundary
+        of the search area.
 
     Returns
     -------
 
     num_of_dfp, distinct_fixed_points : tuple
-        Tuple where the firs element is the number of distinct fixed points found and
+        Tuple where the first element is the number of distinct fixed points found and
         the second element is a list containing the distinct points found in the form
         :math:`[\theta_{fixed},P_{\theta_{fixed}}]`
 
@@ -72,9 +77,10 @@ def fixed_points(
     constants: dict,
     profile: dict,
     iterations: int = 50,
-    theta_lim: list = [-np.pi - 0.1, np.pi + 0.1],
-    P_theta_lim: list = [0, 0.04],
+    theta_lim: list = [-1.01 * np.pi, 1.01 * np.pi],
+    P_theta_lim: list = [0.01, 1.3],
     info: bool = False,
+    scaled_P_thetas: bool = False,
     # polish=True,
     # init="sobol",
     # workers=-1,
@@ -177,26 +183,31 @@ def fixed_points(
     fixed_points = np.empty((3 * iterations, 2))
     fixed_points[:] = np.nan
 
-    theta_min_init = -np.pi + 0.001
-    theta_max_init = np.pi - 0.001
+    # Define the limits of the initial conditions to be certainly inside the
+    # limits of the "bounds" argument you have defined previously
+    if theta_min <= 0:
+        theta_min_init = theta_min * 0.999
+    else:
+        theta_min_init = theta_min * 1.001
 
-    P_theta_min_init = P_theta_min + 0.001
-    P_theta_max_init = P_theta_max - 0.001
+    theta_max_init = np.pi * 0.999
+
+    P_theta_min_init = P_theta_min * 1.001
+    P_theta_max_init = P_theta_max * 0.999
 
     thetas_init = np.linspace(theta_min_init, theta_max_init, 3)
     P_thetas_init = np.linspace(P_theta_min_init, P_theta_max_init, iterations)
 
-    P_thetas_init_mod = np.sin(np.pi * P_thetas_init) ** 4  # (1 - np.cos(P_thetas_init)) / 2
-    scaled_P_thetas_init = (
-        P_theta_min_init + (P_theta_max_init - P_theta_min_init) * P_thetas_init_mod
-    )
+    if scaled_P_thetas:
+        P_thetas_init_mod = np.sin(np.pi * P_thetas_init) ** 4  # (1 - np.cos(P_thetas_init)) / 2
+        P_thetas_init = P_theta_min_init + (P_theta_max_init - P_theta_min_init) * P_thetas_init_mod
 
     idx = 0
 
     # Run fixed_point() for multiple initial conditions in order to locate
     # multiple fixed points
     for theta_init in thetas_init:
-        for P_theta_init in scaled_P_thetas_init:
+        for P_theta_init in P_thetas_init:
 
             initial_condition = [theta_init, P_theta_init]
 
