@@ -35,7 +35,7 @@ from gcmotion.plotters.energy_contour import _cbar
 
 from gcmotion.configuration.plot_parameters import energy_contour as config
 
-from gcmotion.utils._logger_setup import logger
+from gcmotion.utils.logger_setup import logger
 
 
 def collection_energy_contour(
@@ -167,13 +167,17 @@ def collection_energy_contour(
                 **params,
             )
 
-        if Ptheta_lim == "auto":
-            plt.autoscale(axis="y")
-            Ptheta_lim = list(plt.gca().get_ylim())
-            Ptheta_lim[0] = max(0, Ptheta_lim[0])
-            # Hard y lim
-            Ptheta_lim[1] = min(1.6, Ptheta_lim[1])
-
+        # if Ptheta_lim == "auto":
+        #     minpsiNU = min(
+        #         getattr(collection[_], "psiNU").min()
+        #         for _ in range(collection.n)
+        #     )
+        #     maxpsiNU = max(
+        #         getattr(collection[_], "psiNU").max()
+        #         for _ in range(collection.n)
+        #     )
+        #     psiNUlim = [minpsiNU, maxpsiNU]
+        # print(psiNUlim)
         logger.info("\t\tPlotting single energy contour...")
         logger.disable("gcmotion")
         C = energy_contour(

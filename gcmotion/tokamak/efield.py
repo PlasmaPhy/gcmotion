@@ -7,8 +7,9 @@ about the electric field of the system. It implements all the methods needed
 buy the solver and other calculations, and is called automatically wherever required.
 
 To add a new electic field, simply copy-paste an already existing class
-and fill the :py:meth:`~gcmotion.tokamak.efield.ElectricField.solverPhiderNU()` 
-and :py:meth:`~gcmotion.tokamak.efield.ElectricField.PhiNU()` methods to fit
+and fill the :py:meth:`~gcmotion.tokamak.efield.ElectricField.solverPhiderNU()` ,
+:py:meth:`~gcmotion.tokamak.efield.ElectricField.PhiNU()` and
+:py:meth:`~gcmotion.tokamak.efield.ElectricField.Er()` methods to fit
 your electric field. In case your field has extra parameters you want to pass 
 as arguments, you must also create an 
 :py:meth:`~gcmotion.tokamak.efield.ElectricField.__init__()` method and declare 
@@ -97,8 +98,10 @@ class ElectricField(ABC):
 
         .. warning::
             The derivatives are calculated with respect to :math:`\psi`,
-            and **not** :math:`\psi_p`. This is accounted for inside the solver
-            by multiplying by :math:`q(\psi)`.
+            and **not** :math:`\psi_p`, which appear in the differential equations. 
+            This is accounted for inside the solver by multiplying by :math:`q(\psi)`,
+            since :math:`\dfrac{\partial f}{\partial \psi_p} = \dfrac{\partial f}{\partial \psi}\
+            \dfrac{\partial \psi}{\partial \psi_p} = q\dfrac{\partial f}{\partial \psi}`
 
         Parameters
         ----------
@@ -108,6 +111,7 @@ class ElectricField(ABC):
             Value of :math:`\theta` in [NU].
 
         Returns
+        -------
         2-tuple of floats
             Calculated derivatives in [NU].
 
@@ -125,9 +129,9 @@ class ElectricField(ABC):
         Parameters
         ----------
         psi : float | np.ndarray
-            The :math:`\psi` value(s).
+            The :math:`\psi` value(s) in [NU].
         theta : float | np.ndarray
-            Value of :math:`\theta` in [NU].
+            The :math:`\psi` value(s).
 
         Returns
         -------
@@ -188,7 +192,7 @@ class Nofield(ElectricField):
 
 class Radial(ElectricField):
     r"""Initializes an electric field of the form:
-    :math:`E(r) = -E_{peak}\exp\bigg[-\dfrac{(r-r_{peak})^2}{r_w^2})\bigg]`
+    :math:`E(r) = -E_{peak}\exp\bigg[-\dfrac{(r-r_{peak})^2}{r_{w}^2})\bigg]`
 
     with
 
@@ -246,6 +250,8 @@ class Radial(ElectricField):
         self.EaNU = self.Ea.to("NUVolts_per_NUmeter")
         self.psi_peakNU = self.psi_peak.to("NUMagnetic_flux")
         self.psi_waistNU = self.psi_waist.to("NUMagnetic_flux")
+        self.rpeakNU = self.rpeak.to("NUmeters")
+        self.rwNU = self.rw.to("NUmeters")
 
         # Unitless quantities, makes it a bit faster if defined here
         for key, value in self.__dict__.copy().items():
@@ -285,7 +291,7 @@ class Radial(ElectricField):
 
     def Er(self, psi: np.ndarray) -> np.ndarray:
         r = np.sqrt(2 * psi)
-        E = -self._Ea * np.exp(-((r - self._rpeak) ** 2) / self._rw**2)
+        E = -self._EaNU * np.exp(-((r - self._rpeakNU) ** 2) / self._rwNU**2)
         return E
 
     def __repr__(self):

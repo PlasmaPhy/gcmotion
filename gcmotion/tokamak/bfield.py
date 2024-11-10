@@ -23,7 +23,7 @@ The general structure is this::
         def __init__(self, *parameters):
             "Parameter setup."
         
-        def bigNU(self, r, theta)
+        def bigNU(self, psi, theta)
             return (b, g, i)
     
         def solverbNU(self, psi, theta): 
@@ -41,7 +41,7 @@ The general structure is this::
             return string
 
 .. note:: 
-    The Electric Fields's parameters should be Quantites. Conversions to 
+    The Magnetic Fields's parameters should be Quantites. Conversions to 
     [NU] and intermediate values must be calculated in 
     :py:meth:`~gcmotion.tokamak.bfield.MagneticField.__init__()`.
 
@@ -68,12 +68,12 @@ The general structure is this::
   
 .. rubric:: The 'MagneticField' Abstract Base Class
 
-The base class that every other class inherits from is ``MagneticField``. 
+The base class that every other class inherits from. 
 This class does nothing, it is only a template.
 
 .. autoclass:: MagneticField
     :member-order: bysource
-    :members: __init__, solverbNU, solverCNU, bigNU
+    :members: __init__, bigNU, solverbNU
 
 """
 
@@ -99,22 +99,22 @@ class MagneticField(ABC):
     def bigNU(
         self, phi: float | np.ndarray, theta: float | np.ndarray
     ) -> float | np.ndarray:
-        r"""Calculates :math:`B(\psi, theta), i(\psi, theta), g(\psi, theta)`.
-        Input and output must can be both floats or np.ndarrays, in [NU].
+        r"""Calculates :math:`B(\psi, \theta), I(\psi, \theta), g(\psi, \theta)`.
+        Input and output must be both floats or np.ndarrays, in [NU].
 
         Used in energy contour plots.
 
         Parameters
         ----------
         psi : float | np.ndarray
-            The :math:`\psi` value(s).
+            The :math:`\psi` value(s) in [NU].
         theta : float | np.ndarray
-            Value of :math:`\theta` in [NU].
+            The :math:`\theta` value(s).
 
         Returns
         -------
         float | np.ndarray
-            The Calculated :math:`\Phi` value(s).
+            The Calculated :math:`B(\psi, \theta), I(\psi, \theta), g(\psi, \theta)` value(s) in [NU].
 
         """
 
@@ -122,17 +122,21 @@ class MagneticField(ABC):
     def solverbNU(
         self, psi: float, theta: float
     ) -> tuple[float, float, float]:
-        r"""Calculates the **normalized** magnetic field strength
-        :math:`b = B/B_0` and its derivative with respect to
-        :math:`\psi_p` and :math:`\theta`.
+        r"""Calculates all the values needed by the solver:
+        :math:`B,I,g` (by calling ``self.bigNU()``) and the derivatives
+        :math:`\dfrac{\partial B}{\partial \psi}, \dfrac{\partial B}{\partial \theta}\
+        \dfrac{\partial I}{\partial \psi}` and :math:`\dfrac{\partial g}{\partial \psi}`.
+
         Input and output must be floats, in [NU].
 
         Used inside the solver.
 
         .. warning::
             The derivatives are calculated with respect to :math:`\psi`,
-            and **not** :math:`\psi_p`. This is accounted for inside the solver
-            by multiplying by :math:`q(\psi)`.
+            and **not** :math:`\psi_p`, which appear in the differential equations. 
+            This is accounted for inside the solver by multiplying by :math:`q(\psi)`,
+            since :math:`\dfrac{\partial f}{\partial \psi_p} = \dfrac{\partial f}{\partial \psi}\
+            \dfrac{\partial \psi}{\partial \psi_p} = q\dfrac{\partial f}{\partial \psi}`
 
         Parameters
         ----------
@@ -142,8 +146,9 @@ class MagneticField(ABC):
             Value of :math:`\theta` in [NU].
 
         Returns
+        -------
         3-tuple of floats
-            Calculated field strength derivatives in [NU].
+            Calculated values and derivatives in [NU].
         """
 
 
@@ -162,9 +167,9 @@ class LAR(MagneticField):
             The strength of the magnetic field *on the magnetic axis*
             in [T].
         i : Quantity
-            The toroidal current in [T * m].
+            The toroidal current in units of [Plasma Current].
         g : Quantity
-            The poloidal current in [T * m].
+            The poloidal current in units of [Plasma Current].
         """
 
         # SI Quantities
@@ -185,11 +190,12 @@ class LAR(MagneticField):
 
         if isinstance(psi, (int, float)):
             b = 1 - sqrt(2 * psi) * cos(theta)
+            g = self._gNU
+            i = self._iNU
         elif isinstance(psi, np.ndarray):
             b = 1 - np.sqrt(2 * psi) * np.cos(theta)
-
-        g = self._gNU
-        i = self._iNU
+            g = np.tile(self._gNU, psi.shape)
+            i = np.tile(self._iNU, psi.shape)
 
         return (b, i, g)
 

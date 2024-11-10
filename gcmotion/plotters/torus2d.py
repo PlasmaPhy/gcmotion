@@ -20,7 +20,7 @@ Example
 import numpy as np
 import matplotlib.pyplot as plt
 
-from gcmotion.utils._logger_setup import logger
+from gcmotion.utils.logger_setup import logger
 
 from gcmotion.configuration.plot_parameters import torus2d as config
 
@@ -56,7 +56,9 @@ def torus2d(cwp, percentage: int = 100, truescale: bool = True):
     r_plot1 = r_torus
     r_plot2 = Rtorus + r_torus * np.cos(theta_torus)
 
-    fig, ax = plt.subplots(1, 2, figsize=(16, 6), subplot_kw={"projection": "polar"})
+    fig, ax = plt.subplots(
+        1, 2, figsize=(16, 6), subplot_kw={"projection": "polar"}
+    )
 
     wall_points = config["wall_points"]
 
@@ -78,7 +80,9 @@ def torus2d(cwp, percentage: int = 100, truescale: bool = True):
     )
 
     # Orbits
-    ax[0].scatter(theta_torus, r_plot1, **config["torus2d_orbit_kw"], zorder=-1)
+    ax[0].scatter(
+        theta_torus, r_plot1, **config["torus2d_orbit_kw"], zorder=-1
+    )
     ax[1].scatter(z_torus, r_plot2, **config["torus2d_orbit_kw"], zorder=-1)
 
     ax[0].set_ylim(bottom=0)

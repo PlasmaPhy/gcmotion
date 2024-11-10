@@ -18,7 +18,7 @@ Example
 
 import matplotlib.pyplot as plt
 
-from gcmotion.utils._logger_setup import logger
+from gcmotion.utils.logger_setup import logger
 
 from gcmotion.classes.parabolas import Construct
 

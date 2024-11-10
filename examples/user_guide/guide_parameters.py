@@ -33,7 +33,7 @@ params = {
     "theta0"      :   np.repeat(0, 15),
     #"theta0"      :   np.concat((np.repeat(0, 5), np.repeat(np.pi, 3))),
     "zeta0"       :   0,
-    "psi0"        :   Q(np.linspace(0.3, 1.1, 15), "psi_wall"),
+    "psi0"        :   Q(np.linspace(0.3, 1, 15), "psi_wall"),
     #"psi0"        :   Q(np.concat((np.linspace(0.6, 1.2, 5), np.linspace(0.95, 1.05,3))), "psi_wall"),
     "Pzeta0"      :   Q(-0.0272, "NUMagnetic_flux"),
     "t_eval"      :   Q(np.linspace(0, 1e-3, 100000), "seconds") # t0, tf, steps

@@ -19,7 +19,7 @@ Example
 import numpy as np
 import matplotlib.pyplot as plt
 
-from gcmotion.utils._logger_setup import logger
+from gcmotion.utils.logger_setup import logger
 
 from gcmotion.configuration.plot_parameters import tokamak_profile as config
 

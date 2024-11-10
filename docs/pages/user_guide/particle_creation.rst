@@ -4,126 +4,161 @@
 Creating a Particle
 ===================
 
-Setting up tokamak configuration
---------------------------------
+Setting up the Quantity Constructor
+-----------------------------------
 
-First we need to configure our tokamak:
+The quantity constructor is an easy-to-use but powerful tool provided by the 
+`pint <https://pint.readthedocs.io/en/stable/>`_ package. It offers the ability
+create our own units and unit systems, and makes unit conversions a breeze, thus
+saving us the headache of manually converting them every time it is needed. The units
+are defined once in the :py:mod:`gcmotion.utils.setup_pint` module and are henceforth
+globally available. A quick read-through the 
+`pint user guide <https://pint.readthedocs.io/en/stable/user/defining-quantities.html>`_
+is recommended.
+
+From our theory we know that the normalization depends on the Magnetic field strength on
+the magnetic axis :math:`B_0`, the tokamak's major radius :math:`R` and the particle's 
+species, through its atomic and mass number. To make our lives easier when defining 
+initial conditions for :math:`\psi_0`, we also define :math:`[\psi_{wall}]` as a 
+unit of magnetic flux itself, so we can define :math:`\psi_0` relative to that.
+Thus, the tokamak's minor radius :math:`\alpha` is also needed in defining our new
+units system:
 
 .. code-block:: python
-    
-   >>> R, a = 1.65, 0.5  # Major/Minor Radius in [m]
-   >>> qfactor = gcm.qfactor.Hypergeometric(R, a, q0=1.1, q_wall=3.5, n=2)
-   >>> Bfield = gcm.bfield.LAR(i=0, g=1, B0=1)
-   >>> Efield = gcm.efield.Radial(R, a, qfactor, Ea=75000, minimum=0.9, r_w=1 / 50)
 
+   >>> Rnum = 1.65
+   >>> anum = 0.5
+   >>> B0num = 1
+   >>> species = "p"
+   >>> ureg, Q = gcm.setup_pint(R=Rnum, a=anum, B0=B0num, species=species)
 
-#. In the first line, we set the tokamak's major and minor radii in [m]. Note that 
-   first thing in particle initialization is normalizing the lengths to the major 
-   radius R. Therefore, during calculations, the quantity :math:`r_{wall} = \alpha/R` 
-   is used to derive quantities like :math:`\psi_{wall}`, :math:`$B_{wall}`, etc.
+The values passed to ``setup_pint()`` must be purely numerical, and **in [m] and [T]**
+accordingly. The object we are interested in is Q. Through Q we can define any *Quantity* 
+we want, in both S.I. and normalized units. ``ureg`` (UnitRegistry) is just a (very big)
+dictionary containing all the defined units pint offers. We don't really needed but it is nice
+to have around.
 
-#. In the second line, we set up the q factor profile. In this example we use a 
-   hypergeometric profile, but other configurations are :ref:`availiable <qfactors>`. To choose a 
-   different profile, we simple set :code:`qfactor = gcm.qfactor.<q factor>(parameters)`. 
+.. tip::
+   *Quantity* objects are floats (or numpy arrays) with their units attached to them. All operations
+   between Quantities work the same, as long as their dimensionality allows it. For example, pint won't
+   allow us to convert from [Joule] to [kilograms] or add 1[meter] and 5[Tesla] (why would we anyway?).
+
+Configuring the tokamak profile
+--------------------------------------
+
+First we need to configure our tokamak. We create all the Quantities needed for the q-factor,
+magnetic and electric field:
+
+.. code-block:: python
+
+   >>> R = Q(Rnum, "meters")
+   >>> a = Q(anum, "meters")
+   >>> B0 = Q(B0num, "Tesla")
+   >>> i = Q(0, "NUPlasma_current")
+   >>> g = Q(1, "NUPlasma_current")
+   >>> Ea = Q(73500, "Volts/meter")
+
+The prefix "NU" means that the quantity is defined in normalized units.
+
+.. tip::
+   We are not restricted to "meters" or "Tesla". We might as well define :math:`R` in kilometers
+   and :math:`B0` in Webers per square mile. The correct SI values are calculated internally.
+   This applies to every Quantity used to create a particle.
+
+Now we are ready to configure the tokamak profile. This is done by creating a dictionary containing
+all the necessary parameters and objects:
+
+.. code-block:: python
+
+   >>> tokamak = {
+   >>>     "R": R,
+   >>>     "a": a,
+   >>>     "B0": B0,
+   >>>     "qfactor": gcm.qfactor.Hypergeometric(a, B0, q0=1.1, q_wall=3.8, n=2),
+   >>>     "bfield": gcm.bfield.LAR(B0=B0, i=i, g=g),
+   >>>     "efield": gcm.efield.Radial(a, Ea, B0, peak=0.98, rw=1 / 50),
+   >>> } 
+
+#. The first 3 entries are simply the Quantities we defined above.
+
+#. In the 4th entry, we set up the q factor profile. In this example we use a 
+   hypergeometric profile, but other configurations are :ref:`available <qfactors>`. To choose a 
+   different profile, we simple set :code:`qfactor = gcm.qfactor.<qfactor>(parameters)`. 
    Different q profiles require different parameters. We can also easily create 
    new profiles with however many parameters we want. For more info, see the 
    :ref:`documentation <about_qfactors>`.
 
-#. In the third line we set up the Magnetic field inside the tokamak. Here we use 
-   the class Large Aspect Ratio configuration, which is the only :ref:`availiable <bfields>` at the 
+#. In the 5th entry we set up the Magnetic field inside the tokamak. Here we use 
+   the Large Aspect Ratio configuration, which is the only :ref:`available <bfields>` at the 
    moment. We can easily create new ones though, see :ref:`documentation <about_bfields>`. 
-   Note that during calculations, all values are normalized to the Magnetic field 
-   axis strength $B_0$. $B_0$ itself never shows up in calculations, but only when 
-   we want to convert the results to lab units.
 
 #. In the forth line, we set up the Electric field. Similarly to the q factor, 
-   we can choose from the :ref:`availiable <efields>` configurations, or create new ones, see 
+   we can choose from the :ref:`available <efields>` configurations, or create new ones, see 
    :ref:`documentation <about_efields>`.
 
 .. note::
 
-    The `qfactor`, `Bfield` and `Efield` are objects created from their respective classes, 
+    The `qfactor`, `bfield` and `efield` are objects created from their respective classes, 
     and the solver doesn't care about what they do and how, as long as they support 
     the required querry methods described in the documentation. For example, whenever 
-    the solver wants to get the value of the magnetic field stength, it just calls
-    :code: `Bfield.B(psi, theta)`, which returns the numerical vaule of the field 
+    the solver wants to get the value of the magnetic field stength it just calls
+    :code: `Bfield.bigNU(psi, theta)`, which returns the numerical vaule of the field 
     strength. That way, we never have to tinker with the solver itself whenever 
     we change configuration, and we can also use whichever method we want for 
     returning the required values (e.g. analytical calculation, lookup tables etc.)
 
-Setting up particle's initial conditions
-----------------------------------------
+Setting up particle's initial conditions and parameters
+-------------------------------------------------------
+
+Particle initial and conditions are Quantities as well:
 
 .. code-block:: python
     
-   >>> species = "d"
-   >>> mu = 1e-5
-   >>> theta0 = 0
-   >>> psi0 = 0.533  # times psi_wall
-   >>> zeta0 = np.pi
-   >>> Pzeta0 = -0.022
-   >>> t_eval = np.linspace(0, 1000000, 100000)  # t0, tf, steps
+   >>> parameters = {
+   >>>     "species": species,
+   >>>     "mu/muB": Q(5, "keV"),
+   >>>     "theta0": 0,
+   >>>     "zeta0": 0,
+   >>>     "psi0": Q(0.78, "psi_wall"),
+   >>>     "Pzeta0": Q(-0.0272, "NUMagnetic_flux"),
+   >>>     "t_eval": Q(np.linspace(0, 1e-3, 100000), "seconds"),
+   >>> }
 
 
-#. First we must setup the particle's species. This is needed since all calculations 
-   are normalized to the protons mass, so if we want to study other particles, we 
-   need to account for that. The availiable particle species are "p" (proton), "e" (electron),
-   "D" (deuterium), "T" (Tritium), "He3" and "He4". The species string is case-insensitive.
+#. The first entry is  the particle's species. The available particle species are 
+   "p" (proton), "e" (electron), "D" (deuterium), "T" (Tritium), "He3" and "He4". 
+   The species string is case-insensitive.
 
-#. The rest are pretty straight forward, with the exception of :math:`\psi_0`. Since 
-   :math:`\psi_{wall}` is directly dependant on the tokamak's :math:`R` and :math:`\alpha` 
-   through :math:`\psi_{wall} = \dfrac{r_{wall}^2}{2} = \dfrac{1}{2}\bigg(\dfrac{\alpha}{R}\bigg)^2`, 
-   it is usually a weird number (in our example, it is 0.05). Therefore, we set up $\psi_0$ **with respect to $\psi_{wall}$**, 
-   and the actual $\psi_0$ is calculated upon particle initialization.
+#. The ``"mu/muB"`` entry is interesting. Sometimes we need to define the particle's
+   magnetic moment :math:`\mu`, or the product :math:`\mu B_{initial}`. If the Quantity
+   has *dimensionality* of [magnetic moment] = :math:`[current]\cdot[length]^2`, the parameter is parsed
+   as the particle's :math:`\mu`. If it has *dimensionality* of [energy] = :math:`[mass]\cdot[length]^2/[time]^2`, 
+   the parameter is parsed as the particle's :math:`\mu B_{initial}`.
+
+#. The ``"theta0"`` and ``"zeta0"`` entries can be either purely numerical, or Quantities with
+   units of [radians].
+
+#. ``"psi0"`` can be defined in many ways. It can either be defined in units of "Magnetic_flux" 
+   (:math:`[Tesla\cdot meters^2]`), "NUMagnetic_flux" (:math:`[NUTesla\cdot NUmeters^2]`),
+   "psi_wall" (:math:`B_0 a^2/2` [Magnetic_flux]), or "NUpsi_wall" 
+   (:math:`(a/R)^2/2` [NUMagnetic_flux]).
   
-#. :code:`teval` contains the times for which we want to now the orbit. As with all solvers, 
+#. :code:`teval` contains the times for which we want to now the orbit. We can define it in any unit of time
+   we want, such as "miliseconds", or "NUseconds" for normalized time units. As with all solvers, 
    the stepsize of :code:`teval` is not the actual step size of the solver, since it uses 
    an adaptive step size.
 
 Initializing particle
 ---------------------
 
+Now, particle creation is as simple as:
+
 .. code-block:: python
 
-   >>> R, a = 1.65, 0.5  # Major/Minor Radius in [m]
-   >>> qfactor = gcm.qfactor.Hypergeometric(R, a, q0=1.1, q_wall=3.5, n=2)
-   >>> Bfield = gcm.bfield.LAR(i=0, g=1, B0=1)
-   >>> Efield = gcm.efield.Radial(R, a, qfactor, Ea=75000, minimum=0.9, r_w=1 / 50)
+   >>> cwp = gcm.Particle(tokamak, parameters)
 
-   >>> species = "d"
-   >>> mu = 1e-5
-   >>> theta0 = 0
-   >>> psi0 = 0.533  # times psi_wall
-   >>> zeta0 = np.pi
-   >>> Pzeta0 = -0.022
-   >>> t_eval = np.linspace(0, 1000000, 100000)  # t0, tf, steps
-
-   >>> tokamak = {
-   >>>    "R": R,
-   >>>    "a": a,
-   >>>    "qfactor": qfactor,
-   >>>    "Bfield": Bfield,
-   >>>    "Efield": Efield,
-   >>> }
-   >>> parameters = {
-   >>>    "species": species,
-   >>>    "mu": mu,
-   >>>    "theta0": theta0,
-   >>>    "psi0": psi0,
-   >>>    "zeta0": zeta0,
-   >>>    "Pzeta0": Pzeta0,
-   >>>    "t_eval": t_eval,
-   >>> }
-
-   >>> particle1 = gcm.Particle(tokamak, parameters)
-   >>> cwp = particle1
-
-Here we instantiate a single particle from the :py:class:`~gcmotion.classes.particle.Particle` 
-class. We then set it as :code:`cwp` (current working particle), to avoid later confusion.
-
-As we can see, we simply create it by passing the parameters we created above. We can 
-create multiple particles that way, which are all stored in memory until we restart 
-Python, and we can switch between them by simply setting them as :code:`cwp`.
+It is handy to symbolize the particle as ``cwp`` (current working particle). We can create as 
+many different particles as we want, and they will stay in memory until we close the session.
 
 Now :code:`cwp` represents a fully-fledged particle. It stores the parameters we gave 
 it, as well as all later derived and calculated quantities **inside** it 
@@ -131,13 +166,18 @@ it, as well as all later derived and calculated quantities **inside** it
 
 .. code-block:: python
 
-   >>> print(cwp.theta0)
-   0
-   >>> print(cwp.t_eval)
-   [0.00000e+00 1.00001e+01 2.00002e+01 ... 9.99980e+05 9.99990e+05
-   1.00000e+06]
-   >>> print(cwp.Bfield.B(0.5, np.pi)) # B field stength at r=0.5, θ=π
-   1.5
+   >>> cwp["psi0"]
+   0.0975 Tm^2
+   >>> cwp["psi0NU"] # psi0 in [NUMagnetic_flux]
+   0.0358127 NUmf
+   >>> cwp["muB"], cwp["mu"], cwp["muNU"]
+   5 keV
+   6.82714 keV / T
+   2.61793e-05 NUmu
+   >>> cwp["t_eval"]
+   [0 1.00001e-08 2.00002e-08 ... 0.000777408 0.000777418 0.000777428] s
+   >>> cwp["bfield"]
+   LAR: B0=1 T, I=0 Tm, g=1.65 Tm.
 
 Calculating particle's obrit
 ----------------------------
@@ -150,20 +190,7 @@ We simply run:
 
    >>> cwp.run()
 
-The :code:`run()` method goes through some specific steps in a specific order. 
-
-#. It calculates the convertion factors from [NU] (Normalized Units) to lab units. This 
-   is needed first for converting the Electric field strength from [V/m] to [NU].
-
-#. It calculates the particle's energy. The energy can be directly calculated from the 
-   initial conditions alone, since it is a constant of motion.
-
-#. If and only if we use LAR Magnetic field **and** no Electric field, it calculates 
-   the particle's orbit type (Trapped/Passing and Lost/Confined) as described by White.
-
-#. Calculates the actual orbit and stores the results inside itself.
-
-#. Prints the particle's calculated attributes.
+Once the calculation is complete, we should see an info message in our screen.
 
 The :code:`run()` method also accepts 3 optional parameters:
 
@@ -177,13 +204,13 @@ The :code:`run()` method also accepts 3 optional parameters:
 #. :code:`events:list`: a list with :py:mod:`~gcmotion.scripts.events` to provide to the solver's *event locator*. 
    Defaults to an empty list.
 
-.. For example, if we want to calculate the particles orbit up until :math:`\theta` returns
-.. to its initial value 10 times, but not print the info message, we can run:
+For example, if we want to calculate the particles orbit up until :math:`\theta` returns
+to its initial value 10 times, but not print the info message, we can run:
 
-.. .. code-block:: python
+.. code-block:: python
    
-..    >>> events = [gcm.events.when_theta(theta0, 10)]
-..    >>> cwp.run(events=events, info=False)
+   >>> events = [gcm.events.when_theta(parameters["theta0"], 10)]
+   >>> cwp.run(events=events)
 
 .. note::
    

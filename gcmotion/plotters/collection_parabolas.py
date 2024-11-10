@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 
 from gcmotion.plotters.parabolas import parabolas, orbit_point
 
-from gcmotion.utils._logger_setup import logger
+from gcmotion.utils.logger_setup import logger
 
 
 def collection_parabolas(

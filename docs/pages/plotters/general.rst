@@ -11,7 +11,9 @@ Particle) as their first arguement.
     :caption: Plotters
     :maxdepth: 1
 
-    q-factor, magnetic and electric profile <tokamak_profile>
+    q-Factor Profile <qfactor_profile>
+    Magnetic Profile <magnetic_profile>
+    Electric Profile <electric_profile>
     Time evolution of the dynamical variables <time_evolution>
     Poloidal/Toroidal drift <drift>
     Poloidal and Toroidal drifts <drifts>

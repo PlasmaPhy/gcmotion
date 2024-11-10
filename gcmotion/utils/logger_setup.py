@@ -1,14 +1,19 @@
 """
-Logger setup
+Logger setup 
 ------------
 
-Sets up the global logger of the system.
+Module ``logger_setup.py``
+
+Sets up the global logger of the system. The log file is named "log.log" and
+is saved in the directory that the program is run in. The file is overwritten
+upon kernel restart, so using gcm interactively appends lines until restarting
+the session.
 
 Here is how to supress and re-enable the logger:
 
 .. code-block:: python
 
-    >>> from gcmotion.utils._logger_setup import logger, add_logger
+    >>> from gcmotion.utils.logger_setup import logger
     >>> ...
     >>> logger.disable("gcmotion")
     >>> function() # function that logs stuff but we want to disable

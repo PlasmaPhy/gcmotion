@@ -31,6 +31,19 @@ parameter only checks the **sign** of the direction.
 
         return event
 
+To use an event in a particle, you must pass it to its 
+:py:meth:`~gcmotion.classes.particle.Particle.run` method as such:
+
+.. code-block:: python
+
+    >>> events = [gcm.events.when_theta(theta0, 8)]
+    >>> cwp.run(events=events)
+
+This event will stop the solver after :math:`\theta` was taken its initial
+value 8 times, regardless if the particle turns out to be passing or trapped.
+Note that this does **not** mean 8 periods, since the motion is multi-
+periodic. 
+
 .. rubric:: Availiable events
     :heading-level: 4
 
@@ -38,75 +51,56 @@ parameter only checks the **sign** of the direction.
 
 from numpy import pi
 
+from gcmotion.utils.logger_setup import logger
 
-def when_theta_trapped(theta0, terminal):
+
+def when_theta(theta0, terminal, pole: int | float = pi / 2):
     r"""
-    Triggers when :math:`\theta` is equal to ``theta0`` and
+    Triggers when :math:`\theta` mod :math:`2\pi` is equal to ``theta_0`` and
     terminates after ``terminal`` times (Starting position included).
 
-    Can only stop trapped orbits.
+    Can stop both trapped and passing orbits.
 
     Setting ``terminal=0`` makes the event non-terminal.
 
-    Parameters
-    ----------
-    theta0 : int | float
-        The :math:`\theta` value that triggers the event.
-    terminal : int
-        The event's termination number.
-
-    Returns
-    -------
-
-    event : function handle
-        The event function handle to be passed to solve_ivp.
-    """
-
-    def event(t, S):
-        return S[0] - theta0
-
-    if terminal != 0:
-        event.terminal = terminal
-
-    return event
-
-
-def when_theta_passing(theta0, terminal, pole: int | float = pi / 2):
-    r"""
-    Triggers when :math:`\theta` is equal to :math:`3\pi\cdot` ``theta0`` and
-    terminates after ``terminal`` times (Starting position included).
-
-    Can only stop passing orbits.
-
-
-    Setting ``terminal=0`` makes the event non-terminal.
+    .. note::
+        By taking the mod(2π) of the particle's theta during the orbit calculation,
+        we can find when it returns to its original value even if the particle is
+        not trapped. That however creates problem in the (very common) case that our
+        theta0 is 2κπ, since these points are a pole to the mod(2π) function and the
+        event funtion is no longer analytical and continuous. To circumvent this problem,
+        we can add any number to both runtime-theta and event theta, for example π/2, so
+        the pole is now at κπ, and since we try to minimize their difference, this change
+        does not affect the event locator. This number, reasonably called "pole" can
+        be set to any number not-too-close to any initial theta0.
 
     Parameters
     ----------
-    theta0 : int | float
+    theta0 : float
         The :math:`\theta` value that triggers the event.
     terminal : int
         The event's termination number.
-    pole : int | float
+    pole : float, optional
         The modulo pole. Must be different than **ANY** of the
-        initial theta0s, and should lie between (0,2π).
-        Defaults to π/2.
+        initial theta0s. Defaults to π/2.
+
     Returns
     -------
-
     event : function handle
         The event function handle to be passed to solve_ivp.
+
     """
 
     # Warn about pole position
     if abs(pole - theta0) < 1e-3:
         string = "Warning. Pole dangerously close to an initial θ. Event might not trigger."
         print(string)
+        logger.warning(string)
 
     def event(t, S):
-        new = S[0] + pi
-        new0 = theta0 + pi
-        return (new % (2 * pi) + new0) * (new % (2 * pi) - new0)
+        new = S[0] + pole
+        new0 = theta0 + pole
+        return new % (2 * pi) - new0  # * (new % (2 * pi) - new0)
 
     if terminal != 0:
         event.terminal = terminal
@@ -116,7 +110,7 @@ def when_theta_passing(theta0, terminal, pole: int | float = pi / 2):
 
 def when_psi(psi0, terminal):
     r"""
-    Triggers when :math:`\psi` is equal to ``psi0`` and
+    Triggers when :math:`\psi` is equal to ``\psi0`` and
     terminates after ``terminal`` times (Starting position included).
 
     .. note::
@@ -131,14 +125,13 @@ def when_psi(psi0, terminal):
 
     Parameters
     ----------
-    theta0 : int | float
+    psi0 : float
         The :math:`\theta` value that triggers the event.
     terminal : int
         The event's termination number.
 
     Returns
     -------
-
     event : function handle
         The event function handle to be passed to solve_ivp.
     """

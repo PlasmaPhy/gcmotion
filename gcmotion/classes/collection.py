@@ -7,8 +7,9 @@ from gcmotion.classes.particle import Particle
 
 # from gcmotion.scripts.events import when_theta_trapped, when_theta_passing
 
-from gcmotion.utils._logger_setup import logger
+from gcmotion.utils.logger_setup import logger
 from gcmotion.utils.get_size import get_size
+from gcmotion.scripts.events import when_theta
 
 
 class Collection:
@@ -237,7 +238,9 @@ class Collection:
             logger.disable("gcmotion")
 
             start = time()
-            events = []  # FIXME: update events to work with Quantities
+            events = [
+                when_theta(p.theta0, 10)
+            ]  # FIXME: update events to work with Quantities
             p.run(info=False, orbit=orbit, events=events)
             times.append(time() - start)
 

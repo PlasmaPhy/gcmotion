@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 
 from gcmotion.plotters.poloidal_cut import poloidal_cut, _wall
 
-from gcmotion.utils._logger_setup import logger
+from gcmotion.utils.logger_setup import logger
 
 
 def collection_poloidal_cut(

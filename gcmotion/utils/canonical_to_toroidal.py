@@ -1,15 +1,6 @@
-"""
-Canonical to Toroidal coordinates conversion
---------------------------------------------
-
-Simple function to convert a particle's calculated coordinates to
-laboratory toroidal coordinates, with the option to adjust the torus'
-scale to make the orbit more visible.
-"""
-
 import numpy as np
 
-from gcmotion.utils._logger_setup import logger
+from gcmotion.utils.logger_setup import logger
 
 
 def canonical_to_toroidal(
@@ -25,7 +16,6 @@ def canonical_to_toroidal(
 
     Parameters
     ----------
-
     percentage : int, optional
         The percentage of the orbit to be plotted. Defaults to 100.
 
@@ -35,7 +25,6 @@ def canonical_to_toroidal(
 
     Returns
     -------
-
     5-tuple of 2 floats and 3 np.arrays:
         The major and minor radii of the (possibly scaled) tokamak and
         the toroidal coordionates of the particles orbit

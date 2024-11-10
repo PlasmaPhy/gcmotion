@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 
 from gcmotion.plotters.drift import drift
 
-from gcmotion.utils._logger_setup import logger
+from gcmotion.utils.logger_setup import logger
 
 
 def collection_drift(

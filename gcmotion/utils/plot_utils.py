@@ -1,10 +1,3 @@
-"""
-[0,2π] or [-π,π] mod
---------------------
-
-Simple function to mod an array between [0,2π] or [-π,π].
-"""
-
 import numpy as np
 
 from gcmotion.configuration.plot_parameters import energy_contour as config
@@ -43,7 +36,25 @@ def pi_mod(x, lim: list = [-np.pi, np.pi]) -> tuple[np.ndarray, list]:
     return x_plot, lim
 
 
-def yspan(x: np.array) -> tuple(tuple, tuple):
+def yspan(x: np.ndarray):
+    """Calculates the plot span of a bounded array to be plotted,
+    as well as the indexes of its total mimimum and maximum.
+
+    The "zoom out" factor of the plot span can be tweaked in the
+    plot_parameters.py under the name "auto_yaxis_zoom".
+
+    Parameters
+    ----------
+    x : np.ndarray
+        The array to be plotted.
+
+    Returns
+    -------
+    2tuple of 2 2typles
+        1st tuple contains the plot limits and 2nd tuple the
+        minimum and maximum indeces
+
+    """
 
     zoomout = config["auto_yaxis_zoom"]
     hardylim = config["hardylim"]
@@ -56,10 +67,10 @@ def yspan(x: np.array) -> tuple(tuple, tuple):
     diff = xmax - xmin
     mid = (xmin + xmax) / 2
 
-    lower = max(0, mid - zoomout * diff)
+    lower = mid - zoomout * diff
     higher = min(mid + zoomout * diff, hardylim)
 
-    yspan = (lower, higher)
+    xspan = (lower, higher)
     minmaxpos = (minpos, maxpos)
 
-    return yspan, minmaxpos
+    return xspan, minmaxpos

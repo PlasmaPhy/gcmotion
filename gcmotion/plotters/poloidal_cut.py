@@ -18,7 +18,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.cm import get_cmap, colors
 
-from gcmotion.utils._logger_setup import logger
+from gcmotion.utils.logger_setup import logger
 
 from gcmotion.configuration.plot_parameters import poloidal_cut as config
 

@@ -3,7 +3,7 @@ Simple function wrapper around SciPy's solve_ivp() solver. It solves
 the dynamical system:
 
 .. todo::
-    link to system formula
+    link to a markdown file with the system's formula.
 
 It uses the RK4(5) solving method. The tolerance can be tweaked 
 in gcmotion/configuration/solver_configuration.py.
@@ -11,6 +11,12 @@ in gcmotion/configuration/solver_configuration.py.
 The solver only calculates the time evolution of
 :math:`\theta, \psi, \zeta, \rho_{||}`. The rest of the dynamical variables
 are calculated afterwards.
+
+.. important::
+    
+    The solver expects the input to be purely numerical quantites, in [**NU**],
+    and returns the solution also in [**NU**]. The conversion to SI units is handled
+    by the particle's :py:meth:`~gcmotion.classes.particle.Particle.run` method.
 
 .. tip::
     When setting up the analytical function dSdt to pass to the solver,
@@ -26,43 +32,38 @@ This is how ``orbit`` is called inside the class :py:class:`Particle`:
 
 .. code-block:: python
     
-    t = self.t_eval
+    parameters = Parameters(
+        theta0 = self.theta0.magnitude,
+        psi0   = self.psi0NU.magnitude,            
+        zeta0  = self.zeta0.magnitude,
+        rho0   = self.rho0NU.magnitude,
+        mu     = self.muNU.magnitude,
+        t      = self.t_evalNU.magnitude
+    )
 
-    init_cond = {
-        "theta0": self.theta0,
-        "psi0": self.psi0,
-        "zeta0": self.zeta0,
-        "rho0": self.rho0,
-    }
+    profile = Profile(
+        qfactor = self.qfactor,
+        bfield  = self.bfield,
+        efield  = self.efield,
+    )
 
-    constants = {
-        "mu": self.mu,
-    }
-
-    profile = {
-        "qfactor": self.qfactor,
-        "bfield": self.bfield,
-        "efield": self.efield,
-        "Volts_to_NU": self.Volts_to_NU,
-    }
-
-    solution orbit(t, init_cond, constants, profile, events)
+    return orbit(parameters, profile, events=events)
 
 And this is how the solution is unpacked:
 
 .. code-block:: python
 
-    self.theta = solution["theta"]
-    self.psi = solution["psi"]
-    self.zeta = solution["zeta"]
-    self.rho = solution["rho"]
-    self.psip = solution["psip"]
-    self.Ptheta = solution["Ptheta"]
-    self.Pzeta = solution["Pzeta"]
-    self.t_eval = solution["t_eval"]
-    self.t_events = solution["t_events"]
-    self.y_events = solution["y_events"]
-    self.message = solution["message"]
+    self.theta      = self.Q(solution.theta, "radians")
+    self.zeta       = self.Q(solution.zeta, "radians")
+    self.psiNU      = self.Q(solution.psi, "NUMagnetic_flux")
+    self.rhoNU      = self.Q(solution.rho, "NUmeters")
+    self.psipNU     = self.Q(solution.psip, "NUMagnetic_flux")
+    self.PthetaNU   = self.Q(solution.Ptheta, "NUMagnetic_flux")
+    self.PzetaNU    = self.Q(solution.Pzeta, "NUMagnetic_flux")
+    self.t_evalNU   = self.Q(solution.t_eval, "NUseconds")
+    self.t_eventsNU = self.Q(solution.t_events, "NUseconds")
+    self.y_events   = solution.y_events
+    message         = solution.message
 
 
 .. rubric:: Function:
@@ -72,7 +73,7 @@ And this is how the solution is unpacked:
 from scipy.integrate import solve_ivp
 from collections import namedtuple
 
-from gcmotion.utils._logger_setup import logger
+from gcmotion.utils.logger_setup import logger
 
 from gcmotion.configuration.solver_configuration import (
     solver_configuration as config,
@@ -83,36 +84,35 @@ def orbit(
     parameters: namedtuple,
     profile: namedtuple,
     events: list = [],
-):
+) -> namedtuple:
     r"""Wrapper function around SciPy's solve_ivp().
 
     Parameters
     ----------
-
     parameters : namedtuple
         Named tuple containing the initial conditions and constants in [NU]:
         :math:`\theta_0, \psi_0, \zeta_0, \rho_{||,0}`, as well as
         :math:`\mu` and :math:`t`.
     profile : namedtuple
         Named tuple containing the tokamak configuration objects.
-    events : list
+    events : list, optional
         List containing the independed events to track. Defaults to "SI"
 
     Returns
     -------
-
     solution : namedtuple
         A named tuple containing the following:
 
             #. The calculated solutions of
                 :math:`\theta, \psi, \zeta, \rho, \psi_p, P_\theta, P_\zeta`
-                as np.ndarrays.
+                as np.ndarrays in [NU].
 
-            #. A np.ndarray containing the evaluation times. This is useful in the case
-                a terminating event is used.
+            #. A np.ndarray containing the evaluation times in [NU].
+                This is useful in the case a terminating event is used, since the
+                orbit is terminated earlier.
 
-            #. 2 lists containing the time positions and values of the found events. If
-                more than 1 event is used, the lists are nested.
+            #. 2 lists containing the time positions and values of the found events in [NU].
+                If more than 1 event is used, the lists are nested.
 
             #. The solver status message.
 

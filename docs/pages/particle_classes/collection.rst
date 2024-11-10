@@ -3,4 +3,4 @@ Collection class
 
 .. autoclass:: gcmotion.classes.collection.Collection
     :member-order: bysource
-    :members: __init__, run_all, _check, _create, _check_multiples,
+    :members: __init__, run_all, _check, _create,

@@ -13,7 +13,7 @@ Example
 
 .. code-block:: python
 
-    gcm.time_evolution(cwp, percentage=20, units="s")
+    gcm.time_evolution(cwp, percentage=20, units="SI")
 
 .. rubric:: Function:
     :heading-level: 4
@@ -23,10 +23,9 @@ Example
 import numpy as np
 import matplotlib.pyplot as plt
 
-from gcmotion.utils._logger_setup import logger
+from gcmotion.utils.logger_setup import logger
 
 from gcmotion.configuration.plot_parameters import time_evolution as config
-from gcmotion.configuration.plot_parameters import figsize, dpi
 
 
 def time_evolution(cwp, percentage: int = 100, units: str = "SI"):

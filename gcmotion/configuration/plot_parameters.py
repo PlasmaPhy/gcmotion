@@ -24,8 +24,64 @@ time_evolution = {
     },
 }
 
-tokamak_profile = {
+qfactor_profile = {
+    "figsize": (16, 6),
 
+    "plot_params": {
+        "color": "b",
+        "linewidth": 2,
+    },
+
+    "vline_params": {
+        "color": "r",
+        "linewidth": 2,
+    }
+}
+
+magnetic_profile = {
+    "figsize": (16, 6),
+    "grid_density": 100,
+
+    "bcontour_params": {
+        "levels": 100,
+        "cmap": "PuBuGn",
+    },
+
+    "icontour_params": {
+        "levels": 100,
+        "cmap": "YlOrRd",
+    },
+
+    "gcontour_params": {
+        "levels": 100,
+        "cmap": "Purples",
+    },
+}
+
+electric_profile = {
+    "figsize": (16, 6),
+    "grid_density": 200,
+
+    "aspect_ratio": 0.5,
+
+    "contour_params": {
+        "levels": 100,
+        "cmap": "PuBuGn",
+    },
+
+    "plot_params": {
+        "color": "b",
+        "linewidth": 2,
+    },
+
+    "vline_params": {
+        "color": "r",
+        "linewidth": 2,
+    }
+}
+
+tokamak_profile = {
+    "figsize": figsize,
     "contour_params": {
         "levels": 100,
         "cmap": "winter",
@@ -43,7 +99,7 @@ drift = {
         "s" : 0.1,
         "color" : "red",
     },
-
+    "hardylim": 3,
     "yfontsize": 16,
     "xfontsize": 12,
 }
@@ -59,7 +115,7 @@ drifts = {
         "s" : 0.1,
         "color" : "red",
     },
-
+    "hardylim": 3,
     "yfontsize": 16,
     "xfontsize": 12,
 }
@@ -70,6 +126,7 @@ energy_contour = {
         "dpi": dpi,
     },
     "auto_yaxis_zoom": 0.75,
+    "hardylim": 3,
     "contour_grid_density" : 200,
     "contour_levels" : 25,
     "contour_cmap" : "plasma",

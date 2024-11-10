@@ -19,8 +19,8 @@ Example
 import numpy as np
 import matplotlib.pyplot as plt
 
-from gcmotion.utils._logger_setup import logger
-from gcmotion.utils.pi_mod import pi_mod
+from gcmotion.utils.logger_setup import logger
+from gcmotion.utils.plot_utils import pi_mod, yspan
 
 from gcmotion.configuration.plot_parameters import drift as config
 

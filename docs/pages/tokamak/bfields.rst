@@ -3,7 +3,7 @@
 Magnetic field profiles
 =================================
 
-Note that the methods :func:`B()` and :func:`B_der()` as implemented
+Note that the methods :func:`bigNU()` and :func:`solverbNU()` as implemented
 in :py:class:`~gcmotion.tokamak.bfield.MagneticField` are implied.
 
 .. currentmodule:: gcmotion.tokamak.bfield
@@ -18,7 +18,7 @@ in :py:class:`~gcmotion.tokamak.bfield.MagneticField` are implied.
 
    LAR
 
-.. rubric:: Class methods (besides B() and B_der()):
+.. rubric:: Class methods (besides bigNU() and solverbNU()):
 
 .. autoclass:: LAR
    :members: __init__

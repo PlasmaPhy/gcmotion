@@ -1,7 +1,7 @@
 # fmt: off
 
 # Import the logger first
-from gcmotion.utils import _logger_setup
+from gcmotion.utils import logger_setup
 
 from gcmotion.utils.setup_pint import setup_pint
 from gcmotion.utils.get_size import get_size
@@ -14,8 +14,10 @@ from gcmotion.tokamak import qfactor
 from gcmotion.tokamak import bfield
 from gcmotion.tokamak import efield
 
-
 from gcmotion.plotters.time_evolution import time_evolution
+from gcmotion.plotters.qfactor_profile import qfactor_profile
+from gcmotion.plotters.magnetic_profile import magnetic_profile
+from gcmotion.plotters.electric_profile import electric_profile
 from gcmotion.plotters.tokamak_profile import tokamak_profile
 from gcmotion.plotters.drift import drift
 from gcmotion.plotters.drifts import drifts
@@ -33,7 +35,7 @@ from gcmotion.plotters.collection_parabolas import collection_parabolas
 #import gcmotion.scripts.animation as animation
 
 __all__ = [
-    "_logger_setup",
+    "logger_setup",
     "setup_pint",
     "get_size",
     "Particle",
@@ -42,6 +44,9 @@ __all__ = [
     "bfield",
     "efield",
     "time_evolution",
+    "qfactor_profile",
+    "magnetic_profile",
+    "electric_profile",
     "tokamak_profile",
     "drift",
     "drifts",

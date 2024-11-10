@@ -5,16 +5,19 @@ def get_size(obj, seen=None):
     """Recursively finds size of objects.
 
     All of the code is gracefully borrowed from Wissam Jarjoui
-    at `https://goshippo.com/blog/measure-real-size-any-python-object`_.
+    from `<https://goshippo.com/blog/measure-real-size-any-python-object>`_.
 
     Parameters
     ----------
     object : object
         The object to find the size of.
-    seem : ?
-        ?
+    seen : set
+        Set that keeps track of object ids that have already been measured.
+        Should be left to default since the fuction uses it when calling itself
+        recursively to handle self-referential objects. Defaults to None.
 
     Returns
+    -------
     int
         The size of the object in bytes.
     """
@@ -25,6 +28,7 @@ def get_size(obj, seen=None):
     obj_id = id(obj)
     if obj_id in seen:
         return 0
+
     # Important mark as seen *before* entering recursion to gracefully handle
     # self-referential objects
     seen.add(obj_id)
