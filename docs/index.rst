@@ -1,8 +1,11 @@
 Guiding Center Motion
 =====================
 
-.. autosummary::
-   :toctree: generated
+Welcome message goes here.
 
-   gcmotion
+.. toctree::
+   :maxdepth: 1 
 
+   Installing <pages/Installing>
+   User Guide <pages/user_guide/general>
+   API Reference <pages/api>
