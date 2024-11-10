@@ -36,12 +36,13 @@ from gcmotion.plotters.energy_contour import _cbar
 from gcmotion.configuration.plot_parameters import energy_contour as config
 
 from gcmotion.utils.logger_setup import logger
+from gcmotion.utils.plot_utils import yspan
 
 
 def collection_energy_contour(
     collection,
     theta_lim: list = [-np.pi, np.pi],
-    Ptheta_lim: str | list = "auto",
+    psi_lim: str | list = [0, 2],
     plot_drift: bool = True,
     contour_Phi: bool = True,
     units: str = "keV",
@@ -63,10 +64,10 @@ def collection_energy_contour(
 
     theta_lim : list, optional
         Plot xlim. Must be either [0,2π] or [-π,π]. Defaults to [-π,π].
-    Ptheta_lim : list | str, optional
-        If a list is passed, it plots between the 2 values relative to
-        :math:`\psi_{wall}`. If "auto" is passed, it automatically sets
-        the optimal :math:`\psi` limits. Defaults to 'auto'.
+    psi_lim : list | str, optional
+        If a list is passed, it plots between the 2 values of
+        :math:`\psi`. If "auto" is passed, it automatically sets
+        the optimal :math:`\psi` limits. Defaults to [0,2].
     plot_drift : bool, optional
         Whether or not to plot :math:`\theta-P_\theta` drift on top.
         Defaults to True.
@@ -145,7 +146,7 @@ def collection_energy_contour(
 
         logger.info("Plotting Collection energy contour...")
 
-        nonlocal Ptheta_lim, _internal_call, canvas, different_colors, plot_initial
+        nonlocal psi_lim, _internal_call, canvas, different_colors, plot_initial
 
         if canvas is None:
             fig = plt.figure(**config["fig_parameters"])
@@ -166,24 +167,29 @@ def collection_energy_contour(
                 canvas=canvas,
                 **params,
             )
+        # Calculate an automatic y-lim based on the already existing particles,
+        # with a hard limit with respect to psi_wall
+        if isinstance(psi_lim, str):  # If "auto"
+            all_psis = np.hstack(
+                [getattr(p, "psi" + suffix).m for p in collection]
+            )
+            psi_wall = getattr(collection[0], "psi_wallNU").m
+            contour_psi_lim = yspan(all_psis, psi_wall)
 
-        # if Ptheta_lim == "auto":
-        #     minpsiNU = min(
-        #         getattr(collection[_], "psiNU").min()
-        #         for _ in range(collection.n)
-        #     )
-        #     maxpsiNU = max(
-        #         getattr(collection[_], "psiNU").max()
-        #         for _ in range(collection.n)
-        #     )
-        #     psiNUlim = [minpsiNU, maxpsiNU]
-        # print(psiNUlim)
+            contour_psi_lim *= collection[0].Q(suffix + "Magnetic_flux")
+            contour_psiNU_lim = contour_psi_lim.to("NUpsi_wall").m
+            print(type(contour_psiNU_lim))
+        else:
+            contour_psiNU_lim = (
+                np.array(psi_lim) * collection[0].Q("NUpsi_wall").m
+            )
+
         logger.info("\t\tPlotting single energy contour...")
         logger.disable("gcmotion")
         C = energy_contour(
             collection.particles[0],
             theta_lim=theta_lim,
-            Ptheta_lim=Ptheta_lim,
+            psi_lim=contour_psiNU_lim,
             plot_drift=False,
             contour_Phi=contour_Phi,
             units=units,
