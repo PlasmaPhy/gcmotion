@@ -46,12 +46,12 @@ from gcmotion.configuration.plot_parameters import energy_contour as config
 def energy_contour(
     cwp,
     theta_lim: list = [-np.pi, np.pi],
-    Ptheta_lim: str | list = "auto",
+    psi_lim: str | list = "auto",
     plot_drift: bool = True,
     contour_Phi: bool = True,
     units: str = "SI",
     levels: int = None,
-    wall_shade: bool = False,
+    wall_shade: bool = True,
     **params,
 ):
     r"""
@@ -69,10 +69,10 @@ def energy_contour(
         The current working particle.
     theta_lim : list, optional
         Plot xlim. Must be either [0,2π] or [-π,π]. Defaults to [-π,π].
-    Ptheta_lim : list | str, optional
+    psi_lim : list | str, optional
         If a list is passed, it plots between the 2 values of
-        :math:`P_\theta`. If "auto" is passed, it automatically sets
-        the optimal :math:`P_\theta` limits. Defaults to 'auto'.
+        :math:`\psi`. If "auto" is passed, it automatically sets
+        the optimal :math:`\psi` limits. Defaults to 'auto'.
     plot_drift : bool, optional
         Whether or not to plot :math:`\theta-P_\theta` drift on top.
         Defaults to True.
@@ -87,7 +87,7 @@ def energy_contour(
         Whether to shade the region :math:`\psi/\psi_{wall} > 1`.
         Note that this only makes sense in the case of
         :math:`I=0`, where :math:`P_\theta=\psi`
-        Defaults to False.
+        Defaults to True.
     params : dict, optional
         Extra plotting parameters:
 
@@ -110,14 +110,11 @@ def energy_contour(
     # Use cwp.psiNU to calculate the contour, since psi cannot be solved
     # for Ptheta in the general case if I =/= 0.
     Q = getattr(cwp, "Q")
-    cwpPtheta = getattr(cwp, "Ptheta" + suffix).copy()
-    cwppsiNU = getattr(cwp, "psiNU").copy()  # NU always
+    psi_wallNU = getattr(cwp, "psi_wallNU").m
+    cwppsiNU = getattr(cwp, "psiNU").copy()
     muNU = getattr(cwp, "muNU").magnitude
     PzetaNU = getattr(cwp, "Pzeta0NU").magnitude
     profile = getattr(cwp, "profile")
-
-    # Hard y lim, in the case that the particle escapes
-    bound = config["hardylim"] * getattr(cwp, "psi_wall" + suffix)
 
     # Unpack params
     _internal_call = params.pop("_internal_call", False)  # POP!
@@ -133,6 +130,11 @@ def energy_contour(
         fig, ax = canvas
         logger.debug("\tContour: Using existing canvas.")
 
+    if theta_lim not in [[0, 2 * np.pi], [-np.pi, np.pi]]:
+        print("'theta_lim' must be either [0,2*np.pi] or [-np.pi,np.pi]. Defaulting to [-np.pi,np.pi]")  # fmt: skip
+        logger.warning("\tContour: Invalid 'theta_lim': Defaulting to [-np.pi,np.pi]")  # fmt: skip
+        theta_lim = [-np.pi, np.pi]
+
     # Plot drift of Ptheta-theta
     if plot_drift:
         drift(
@@ -146,21 +148,20 @@ def energy_contour(
         )
         logger.debug("\tContour: Plotting particle's Pθ drift.")
 
-    # Find the psi-grid span of psi upon which to calculate the energy.
-    # Psi is in [NU] despite the "units" arguement.
-    if isinstance(Ptheta_lim, list):
-        pass  # FIXME: find a way to set Ptheta limits for the contour plot
-    elif isinstance(Ptheta_lim, str):
-        psiNUspan, _ = yspan(cwppsiNU.magnitude)
+    # Find the psi-grid span of psi upon which to calculate the W and Ptheta
+    # grids. Psi must be passed in [NU] despite the "units" arguement.
+    if isinstance(psi_lim, str):  # If "auto"
+        psi_lim = yspan(cwppsiNU.magnitude, psi_wallNU)
+    elif isinstance(psi_lim, (list, np.ndarray)):  # If relative to psi_wall
+        psi_lim = np.array(psi_lim) * Q("NUpsi_wall")
+        psi_lim = psi_lim.to("NUmagnetic_flux").m
 
     # Calculate Energy AND Ptheta grid values in [NU] based on the
     # psi limits calculated above.
-    psiNU_min, psiNU_max = (psiNUspan[0], psiNUspan[1])
-
     grid_density = config["contour_grid_density"]
     theta, psiNU = np.meshgrid(
         np.linspace(theta_lim[0], theta_lim[1], grid_density),
-        np.linspace(psiNU_min, psiNU_max, grid_density),
+        np.linspace(psi_lim[0], psi_lim[1], grid_density),
     )
 
     WNU, PthetaNU = energy_Ptheta(
@@ -171,24 +172,22 @@ def energy_contour(
         profile=profile,
         contour_Phi=contour_Phi,
     )
-    # Convert them to SI if needed and calculate their spans
+
+    # Quantify them, convert them to SI if needed and calculate their spans
     WNU = Q(WNU, "NUJoule")
     PthetaNU = Q(PthetaNU, "NUMagnetic_flux")
+
     if units == "NU":
-        W_contour = (
-            WNU.m if units == "NU" else WNU.to("keV").m
-        )  # Purely numeric
+        Eunits = "NUJoule"
+        W_contour = WNU.m
         Ptheta_contour = PthetaNU.m
     elif units == "SI":
+        Eunits = "keV"
         W_contour = WNU.to("kev").m
-        Ptheta_contour = PthetaNU.to("Magnetic_flux").magnitude
+        Ptheta_contour = PthetaNU.to("Magnetic_flux").m
 
     Wspan = np.array([W_contour.min(), W_contour.max()])
-    Pthetaspan = (
-        [Ptheta_contour.min(), Ptheta_contour.max()]
-        if Ptheta_lim == "auto"
-        else Ptheta_lim
-    )
+    Pthetaspan = [Ptheta_contour.min(), Ptheta_contour.max()]
 
     # Configure contour plot
     if levels is None:  # If non is given
@@ -210,53 +209,44 @@ def energy_contour(
 
     # Contour plot
     # Make sure Ptheta is also in the required units
-
     C = ax.contourf(theta, Ptheta_contour, W_contour, **contour_kw)
-    ax.set_xlabel(r"$\theta$")
-    ax.set_ylabel(r"$P_\theta$", rotation=90)
+    ax.set_xlabel(r"$\theta$ [rads]")
+    ax.set_ylabel(
+        rf"$P_\theta$ [{Q(suffix+"Magnetic_flux").units:~P}]", rotation=90
+    )
     ticks = ["-2π", "-3π/2", "-π", "-π/2", "0", "π/2", "π", "3π/2", "2π"]
     plt.xticks(np.linspace(-2 * np.pi, 2 * np.pi, 9), ticks)
     ax.set(xlim=theta_lim, ylim=Pthetaspan)
     ax.set_facecolor("white")
 
-    # Wall shade
-    if wall_shade:  # ψ_wall boundary rectangle
+    # Apply the wall shade if required AND if I=0
+    if wall_shade and not getattr(cwp.bfield, "has_i", False):
         _wall_shade(
             canvas=canvas,
             x=theta_lim[0],
             y=getattr(cwp, "psi_wall" + suffix).m,
+            width=theta_lim[1],
             height=Pthetaspan[1],
         )
 
     # Energy labels on contour lines (creates gaps to the contour for some reason)
     # plt.clabel(C, inline=1, fontsize=10, zorder=10)
 
-    # # Cursor
-    # if units == "NU":
-    #     cursor_units = "NUJoule"
-    #     cursor_Ptheta_units = "NUMagnetic_flux"
-    # elif units == "SI":
-    #     cursor_units = "keV"
-    #     cursor_Ptheta_units = "Magnetic_flux"
+    # Cursor
+    Xflat, Yflat, Zflat = (
+        theta.flatten(),
+        Ptheta_contour.flatten(),
+        W_contour.flatten(),
+    )
 
-    # def fmt(theta, Ptheta):  # FIXME
-    #     Ptheta = Q(Ptheta, cursor_Ptheta_units)
-    #     E = Q(
-    #         energy_Ptheta(
-    #             theta=theta,
-    #             psi=psiNU,
-    #             mu=muNU,
-    #             Pzeta=PzetaNU,
-    #             profile=profile,
-    #             contour_Phi=contour_Phi,
-    #         ),
-    #         "NUJoule",
-    #     ).to(cursor_units)
-    #     return "theta={theta:.4g},\tPtheta={Ptheta:.4g~P},\tE={E:.4g~P} \n".format(
-    #         theta=theta, Ptheta=Ptheta, E=E
-    #     )
+    def fmt(x, y):
+        # get closest point with known data
+        dist = np.linalg.norm(np.vstack([Xflat - x, Yflat - y]), axis=0)
+        idx = np.argmin(dist)
+        z = Zflat[idx]
+        return f"theta={x:.4g}  Ptheta={y:.5f}  E={z:.4g}[{Eunits}]"
 
-    # plt.gca().format_coord = fmt
+    plt.gca().format_coord = fmt
 
     # Color bar Plotting
     Esuffix = "NU" if suffix == "NU" else "keV"
@@ -321,7 +311,7 @@ def _cbar(energies, units, canvas, C):
     return cbar
 
 
-def _wall_shade(canvas, x, y, height):
+def _wall_shade(canvas, x, y, width, height):
     """Displays a shade above ψ=ψ_wall."""
 
     fig, ax = canvas

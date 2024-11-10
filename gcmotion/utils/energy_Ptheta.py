@@ -1,6 +1,5 @@
 import numpy as np
 from collections import namedtuple
-from gcmotion.utils.logger_setup import logger
 
 
 def energy_Ptheta(
@@ -52,12 +51,11 @@ def energy_Ptheta(
     rho = (Pzeta + psip) / g
     W = (1 / 2) * rho**2 * b**2 + mu * b  # Without Φ
 
-    Ptheta = psi + rho * i
-    # print(Ptheta)
     # Add Φ if asked
     if contour_Phi:
         Phi = efield.PhiNU(psi, theta)
         W += Phi  # all normalized
-        logger.debug("\tContour: Adding Φ term to the contour.")
+
+    Ptheta = psi + rho * i
 
     return W, Ptheta
