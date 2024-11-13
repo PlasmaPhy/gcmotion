@@ -73,9 +73,8 @@ def bifurcation(
     thetas_fixed = deque([])
     P_thetas_fixed = deque([])
 
-    particles = collection.particles
-    p1 = particles[0]
-    p_last = particles[-1]
+    p1 = collection[0]
+    p_last = collection[-1]
     Q = p1.Q
 
     # Check if the partcles have different Pzeta0's
@@ -97,7 +96,7 @@ def bifurcation(
 
     Parameters = namedtuple("Orbit_Parameters", ["Pzeta0", "mu"])
 
-    for idx, p in enumerate(particles):
+    for idx, p in enumerate(collection):
 
         current_P_zeta = p.Pzeta0NU.magnitude
         # Get Particle Parameters

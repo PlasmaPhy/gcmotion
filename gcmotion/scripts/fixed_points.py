@@ -114,7 +114,7 @@ def fixed_points(
     psi_lim = np.array(psi_lim) * Q("NUpsi_wall")
     psi_lim = psi_lim.to("NUmagnetic_flux").m
 
-    P_theta_lim = energy_Ptheta(
+    _, P_theta_lim = energy_Ptheta(
         psi=psi_lim, theta=0, mu=mu, Pzeta=Pzeta0, profile=profile, contour_Phi=True
     )
 
@@ -171,7 +171,7 @@ def fixed_points(
             bounds,
             x0=initial_condition,
             tol=1e-7,
-            atol=1e-15,
+            # atol=1e-15,
             maxiter=10000,
             popsize=15,
             mutation=(0.5, 1),

@@ -116,7 +116,7 @@ def bifurcation_plot(
     P_theta_plot = [P_theta / psi_wall for P_theta in P_theta_plot]
 
     # ax_P_theta.set_title(r"$P_{theta}$ Bifurcation Diagram")
-    ax_P_theta.set_ylabel(r"$P_{\theta_s}/P_{\theta_w}$")
+    ax_P_theta.set_ylabel(r"$P_{\theta_s}$")
     ax_P_theta.scatter(P_zeta_plot, P_theta_plot, s=2)
     ax_P_theta.axhline(y=1, color="black", linestyle="--", linewidth=1, alpha=0.5)
 
