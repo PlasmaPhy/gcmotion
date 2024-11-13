@@ -38,6 +38,7 @@ from gcmotion.utils.logger_setup import logger
 from gcmotion.utils.energy_Ptheta import energy_Ptheta
 from gcmotion.utils.plot_utils import yspan
 
+from gcmotion.plotters.fixed_points_plot import fixed_points_plot
 from gcmotion.plotters.drift import drift
 
 from gcmotion.configuration.plot_parameters import energy_contour as config
@@ -48,6 +49,10 @@ def energy_contour(
     theta_lim: list = [-np.pi, np.pi],
     psi_lim: str | list = "auto",
     plot_drift: bool = True,
+    plot_fixed_points: bool = False,
+    theta_fixed_density: int = 5,
+    P_theta_fixed_density: int = 5,
+    fixed_points_info: bool = False,
     contour_Phi: bool = True,
     units: str = "SI",
     levels: int = None,
@@ -135,6 +140,10 @@ def energy_contour(
         logger.warning("\tContour: Invalid 'theta_lim': Defaulting to [-np.pi,np.pi]")  # fmt: skip
         theta_lim = [-np.pi, np.pi]
 
+    # Plot fixed points if asked
+    if plot_fixed_points:
+        psi_lim_fixed_points = psi_lim
+
     # Plot drift of Ptheta-theta
     if plot_drift:
         drift(
@@ -211,13 +220,25 @@ def energy_contour(
     # Make sure Ptheta is also in the required units
     C = ax.contourf(theta, Ptheta_contour, W_contour, **contour_kw)
     ax.set_xlabel(r"$\theta$ [rads]")
-    ax.set_ylabel(
-        rf"$P_\theta$ [{Q(suffix+"Magnetic_flux").units:~P}]", rotation=90
-    )
+    ax.set_ylabel(rf"$P_\theta$ [{Q(suffix+"Magnetic_flux").units:~P}]", rotation=90)
     ticks = ["-2π", "-3π/2", "-π", "-π/2", "0", "π/2", "π", "3π/2", "2π"]
     plt.xticks(np.linspace(-2 * np.pi, 2 * np.pi, 9), ticks)
     ax.set(xlim=theta_lim, ylim=Pthetaspan)
     ax.set_facecolor("white")
+
+    if plot_fixed_points:
+
+        fixed_points_plot(
+            cwp,
+            theta_lim=[1.01 * theta_lim[0], 1.01 * theta_lim[1]],
+            psi_lim=psi_lim_fixed_points,
+            theta_density=theta_fixed_density,
+            P_theta_density=P_theta_fixed_density,
+            _internal_call=True,
+            info=fixed_points_info,
+            canvas=canvas,
+        )
+        logger.debug("\tPlotting particle's fixed points in contour.")
 
     # Apply the wall shade if required AND if I=0
     if wall_shade and not getattr(cwp.bfield, "has_i", False):

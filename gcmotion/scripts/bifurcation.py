@@ -13,9 +13,10 @@ This is how :py:func:`bifurcation` can be called inside the function :py:func:`b
 
         thetas_fixed, P_thetas_fixed, num_of_fp = bifurcation(
             collection=collection,
+            theta_density=theta_density,
+            P_theta_density=P_theta_density,
             theta_lim=theta_lim,
             psi_lim=psi_lim,
-            iterations=iterations,
             info=info,
         )
 
@@ -24,6 +25,12 @@ This is how :py:func:`bifurcation` can be called inside the function :py:func:`b
     
     collection : :py:class:`~gcmotion.classes.collection.Collection`
         The collection of particles
+    theta_density : int, optional
+        Integer dictating the number of initial conditions with regard to the 
+        :math:`\theta` variable that will be passed into :py:func:`fixed_points`.
+    P_theta_density : int, optional
+        Integer dictating the number of initial conditions with regard to the 
+        :math:`P_{\theta}` variable that will be passed into :py:func:`fixed_points`.
     theta_lim : list, optional
         Provides the limits for the solution search area for fixed points
         with regards to the :math:`\theta` variable. It will be passed into 
@@ -32,9 +39,6 @@ This is how :py:func:`bifurcation` can be called inside the function :py:func:`b
         Provides the limits (divided by psi_wall) for the solution search area with regards
         to the :math:`P_{\theta}` variable. It will be passed into the "bounds" argument of
         :py:func:`fixed_points`. 
-    iterations : int, optional
-        Integer that essentially dictates the number of initial conditions that will be 
-        passed into :py:func:`fixed_points`.
     info : bool, optional
         Boolean that dictates weather the :math:`P_{\zeta0}` of the particle whose
         fixed points have just been calculated, will be printed alongside the fixed points
@@ -58,14 +62,12 @@ from gcmotion.classes.collection import Collection
 
 def bifurcation(
     collection: Collection,
+    theta_density=5,
+    P_theta_density=5,
     theta_lim: list = [-np.pi, np.pi],
     psi_lim: list = [0.01, 1.3],
-    iterations: int = 250,
     info: bool = False,
 ):
-
-    theta_min = theta_lim[0]
-    theta_max = theta_lim[1]
 
     num_of_fp = deque([])
     fp = deque([])
@@ -75,7 +77,7 @@ def bifurcation(
 
     p1 = collection[0]
     p_last = collection[-1]
-    Q = p1.Q
+    # Q = p1.Q
 
     # Check if the partcles have different Pzeta0's
     if p1.Pzeta0 == p_last.Pzeta0:
@@ -108,10 +110,11 @@ def bifurcation(
         current_num_of_fp, current_fp = fixed_points(
             parameters=parameters,
             profile=profile,
-            Q=Q,
-            theta_lim=[theta_min, theta_max],
+            Q=p.Q,
+            theta_density=theta_density,
+            P_theta_density=P_theta_density,
+            theta_lim=theta_lim,
             psi_lim=psi_lim,
-            iterations=iterations,
             info=False,
         )
 

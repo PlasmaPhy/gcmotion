@@ -30,9 +30,10 @@ from gcmotion.classes.collection import Collection
 
 def bifurcation_plot(
     collection: Collection,
+    theta_density=5,
+    P_theta_density=5,
     theta_lim: list = [-np.pi, np.pi],
     psi_lim: list = [0.01, 1.3],
-    iterations: int = 250,
     info: bool = False,
 ):
     r"""Draws the bifurcation diagrams for the :math:`theta`'s  fixed,
@@ -45,6 +46,14 @@ def bifurcation_plot(
     ----------
     collection : :py:class:`~gcmotion.classes.collection.Collection`
         The collection of particles
+    theta_density : int, optional
+        Integer dictating the number of initial conditions with regard to the
+        :math:`\theta` variable that will be passed into :py:func:`bifurcation`
+        and then :py:func:`fixed_points`.
+    P_theta_density : int, optional
+        Integer dictating the number of initial conditions with regard to the
+        :math:`P_{\theta}` variable that will be passed into :py:func:`bifurcation`
+        and then :py:func:`fixed_points`.
     theta_lim : list, optional
         Provides the limits for the solution search area for fixed points
         with regards to the :math:`\theta` variable. It will be passed into
@@ -53,9 +62,6 @@ def bifurcation_plot(
         Provides the limits (divided by psi_wall) for the solution search area with regards
         to the :math:`P_{\theta}` variable. It will be passed into the "bounds" argument of
         :py:func:`bifurcation`.
-    iterations : int, optional
-        Integer that essentially dictates the number of initial conditions that will be
-        passed into :py:func:`bifurcation` and then :py:func:`fixed_points`.
     info : bool, optional
         Boolean that dictates weather the :math:`P_{\zeta0}` of the particle whose
         fixed points have just been calculated, will be printed alongside the fixed points
@@ -65,9 +71,10 @@ def bifurcation_plot(
     start = time()
     thetas_fixed, P_thetas_fixed, num_of_fp = bifurcation(
         collection=collection,
+        theta_density=theta_density,
+        P_theta_density=P_theta_density,
         theta_lim=theta_lim,
         psi_lim=psi_lim,
-        iterations=iterations,
         info=info,
     )
 
