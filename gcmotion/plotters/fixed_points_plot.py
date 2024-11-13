@@ -9,12 +9,18 @@ This is how :py:func:`fixed_points_plot` can be called inside the function :py:f
 .. code-block:: python
 
     if plot_fixed_points:
+
+        params.pop("theta_lim", None)
+        params.pop("psi_lim", None)
+
         fixed_points_plot(
             cwp,
-            theta_lim=[theta_min, theta_max],
-            psi_lim=[psi_min, psi_max],
-            info=True,
+            theta_lim=[-1.01 * np.pi, 1.01 * np.pi],
+            psi_lim=psi_lim,
+            theta_density=theta_fixed_density,
+            P_theta_density=P_theta_fixed_density,
             _internal_call=True,
+            info=True,
             canvas=canvas,
             **params,
         )
@@ -24,19 +30,24 @@ This is how :py:func:`fixed_points_plot` can be called inside the function :py:f
 
 from gcmotion.scripts.fixed_points import fixed_points as fp
 import matplotlib.pyplot as plt
-from gcmotion.utils._logger_setup import logger
+import numpy as np
+
+from collections import namedtuple
+from gcmotion.utils.logger_setup import logger
 
 
 def fixed_points_plot(
     cwp,
     theta_lim: list,
     psi_lim: list,
+    theta_density: int = 5,
+    P_theta_density: int = 5,
     info: bool = False,
     **params,
 ):
     r"""Draws fixed points plot.
 
-    This method is called internally by ``countour_energy()``
+    This method is called internally by ``energy_contour()``
     as well.
 
     :meta public:
@@ -48,7 +59,14 @@ def fixed_points_plot(
     theta_lim : list
         List containing the limits for :math:`\theta` (x- axis limits).
     psi_lim : list
-        List containing the limits for :math:`P_{\theta}` (y- axis limits).
+        List containing the limits for :math:`\psi` and
+        consequently :math:`P_{\theta}` (y- axis limits).
+    theta_density : int, optional
+        Integer dictating the number of initial conditions with regard to the
+        :math:`\theta` variable that will be passed into :py:func:`fixed_points`.
+    P_theta_density : int, optional
+        Integer dictating the number of initial conditions with regard to the
+        :math:`P_{\theta}` variable that will be passed into :py:func:`fixed_points`.
     info : bool, optional
         Passed into ``fixed_poits()``. Determines weather to print information
         about the fixed points (number, values). Defaults to ``False``.
@@ -67,29 +85,35 @@ def fixed_points_plot(
 
     logger.info(f"Plotting fixed points")
 
-    # Set up fixed points parameters
-    theta_min = theta_lim[0]
-    theta_max = theta_lim[1]
+    # Get Tokamak profile
+    qfactor = cwp.qfactor
+    bfield = cwp.bfield
+    efield = cwp.efield
 
-    P_theta_min = psi_lim[0]
-    P_theta_max = psi_lim[1]
+    Profile = namedtuple("Tokamak_Profile", ["qfactor", "bfield", "efield"])
+    profile = Profile(
+        qfactor=qfactor,
+        bfield=bfield,
+        efield=efield,
+    )
 
-    # Set up constants dict
-    constants = {"mu": cwp.mu, "mass": cwp.mi, "qi": cwp.qi, "Pzeta0": cwp.Pzeta0}
-    # Set up tokamak profile dict
-    profile = {
-        "qfactor": cwp.qfactor,
-        "Bfield": cwp.Bfield,
-        "Efield": cwp.Efield,
-        "Volts_to_NU": cwp.Volts_to_NU,
-    }
+    Parameters = namedtuple("Orbit_Parameters", ["Pzeta0", "mu"])
+
+    # Get Particle Parameters
+    parameters = Parameters(
+        Pzeta0=cwp.Pzeta0NU.magnitude,
+        mu=cwp.muNU.magnitude,
+    )
 
     # Calculate fixed points
     _, fixed_points = fp(
-        constants,
-        profile,
-        theta_lim=[theta_min, theta_max],
-        psi_lim=[P_theta_min, P_theta_max],
+        parameters=parameters,
+        profile=profile,
+        Q=cwp.Q,
+        theta_density=theta_density,
+        P_theta_density=P_theta_density,
+        theta_lim=theta_lim,
+        psi_lim=psi_lim,
         info=info,
     )
 
@@ -107,5 +131,9 @@ def fixed_points_plot(
     thetas_fixed = fixed_points[:, 0]
     P_thetas_fixed = fixed_points[:, 1]
 
-    P_theta_plot = P_thetas_fixed / cwp.psi_wall
-    ax.scatter(thetas_fixed, P_theta_plot, marker="x", color="green")
+    P_thetas_fixed = cwp.Q(P_thetas_fixed, "NUmagnetic_flux").to("Magnetic_flux")
+
+    ax.set_xticks([-np.pi, 0, np.pi])
+    ax.set_xticklabels([r"$-\pi$", "0", r"$\pi$"])
+    ax.set_xlim([-np.pi, np.pi])
+    ax.scatter(thetas_fixed, P_thetas_fixed, marker="x", color="green", s=80)

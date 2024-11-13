@@ -10,37 +10,48 @@ This is how :py:func:`fixed_points` can be called inside the function :py:func:`
 
     from gcmotion.scripts.fixed_points import fixed_points as fp
 
-        constants = {"mu": cwp.mu, "mass": cwp.mi, "qi": cwp.qi, "Pzeta0": cwp.Pzeta0}
+    # Get Tokamak profile
+    qfactor = cwp.qfactor
+    bfield = cwp.bfield
+    efield = cwp.efield
 
-        profile = {
-            "qfactor": cwp.qfactor,
-            "Bfield": cwp.Bfield,
-            "Efield": cwp.Efield,
-            "Volts_to_NU": cwp.Volts_to_NU,
-        }
+    Profile = namedtuple("Tokamak_Profile", ["qfactor", "bfield", "efield"])
+    profile = Profile(
+        qfactor=qfactor,
+        bfield=bfield,
+        efield=efield,
+    )
 
-        _, fixed_points = fp(
-            constants,
-            profile,
-            theta_lim=[theta_min, theta_max],
-            psi_lim=[P_theta_min, P_theta_max],
-            info=info,
-        )
+    Parameters = namedtuple("Orbit_Parameters", ["Pzeta0", "mu"])
 
+    # Get Particle Parameters
+    parameters = Parameters(
+        Pzeta0=cwp.Pzeta0NU.magnitude,
+        mu=cwp.muNU.magnitude,
+    )
 
-
+    # Calculate fixed points
+    _, fixed_points = fp(
+        parameters=parameters,
+        profile=profile,
+        theta_lim=theta_lim,
+        psi_lim=psi_lim,
+        info=info,
+    )
 
     Parameters
     ----------
-    constants : dict
-        Dict containing the constants of motion. Currently :math:`\mu, m_i, q_i, P_{\zeta0}`
-        are used.
-    profile : dict
+    parameters : namedtuple
+        Namedtuple containing the constants of motion. Currently 
+        :math:`\mu, P_{\zeta0}` are used.
+    profile : namedtuple
         Dict containing the tokamak configuration objects.
-    iterations : int, optional
-        Integer that essentially dictates the number of initial conditions that will be fed into
-        differential_evolution, thus dictating the number of iterations the
-        afformentioned function will be executed.
+    theta_density : int, optional
+        Integer dictating the number of initial conditions with regard to the 
+        :math:`\theta` variable
+    P_theta_density : int, optional
+        Integer dictating the number of initial conditions with regard to the 
+        :math:`P_{\theta}` variable
     theta_lim : list, optional
         Provides the limits for the solution search area with regards to the :math:`\theta`
           variable. It will be passed into the "bounds" argument of :py:func:`differential_evolution`. 
@@ -56,6 +67,9 @@ This is how :py:func:`fixed_points` can be called inside the function :py:func:`
         :math:`P_{\theta}` (initial conditions for fixed points search) will be scaled, so
         as to increase the density of initial :math:`P_{\theta}`'s near the lower boundary
         of the search area.
+
+.. note:: The parameters argument mus contain the parameters in Normalized Units (NU)
+and it must contain their magnitude, NOT the entire Quantity object.
 
     Returns
     -------
@@ -83,7 +97,8 @@ def fixed_points(
     parameters: namedtuple,
     profile: namedtuple,
     Q: Quantity,
-    iterations: int = 50,
+    theta_density: int = 5,
+    P_theta_density: int = 5,
     theta_lim: list = [-1.01 * np.pi, 1.01 * np.pi],
     psi_lim: list = [0.01, 1.3],
     info: bool = False,
@@ -182,7 +197,7 @@ def fixed_points(
 
         return theta_solution, P_theta_solution
 
-    fixed_points = np.empty((3 * iterations, 2))
+    fixed_points = np.empty((theta_density * P_theta_density, 2))
     fixed_points[:] = np.nan
 
     # Define the limits of the initial conditions to be certainly inside the
@@ -197,8 +212,8 @@ def fixed_points(
     P_theta_min_init = P_theta_min * 1.001
     P_theta_max_init = P_theta_max * 0.999
 
-    thetas_init = np.linspace(theta_min_init, theta_max_init, 3)
-    P_thetas_init = np.linspace(P_theta_min_init, P_theta_max_init, iterations)
+    thetas_init = np.linspace(theta_min_init, theta_max_init, theta_density)
+    P_thetas_init = np.linspace(P_theta_min_init, P_theta_max_init, P_theta_density)
 
     if scaled_P_thetas:
         P_thetas_init_mod = np.sin(np.pi * P_thetas_init) ** 4  # (1 - np.cos(P_thetas_init)) / 2
