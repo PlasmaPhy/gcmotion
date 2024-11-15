@@ -68,8 +68,8 @@ This is how :py:func:`fixed_points` can be called inside the function :py:func:`
         as to increase the density of initial :math:`P_{\theta}`'s near the lower boundary
         of the search area.
 
-.. note:: The parameters argument mus contain the parameters in Normalized Units (NU)
-and it must contain their magnitude, NOT the entire Quantity object.
+    .. note:: The parameters argument mus contain the parameters in Normalized Units (NU)
+    and it must contain their magnitude, NOT the entire Quantity object.
 
     Returns
     -------
