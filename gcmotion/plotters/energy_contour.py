@@ -52,6 +52,7 @@ def energy_contour(
     plot_fixed_points: bool = False,
     theta_fixed_density: int = 5,
     P_theta_fixed_density: int = 5,
+    dist_tol: float = 1e-3,
     fixed_points_info: bool = False,
     contour_Phi: bool = True,
     units: str = "SI",
@@ -140,7 +141,8 @@ def energy_contour(
         logger.warning("\tContour: Invalid 'theta_lim': Defaulting to [-np.pi,np.pi]")  # fmt: skip
         theta_lim = [-np.pi, np.pi]
 
-    # Plot fixed points if asked
+    # Store fixed points limits before they are changed because the are again changed in
+    # "fixed points"
     if plot_fixed_points:
         psi_lim_fixed_points = psi_lim
 
@@ -232,6 +234,7 @@ def energy_contour(
             cwp,
             theta_lim=[1.01 * theta_lim[0], 1.01 * theta_lim[1]],
             psi_lim=psi_lim_fixed_points,
+            dist_tol=dist_tol,
             theta_density=theta_fixed_density,
             P_theta_density=P_theta_fixed_density,
             _internal_call=True,

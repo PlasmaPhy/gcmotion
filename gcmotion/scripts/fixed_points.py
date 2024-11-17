@@ -43,7 +43,8 @@ This is how :py:func:`fixed_points` can be called inside the function :py:func:`
     ----------
     parameters : namedtuple
         Namedtuple containing the constants of motion. Currently 
-        :math:`\mu, P_{\zeta0}` are used.
+        :math:`\mu, P_{\zeta0}` are used. ATTENTION, magnitude of parameters ONLY must be
+        passed, not units as well
     profile : namedtuple
         Dict containing the tokamak configuration objects.
     theta_density : int, optional
@@ -101,6 +102,7 @@ def fixed_points(
     P_theta_density: int = 5,
     theta_lim: list = [-1.01 * np.pi, 1.01 * np.pi],
     psi_lim: list = [0.01, 1.3],
+    dist_tol: float = 1e-3,
     info: bool = False,
     scaled_P_thetas: bool = False,
     # polish=True,
@@ -234,7 +236,7 @@ def fixed_points(
 
     # A lot of the fixed points that were found have identical values-->
     # find out how many distinct fixed points were located
-    distinct_fixed_points = distinctify(fixed_points)
+    distinct_fixed_points = distinctify(fixed_points, tol=dist_tol)
     num_of_dfp = distinct_fixed_points.shape[0]
 
     if info:

@@ -34,6 +34,7 @@ def bifurcation_plot(
     P_theta_density=5,
     theta_lim: list = [-np.pi, np.pi],
     psi_lim: list = [0.01, 1.3],
+    dist_tol: float = 1e-3,
     info: bool = False,
 ):
     r"""Draws the bifurcation diagrams for the :math:`theta`'s  fixed,
@@ -69,12 +70,13 @@ def bifurcation_plot(
     """
 
     start = time()
-    thetas_fixed, P_thetas_fixed, num_of_fp = bifurcation(
+    X_thetas, X_P_thetas, O_thetas, O_P_thetas, num_of_fp = bifurcation(
         collection=collection,
         theta_density=theta_density,
         P_theta_density=P_theta_density,
         theta_lim=theta_lim,
         psi_lim=psi_lim,
+        dist_tol=dist_tol,
         info=info,
     )
 
@@ -82,55 +84,86 @@ def bifurcation_plot(
 
     particles = collection.particles
     p1 = particles[0]
-    psi_wall = p1.psi_wall
+    psi_wallNU = p1.psi_wallNU.magnitude
 
-    fig, ax = plt.subplots(3, 1, figsize=(6, 4), sharex=True)
+    fig, ax = plt.subplots(3, 1, figsize=(9, 7), sharex=True)
     plt.xlabel(r"$P_{\zeta}$")
+    fig.suptitle("Fixed Points Bifurcation Diagram")
 
     ax_theta = ax[0]
     ax_P_theta = ax[1]
     ax_ndfp = ax[2]
 
     P_zeta_plot = []
-    theta_plot = []
-    P_theta_plot = []
+
+    X_theta_plot = []
+    X_P_theta_plot = []
+
+    O_theta_plot = []
+    O_P_theta_plot = []
 
     particles = collection.particles
 
-    # Theta Bifurcation
+    # Theta Fixed Bifurcation
     for i, p in enumerate(particles):
         P_zeta = p.Pzeta0
-        y_list = thetas_fixed[i]
-        P_zeta_plot.extend([P_zeta] * y_list.shape[0])
-        theta_plot.extend(y_list)
+        y_list = X_thetas[i]
+        P_zeta_plot.extend([P_zeta] * len(list(y_list)))
+        X_theta_plot.extend(y_list)
 
-    # ax_theta.set_title("theta Bifurcation Diagram")
-    ax_theta.set_ylabel(r"$\theta_s$")
+    ax_theta.set_ylabel(r"$\theta_s$ Fixed")
     ax_theta.set_yticks([-np.pi, 0, np.pi])
     ax_theta.set_yticklabels([r"$-\pi$", "0", r"$\pi$"])
     ax_theta.set_ylim([-np.pi - 0.5, np.pi + 0.5])
-    ax_theta.scatter(P_zeta_plot, theta_plot, s=2)
+    ax_theta.scatter(P_zeta_plot, X_theta_plot, s=2, color="#E65100")
 
     P_zeta_plot = []
 
-    # P_theta Bifurcation
     for i, p in enumerate(particles):
         P_zeta = p.Pzeta0
-        y_list = P_thetas_fixed[i]
-        P_zeta_plot.extend([P_zeta] * y_list.shape[0])
-        P_theta_plot.extend(y_list)
+        y_list = O_thetas[i]
+        P_zeta_plot.extend([P_zeta] * len(list(y_list)))
+        O_theta_plot.extend(y_list)
 
-    P_theta_plot = [P_theta / psi_wall for P_theta in P_theta_plot]
+    ax_theta.scatter(P_zeta_plot, O_theta_plot, s=2)
 
-    # ax_P_theta.set_title(r"$P_{theta}$ Bifurcation Diagram")
-    ax_P_theta.set_ylabel(r"$P_{\theta_s}$")
-    ax_P_theta.scatter(P_zeta_plot, P_theta_plot, s=2)
-    ax_P_theta.axhline(y=1, color="black", linestyle="--", linewidth=1, alpha=0.5)
+    P_zeta_plot1 = []
+
+    # P_theta Fixed Bifurcation
+    for i, p in enumerate(particles):
+        P_zeta = p.Pzeta0
+        y_list = X_P_thetas[i]
+        P_zeta_plot1.extend([P_zeta] * len(list(y_list)))
+        X_P_theta_plot.extend(y_list)
+
+    P_zeta_plot2 = []
+
+    # P_theta Fixed Bifurcation
+    for i, p in enumerate(particles):
+        P_zeta = p.Pzeta0
+        y_list = O_P_thetas[i]
+        P_zeta_plot2.extend([P_zeta] * len(list(y_list)))
+        O_P_theta_plot.extend(y_list)
+
+    # Set the upper limit of the y axis properly
+    ul = 1.05 * psi_wallNU
+
+    # Combine the two lists for comparison
+    combined_P_theta_plot = X_P_theta_plot + O_P_theta_plot
+
+    if max(combined_P_theta_plot) > psi_wallNU:
+        ul = max(combined_P_theta_plot) * 1.05
+
+    ax_P_theta.set_ylabel(r"$P_{\theta_s}$ Fixed")
+    ax_P_theta.set_ylim(0, ul)
+    ax_P_theta.scatter(P_zeta_plot1, X_P_theta_plot, s=2, color="#E65100", label="X points")
+    ax_P_theta.scatter(P_zeta_plot2, O_P_theta_plot, s=2, label="O points")
+    ax_P_theta.axhline(y=psi_wallNU, color="black", linestyle="--", linewidth=1, alpha=0.5)
+    ax_P_theta.legend(loc="upper right")
 
     # Number of distinct fixed points Diagram
-    # ax_ndfp.set_title("Number of Fixed Points Bifurcation Diagram")
     P_zetas = [p.Pzeta0 for p in particles]
-    ax_ndfp.set_ylabel("Fixed Points")
+    ax_ndfp.set_ylabel("Number of Fixed Points")
     ax_ndfp.scatter(P_zetas, num_of_fp, s=2)
 
     plt.ion()

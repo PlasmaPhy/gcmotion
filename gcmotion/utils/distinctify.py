@@ -21,7 +21,7 @@ determine which points [x,y] can be considered distinct.
 import numpy as np
 
 
-def distinctify(points: np.ndarray, tol=1e-2):
+def distinctify(points: np.ndarray, tol: float):
 
     def are_considered_equal(sublist1, sublist2, tol=tol):
         return abs(sublist1[0] - sublist2[0]) <= tol and abs(sublist1[1] - sublist2[1]) <= tol

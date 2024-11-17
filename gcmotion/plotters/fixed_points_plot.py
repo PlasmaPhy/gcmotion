@@ -29,6 +29,7 @@ This is how :py:func:`fixed_points_plot` can be called inside the function :py:f
 """
 
 from gcmotion.scripts.fixed_points import fixed_points as fp
+from gcmotion.scripts.XO_points_classification import XO_points_classification as xoc
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -42,6 +43,7 @@ def fixed_points_plot(
     psi_lim: list,
     theta_density: int = 5,
     P_theta_density: int = 5,
+    dist_tol: float = 1e-3,
     info: bool = False,
     **params,
 ):
@@ -114,7 +116,14 @@ def fixed_points_plot(
         P_theta_density=P_theta_density,
         theta_lim=theta_lim,
         psi_lim=psi_lim,
+        dist_tol=dist_tol,
         info=info,
+    )
+
+    X_points, O_points = xoc(
+        unclassified_fixed_points=fixed_points,
+        parameters=parameters,
+        profile=profile,
     )
 
     # Check canvas
@@ -127,13 +136,15 @@ def fixed_points_plot(
         fig, ax = canvas
         logger.debug("\tUsing existing canvas.")
 
-    # Extract and plot the [theta, P_theta] fixed points
-    thetas_fixed = fixed_points[:, 0]
-    P_thetas_fixed = fixed_points[:, 1]
+    # Convert deque to numpy arrays for easy manipulation
+    X_thetas, X_P_thetas = zip(*X_points) if X_points else ([], [])
+    O_thetas, O_P_thetas = zip(*O_points) if O_points else ([], [])
 
-    P_thetas_fixed = cwp.Q(P_thetas_fixed, "NUmagnetic_flux").to("Magnetic_flux")
+    X_P_thetas = cwp.Q(X_P_thetas, "NUmagnetic_flux").to("Magnetic_flux")
+    O_P_thetas = cwp.Q(O_P_thetas, "NUmagnetic_flux").to("Magnetic_flux")
 
     ax.set_xticks([-np.pi, 0, np.pi])
     ax.set_xticklabels([r"$-\pi$", "0", r"$\pi$"])
     ax.set_xlim([-np.pi, np.pi])
-    ax.scatter(thetas_fixed, P_thetas_fixed, marker="x", color="green", s=80)
+    ax.scatter(X_thetas, X_P_thetas, marker="x", color="#80FF80", s=100)
+    ax.scatter(O_thetas, O_P_thetas, marker="o", edgecolor="yellow", facecolors="none", s=100)

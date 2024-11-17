@@ -56,6 +56,7 @@ This is how :py:func:`bifurcation` can be called inside the function :py:func:`b
 import numpy as np
 from collections import deque, namedtuple
 
+from gcmotion.scripts.XO_points_classification import XO_points_classification as xoc
 from gcmotion.scripts.fixed_points import fixed_points
 from gcmotion.classes.collection import Collection
 
@@ -66,14 +67,23 @@ def bifurcation(
     P_theta_density=5,
     theta_lim: list = [-np.pi, np.pi],
     psi_lim: list = [0.01, 1.3],
+    dist_tol: float = 1e-3,
     info: bool = False,
 ):
 
     num_of_fp = deque([])
     fp = deque([])
+    X_points = deque([])
+    O_points = deque([])
 
     thetas_fixed = deque([])
     P_thetas_fixed = deque([])
+
+    X_thetas = deque([])
+    X_P_thetas = deque([])
+
+    O_thetas = deque([])
+    O_P_thetas = deque([])
 
     p1 = collection[0]
     p_last = collection[-1]
@@ -115,22 +125,58 @@ def bifurcation(
             P_theta_density=P_theta_density,
             theta_lim=theta_lim,
             psi_lim=psi_lim,
+            dist_tol=dist_tol,
             info=False,
+        )
+
+        current_X_points, current_O_points = xoc(
+            unclassified_fixed_points=current_fp,
+            parameters=parameters,
+            profile=profile,
         )
 
         current_thetas_fixed = current_fp[:, 0]
         current_P_thetas_fixed = current_fp[:, 1]
+
+        # Convert deque to numpy arrays for easy manipulation
+        current_X_thetas, current_X_P_thetas = (
+            zip(*current_X_points) if current_X_points else ([], [])
+        )
+        current_O_thetas, current_O_P_thetas = (
+            zip(*current_O_points) if current_O_points else ([], [])
+        )
 
         if info:
             print(
                 f"\nCurrent Step: {idx+1} at P_z = {current_P_zeta} with {current_num_of_fp} fixed points"
             )
             print(f"Current Fixed Points: {current_fp}\n")
+            print(
+                f"Current X Points: {[[float(thetaX),float(P_thetaX)] for thetaX,P_thetaX in current_X_points]}\n"
+            )
+            print(
+                f"Current O Points: {[[float(thetaO),float(P_thetaO)] for thetaO,P_thetaO in current_O_points]}\n"
+            )
 
         fp.append(current_fp)
         num_of_fp.append(current_num_of_fp)
 
+        X_points.append(current_X_points)
+        O_points.append(current_O_points)
+
         thetas_fixed.append(current_thetas_fixed)
         P_thetas_fixed.append(current_P_thetas_fixed)
 
-    return thetas_fixed, P_thetas_fixed, num_of_fp
+        X_thetas.append(current_X_thetas)
+        X_P_thetas.append(current_X_P_thetas)
+
+        O_thetas.append(current_O_thetas)
+        O_P_thetas.append(current_O_P_thetas)
+
+    return (
+        X_thetas,
+        X_P_thetas,
+        O_thetas,
+        O_P_thetas,
+        num_of_fp,
+    )  # thetas_fixed, P_thetas_fixed, num_of_fp
