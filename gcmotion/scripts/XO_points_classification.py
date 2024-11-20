@@ -1,81 +1,54 @@
 import numpy as np
 from collections import namedtuple, deque
 from gcmotion.utils.energy_Ptheta import energy_Ptheta
+from gcmotion.utils.second_derivative import higher_order_second_derivative
 
 
 def XO_points_classification(
     unclassified_fixed_points: np.ndarray,
     parameters: namedtuple,
     profile: namedtuple,
-    grid_density: int = 10,
+    delta: float = 1e-5,
 ):
     # Parameters
     mu = parameters.mu
     Pzeta0 = parameters.Pzeta0
 
-    O_points = deque()  # Deque for stable O-points
-    X_points = deque()  # Deque for unstable X-points and saddle X-points
+    O_points = deque([])  # Deque for stable O-points
+    X_points = deque([])  # Deque for unstable X-points and saddle X-points
+
+    def WNU(theta, P_theta):
+        # Calculate the Hamiltonian at (theta, P_theta)
+        W, _ = energy_Ptheta(
+            psi=P_theta, theta=theta, Pzeta=Pzeta0, mu=mu, profile=profile, contour_Phi=True
+        )  # FOR NOW ONLY WORKS FOR LAR BECAUSE psi=P_theta
+
+        return W
 
     for fixed_point in unclassified_fixed_points:
 
-        theta_fixed = fixed_point[0]
-        P_theta_fixed = fixed_point[1]
+        theta_fixed, P_theta_fixed = fixed_point
 
-        # Define the grid around the fixed point
-        theta_min = 0.9 * theta_fixed
-        theta_max = 1.1 * theta_fixed
-
-        if theta_fixed < 0:
-            theta_min = 1.1 * theta_fixed
-            theta_max = 0.9 * theta_fixed
-        elif theta_fixed < 1e-2:
-            theta_min = theta_fixed - 0.1
-            theta_max = theta_fixed + 0.1
-
-        P_theta_min = 0.9 * P_theta_fixed
-        P_theta_max = 1.1 * P_theta_fixed
-
-        # Create the grid
-        theta, P_thetaNU = np.meshgrid(
-            np.linspace(theta_min, theta_max, grid_density),
-            np.linspace(P_theta_min, P_theta_max, grid_density),
+        # Compute the Hessian matrix elements
+        d2W_dtheta2 = higher_order_second_derivative(
+            WNU, theta_fixed, P_theta_fixed, delta, delta, "x"
         )
+        d2W_dPtheta2 = higher_order_second_derivative(
+            WNU, theta_fixed, P_theta_fixed, delta, delta, "y"
+        )
+        d2W_dtheta_dPtheta = higher_order_second_derivative(
+            WNU, theta_fixed, P_theta_fixed, delta, delta, "mixed"
+        )
+        # Hessian matrix
+        Hessian = np.array([[d2W_dtheta2, d2W_dtheta_dPtheta], [d2W_dtheta_dPtheta, d2W_dPtheta2]])
 
-        # Compute the Hamiltonian values on the grid
-        WNU, _ = energy_Ptheta(
-            psi=P_thetaNU, theta=theta, Pzeta=Pzeta0, mu=mu, profile=profile, contour_Phi=True
-        )  # BECAUSE psi=P_thetaNU ONLY WORKS FOR LAR AT THE MOMENT
+        # Determinant of the Hessian
+        det_Hessian = np.linalg.det(Hessian)
 
-        # Locate the grid index of the fixed point
-        idx_theta = np.abs(theta[0, :] - theta_fixed).argmin()  # Closest row in theta
-        idx_P_theta = np.abs(P_thetaNU[:, 0] - P_theta_fixed).argmin()  # Closest column in psi
-
-        # Energy at the fixed point
-        W_fixed = WNU[idx_theta, idx_P_theta]
-
-        # Extract the energy of the 4 second closest neighbors to avoid
-        # numerical errors
-        neighbor_up = WNU[idx_theta, idx_P_theta + 2]
-        neighbor_down = WNU[idx_theta, idx_P_theta - 2]
-        neighbor_right = WNU[idx_theta + 2, idx_P_theta]
-        neighbor_left = WNU[idx_theta - 2, idx_P_theta]
-
-        # Classify the fixed point
-        if all(W > W_fixed for W in [neighbor_up, neighbor_down, neighbor_left, neighbor_right]):
-            O_points.append([theta_fixed, P_theta_fixed])  # Add to O-points deque
-        elif all(W < W_fixed for W in [neighbor_up, neighbor_down, neighbor_left, neighbor_right]):
-            X_points.append([theta_fixed, P_theta_fixed])  # Add to X-points deque (unstable max)
-        elif (
-            neighbor_up < W_fixed
-            and neighbor_down < W_fixed
-            and neighbor_left > W_fixed
-            and neighbor_right > W_fixed
-        ) or (
-            neighbor_up > W_fixed
-            and neighbor_down > W_fixed
-            and neighbor_left < W_fixed
-            and neighbor_right < W_fixed
-        ):
-            X_points.append([theta_fixed, P_theta_fixed])  # Add to X-points deque (saddle)
+        # Classification based on determinant
+        if det_Hessian < 0:
+            X_points.append(fixed_point)
+        elif det_Hessian > 0:
+            O_points.append(fixed_point)
 
     return X_points, O_points
