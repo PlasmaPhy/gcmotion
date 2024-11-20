@@ -36,6 +36,7 @@ This is how :py:func:`fixed_points` can be called inside the function :py:func:`
         profile=profile,
         theta_lim=theta_lim,
         psi_lim=psi_lim,
+        dist_tol=dist_tol,
         info=info,
     )
 
@@ -60,6 +61,10 @@ This is how :py:func:`fixed_points` can be called inside the function :py:func:`
         Provides the limits (divided by psi_wall) for the solution search area with regards
         to the :math:`P_{\theta}` variable. It will be passed into the "bounds" argument of
         :py:func:`differential_evolution`. 
+    dist_tol : float, optional
+        Tolerance that determines distinct fixed points. If both :math:`P_{\theta}` and
+        :math:`P_{\theta}` elements of a fixed point are less than :py:data:`dist_tol` apart
+        the two fixed points are not considered distinct.
     info : bool, optional
         Boolean that dictates weather the fixed points and distinct fixed points found 
         will be printed alongside how many where found respectively.

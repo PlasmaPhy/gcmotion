@@ -44,7 +44,7 @@ def XO_points_classification(
         # Compute the Hamiltonian values on the grid
         WNU, _ = energy_Ptheta(
             psi=P_thetaNU, theta=theta, Pzeta=Pzeta0, mu=mu, profile=profile, contour_Phi=True
-        )
+        )  # BECAUSE psi=P_thetaNU ONLY WORKS FOR LAR AT THE MOMENT
 
         # Locate the grid index of the fixed point
         idx_theta = np.abs(theta[0, :] - theta_fixed).argmin()  # Closest row in theta

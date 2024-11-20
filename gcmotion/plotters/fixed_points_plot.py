@@ -20,6 +20,7 @@ This is how :py:func:`fixed_points_plot` can be called inside the function :py:f
             theta_density=theta_fixed_density,
             P_theta_density=P_theta_fixed_density,
             _internal_call=True,
+            dist_tol=dist_tol,
             info=True,
             canvas=canvas,
             **params,
@@ -69,6 +70,10 @@ def fixed_points_plot(
     P_theta_density : int, optional
         Integer dictating the number of initial conditions with regard to the
         :math:`P_{\theta}` variable that will be passed into :py:func:`fixed_points`.
+    dist_tol : float, optional
+        Tolerance that determines distinct fixed points. If both :math:`P_{\theta}` and
+        :math:`P_{\theta}` elements of a fixed point are less than :py:data:`dist_tol` apart
+        the two fixed points are not considered distinct.
     info : bool, optional
         Passed into ``fixed_poits()``. Determines weather to print information
         about the fixed points (number, values). Defaults to ``False``.

@@ -17,6 +17,7 @@ This is how :py:func:`bifurcation` can be called inside the function :py:func:`b
             P_theta_density=P_theta_density,
             theta_lim=theta_lim,
             psi_lim=psi_lim,
+            dist_tol=dist_tol,
             info=info,
         )
 
@@ -39,6 +40,10 @@ This is how :py:func:`bifurcation` can be called inside the function :py:func:`b
         Provides the limits (divided by psi_wall) for the solution search area with regards
         to the :math:`P_{\theta}` variable. It will be passed into the "bounds" argument of
         :py:func:`fixed_points`. 
+    dist_tol : float, optional
+        Tolerance that determines distinct fixed points. If both :math:`P_{\theta}` and
+        :math:`P_{\theta}` elements of a fixed point are less than :py:data:`dist_tol` apart
+        the two fixed points are not considered distinct.
     info : bool, optional
         Boolean that dictates weather the :math:`P_{\zeta0}` of the particle whose
         fixed points have just been calculated, will be printed alongside the fixed points
@@ -71,13 +76,11 @@ def bifurcation(
     info: bool = False,
 ):
 
-    num_of_fp = deque([])
-    fp = deque([])
+    num_of_XP = deque([])
+    num_of_OP = deque([])
+
     X_points = deque([])
     O_points = deque([])
-
-    thetas_fixed = deque([])
-    P_thetas_fixed = deque([])
 
     X_thetas = deque([])
     X_P_thetas = deque([])
@@ -87,7 +90,6 @@ def bifurcation(
 
     p1 = collection[0]
     p_last = collection[-1]
-    # Q = p1.Q
 
     # Check if the partcles have different Pzeta0's
     if p1.Pzeta0 == p_last.Pzeta0:
@@ -135,9 +137,6 @@ def bifurcation(
             profile=profile,
         )
 
-        current_thetas_fixed = current_fp[:, 0]
-        current_P_thetas_fixed = current_fp[:, 1]
-
         # Convert deque to numpy arrays for easy manipulation
         current_X_thetas, current_X_P_thetas = (
             zip(*current_X_points) if current_X_points else ([], [])
@@ -158,14 +157,11 @@ def bifurcation(
                 f"Current O Points: {[[float(thetaO),float(P_thetaO)] for thetaO,P_thetaO in current_O_points]}\n"
             )
 
-        fp.append(current_fp)
-        num_of_fp.append(current_num_of_fp)
+        num_of_XP.append(len(current_X_points))
+        num_of_OP.append(len(current_O_points))
 
         X_points.append(current_X_points)
         O_points.append(current_O_points)
-
-        thetas_fixed.append(current_thetas_fixed)
-        P_thetas_fixed.append(current_P_thetas_fixed)
 
         X_thetas.append(current_X_thetas)
         X_P_thetas.append(current_X_P_thetas)
@@ -178,5 +174,6 @@ def bifurcation(
         X_P_thetas,
         O_thetas,
         O_P_thetas,
-        num_of_fp,
-    )  # thetas_fixed, P_thetas_fixed, num_of_fp
+        num_of_XP,
+        num_of_OP,
+    )
