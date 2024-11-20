@@ -68,8 +68,6 @@ from gcmotion.classes.collection import Collection
 
 def bifurcation(
     collection: Collection,
-    theta_density=5,
-    P_theta_density=5,
     theta_lim: list = [-np.pi, np.pi],
     psi_lim: list = [0.01, 1.3],
     dist_tol: float = 1e-3,
@@ -123,8 +121,6 @@ def bifurcation(
             parameters=parameters,
             profile=profile,
             Q=p.Q,
-            theta_density=theta_density,
-            P_theta_density=P_theta_density,
             theta_lim=theta_lim,
             psi_lim=psi_lim,
             dist_tol=dist_tol,

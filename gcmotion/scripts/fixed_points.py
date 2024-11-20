@@ -94,6 +94,7 @@ from scipy.optimize import differential_evolution
 from collections import namedtuple
 from gcmotion.utils.distinctify import distinctify
 from gcmotion.utils.energy_Ptheta import energy_Ptheta
+from gcmotion.scripts.fp_ic_scan import fp_ic_scan as ic_scanner
 
 # Quantity alias for type annotations
 type Quantity = pint.UnitRegistry.Quantity
@@ -103,13 +104,10 @@ def fixed_points(
     parameters: namedtuple,
     profile: namedtuple,
     Q: Quantity,
-    theta_density: int = 5,
-    P_theta_density: int = 5,
     theta_lim: list = [-1.01 * np.pi, 1.01 * np.pi],
     psi_lim: list = [0.01, 1.3],
     dist_tol: float = 1e-3,
     info: bool = False,
-    scaled_P_thetas: bool = False,
     # polish=True,
     # init="sobol",
     # workers=-1,
@@ -143,7 +141,7 @@ def fixed_points(
     P_theta_min = P_theta_lim[0]
     P_theta_max = P_theta_lim[1]
 
-    bounds = [(theta_min, theta_max), (P_theta_min, P_theta_max)]
+    bounds = [(theta_min, theta_max), (0.99 * P_theta_min, 1.01 * P_theta_max)]
 
     # Function to locate a single fixed point
     def fixed_point(initial_condition=None):
@@ -193,7 +191,7 @@ def fixed_points(
             bounds,
             x0=initial_condition,
             tol=1e-7,
-            # atol=1e-15,
+            atol=1e-15,
             maxiter=10000,
             popsize=15,
             mutation=(0.5, 1),
@@ -204,40 +202,28 @@ def fixed_points(
 
         return theta_solution, P_theta_solution
 
-    fixed_points = np.empty((theta_density * P_theta_density, 2))
+    initial_conditions = ic_scanner(
+        parameters=parameters,
+        profile=profile,
+        grid_density=900,
+        psi_lim=psi_lim,
+        theta_lim=theta_lim,
+        tol=1e-6,
+        info=info,
+    )
+
+    fixed_points = np.empty((len(initial_conditions), len(initial_conditions[0])))
     fixed_points[:] = np.nan
-
-    # Define the limits of the initial conditions to be certainly inside the
-    # limits of the "bounds" argument you have defined previously
-    if theta_min <= 0:
-        theta_min_init = theta_min * 0.999
-    else:
-        theta_min_init = theta_min * 1.001
-
-    theta_max_init = np.pi * 0.999
-
-    P_theta_min_init = P_theta_min * 1.001
-    P_theta_max_init = P_theta_max * 0.999
-
-    thetas_init = np.linspace(theta_min_init, theta_max_init, theta_density)
-    P_thetas_init = np.linspace(P_theta_min_init, P_theta_max_init, P_theta_density)
-
-    if scaled_P_thetas:
-        P_thetas_init_mod = np.sin(np.pi * P_thetas_init) ** 4  # (1 - np.cos(P_thetas_init)) / 2
-        P_thetas_init = P_theta_min_init + (P_theta_max_init - P_theta_min_init) * P_thetas_init_mod
 
     idx = 0
 
     # Run fixed_point() for multiple initial conditions in order to locate
     # multiple fixed points
-    for theta_init in thetas_init:
-        for P_theta_init in P_thetas_init:
+    for initial_condition in initial_conditions:
 
-            initial_condition = [theta_init, P_theta_init]
-
-            theta_fix, P_theta_fix = fixed_point(initial_condition=initial_condition)
-            fixed_points[idx] = [float(theta_fix), float(P_theta_fix)]
-            idx += 1
+        theta_fix, P_theta_fix = fixed_point(initial_condition=initial_condition)
+        fixed_points[idx] = [float(theta_fix), float(P_theta_fix)]
+        idx += 1
 
     # A lot of the fixed points that were found have identical values-->
     # find out how many distinct fixed points were located
