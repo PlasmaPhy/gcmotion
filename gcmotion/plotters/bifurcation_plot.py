@@ -30,8 +30,6 @@ from gcmotion.classes.collection import Collection
 
 def bifurcation_plot(
     collection: Collection,
-    theta_density=5,
-    P_theta_density=5,
     theta_lim: list = [-np.pi, np.pi],
     psi_lim: list = [0.01, 1.3],
     dist_tol: float = 1e-3,
@@ -76,8 +74,6 @@ def bifurcation_plot(
     start = time()
     X_thetas, X_P_thetas, O_thetas, O_P_thetas, num_of_XP, num_of_OP = bifurcation(
         collection=collection,
-        theta_density=theta_density,
-        P_theta_density=P_theta_density,
         theta_lim=theta_lim,
         psi_lim=psi_lim,
         dist_tol=dist_tol,
