@@ -2,7 +2,7 @@ r"""
 Electric Profile
 ----------------
 
-Plots a poloidal cut of the Electric potential, as well as 2 plots of the 
+Plots a poloidal cut of the Electric potential, as well as 2 plots of the
 electric potential and field with respect to :math:`r`.
 """
 
@@ -21,8 +21,8 @@ type Quantity = pint.UnitRegistry.Quantity
 def electric_profile(
     tokamak: dict, Q: Quantity, zoom: list = [0, 1.1], units: str = "SI"
 ):
-    r"""Plots a poloidal cut of the Electric potential, as well as 2 plots of the
-    electric potential and field with respect to :math:`r`.
+    r"""Plots a poloidal cut of the Electric potential, as well as 2 plots of
+    the electric potential and field with respect to :math:`r`.
 
     Parameters
     ----------

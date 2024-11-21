@@ -19,8 +19,8 @@ Example
 .. code-block:: python
 
     gcm.energy_contour(
-        cwp, theta_lim = [-np.pi ,np.pi], Ptheta_lim="auto", 
-        plot_drift=True, contour_Phi=True, units="SI", 
+        cwp, theta_lim = [-np.pi ,np.pi], Ptheta_lim="auto",
+        plot_drift=True, contour_Phi=True, units="SI",
         levels=20
     )
 
@@ -104,7 +104,8 @@ def energy_contour(
         logger.enable("gcmotion")
 
     suffix = "NU" if units == "NU" else "" if units == "SI" else ""
-    logger.info(f"Plotting contour plot in {"NU" if suffix=="NU" else "SI"}...")  # fmt: skip
+    logger.info(f"Plotting contour plot in {
+                "NU" if suffix == "NU" else "SI"}...")
 
     # Get all needed attributes first
     # Use cwp.psiNU to calculate the contour, since psi cannot be solved
@@ -131,8 +132,10 @@ def energy_contour(
         logger.debug("\tContour: Using existing canvas.")
 
     if theta_lim not in [[0, 2 * np.pi], [-np.pi, np.pi]]:
-        print("'theta_lim' must be either [0,2*np.pi] or [-np.pi,np.pi]. Defaulting to [-np.pi,np.pi]")  # fmt: skip
-        logger.warning("\tContour: Invalid 'theta_lim': Defaulting to [-np.pi,np.pi]")  # fmt: skip
+        print(
+            "'theta_lim' must be either [0,2*np.pi] or [-np.pi,np.pi]. Defaulting to [-np.pi,np.pi]")
+        logger.warning(
+            "\tContour: Invalid 'theta_lim': Defaulting to [-np.pi,np.pi]")
         theta_lim = [-np.pi, np.pi]
 
     # Plot drift of Ptheta-theta
@@ -229,7 +232,8 @@ def energy_contour(
             height=Pthetaspan[1],
         )
 
-    # Energy labels on contour lines (creates gaps to the contour for some reason)
+    # Energy labels on contour lines (creates gaps to the contour for some
+    # reason)
     # plt.clabel(C, inline=1, fontsize=10, zorder=10)
 
     # Cursor
@@ -261,7 +265,11 @@ def energy_contour(
         plt.show(block=True)
         logger.info("--> Energy contour successfully plotted (returned null).")
     else:
-        logger.info("--> Energy contour successfully plotted (returned contour object)\n")  # fmt:skip
+        # fmt:skip
+        logger.info(
+            "--> Energy contour successfully plotted "
+            + "(returned contour object)"
+        )
         return C
 
 

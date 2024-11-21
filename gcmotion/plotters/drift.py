@@ -1,5 +1,5 @@
 r"""
-Plots poloidal :math:`\theta - P_\theta` or 
+Plots poloidal :math:`\theta - P_\theta` or
 :math:`\zeta - P_\zeta` drift.
 
 The x-axis (angle) limits can be either [-π,π] or [0,2π].
@@ -20,7 +20,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from gcmotion.utils.logger_setup import logger
-from gcmotion.utils.plot_utils import pi_mod, yspan
+from gcmotion.utils.plot_utils import pi_mod
 
 from gcmotion.configuration.plot_parameters import drift as config
 
@@ -60,7 +60,10 @@ def drift(
         logger.enable("gcmotion")
 
     suffix = "NU" if units == "NU" else "" if units == "SI" else ""
-    logger.info(f"Plotting {angle}-P_{angle} drift in {"NU" if suffix=="NU" else "SI"}...")  # fmt: skip
+    logger.info(
+        f"Plotting {angle}-P_{angle} drift in " +
+        f"{"NU" if suffix == "NU" else "SI"}..."
+    )
 
     # Get all needed attributes first
     q = getattr(cwp, angle).copy()

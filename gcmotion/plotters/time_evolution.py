@@ -3,9 +3,9 @@ Plots the time evolution of the dynamical variables
 :math:`\theta, \zeta, \psi, \psi_p, \rho_{||}, P_\theta, P_\zeta`
 with respect to time.
 
-The time axis can be either [NU] (normalized units) of time, or 
+The time axis can be either [NU] (normalized units) of time, or
 seconds.
-The percentage of the shown time evolution can be any integer 
+The percentage of the shown time evolution can be any integer
 from 1 to 100.
 
 Example
@@ -44,7 +44,10 @@ def time_evolution(cwp, percentage: int = 100, units: str = "SI"):
         The unit system. Can be either 'SI' or 'NU'. Defauls to "SI".
     """
     suffix = "NU" if units == "NU" else "" if units == "SI" else ""
-    logger.info(f"Plotting time evolutions in {"NU" if suffix=="NU" else "SI"}...")  # fmt: skip
+    logger.info(
+        "Plotting time evolutions in "
+        + f"{"NU" if suffix == "NU" else "SI"}..."
+    )
 
     # Get all needed attributes first
     theta = getattr(cwp, "theta").copy()
@@ -68,7 +71,6 @@ def time_evolution(cwp, percentage: int = 100, units: str = "SI"):
     ax[0].set_title("Time evolution of dynamical variables", c="b")
     ax[5].set_title("Time evolution of canonical momenta", c="b")
 
-    # fmt: off
     ax[0].scatter(t[:points], theta[:points],   **config["scatter_args"])
     ax[1].scatter(t[:points], zeta[:points],    **config["scatter_args"])
     ax[2].scatter(t[:points], psi[:points],     **config["scatter_args"])
@@ -78,16 +80,22 @@ def time_evolution(cwp, percentage: int = 100, units: str = "SI"):
     ax[6].scatter(t[:points], Pzeta[:points],   **config["scatter_args"])
 
     lp = config["labelpad"]
-    lp = lp*2 if suffix == "NU" else lp # give them NUs a bit more space
+    lp = lp*2 if suffix == "NU" else lp  # give them NUs a bit more space
     loc = config["loc"]
-    ax[0].set_ylabel(r"$\theta(t)$"   +"\n"+ rf"[${theta.units:P~}$]",  loc=loc, labelpad=lp, **config["ylabel_args"])
-    ax[1].set_ylabel(r"$\zeta(t)$"    +"\n"+ rf"[${zeta.units:P~}$]",   loc=loc, labelpad=lp, **config["ylabel_args"])
-    ax[2].set_ylabel(r"$\psi(t)$"     +"\n"+ rf"[${psi.units:P~}$]",    loc=loc, labelpad=lp, **config["ylabel_args"])
-    ax[3].set_ylabel(r"$\psi_p(t)$"   +"\n"+ rf"[${psip.units:P~}$]",   loc=loc, labelpad=lp, **config["ylabel_args"])
-    ax[4].set_ylabel(r"$\rho_{||}(t)$"+"\n"+ rf"[${rho.units:P~}$]",    loc=loc, labelpad=lp, **config["ylabel_args"])
-    ax[5].set_ylabel(r"$P_\theta(t)$" +"\n"+ rf"[${Ptheta.units:P~}$]", loc=loc, labelpad=lp, **config["ylabel_args"])
-    ax[6].set_ylabel(r"$P_\zeta(t)$"  +"\n"+ rf"[${Pzeta.units:P~}$]",  loc=loc, labelpad=lp, **config["ylabel_args"])
-    # fmt: on
+    ax[0].set_ylabel(r"$\theta(t)$" + "\n" + rf"[${theta.units:P~}$]",
+                     loc=loc, labelpad=lp, **config["ylabel_args"])
+    ax[1].set_ylabel(r"$\zeta(t)$" + "\n" + rf"[${zeta.units:P~}$]",
+                     loc=loc, labelpad=lp, **config["ylabel_args"])
+    ax[2].set_ylabel(r"$\psi(t)$" + "\n" + rf"[${psi.units:P~}$]",
+                     loc=loc, labelpad=lp, **config["ylabel_args"])
+    ax[3].set_ylabel(r"$\psi_p(t)$" + "\n" + rf"[${psip.units:P~}$]",
+                     loc=loc, labelpad=lp, **config["ylabel_args"])
+    ax[4].set_ylabel(r"$\rho_{||}(t)$"+"\n" + rf"[${rho.units:P~}$]",
+                     loc=loc, labelpad=lp, **config["ylabel_args"])
+    ax[5].set_ylabel(r"$P_\theta(t)$" + "\n" + rf"[${Ptheta.units:P~}$]",
+                     loc=loc, labelpad=lp, **config["ylabel_args"])
+    ax[6].set_ylabel(r"$P_\zeta(t)$" + "\n" + rf"[${Pzeta.units:P~}$]",
+                     loc=loc, labelpad=lp, **config["ylabel_args"])
 
     # Zoom out Pzeta y-axis
     current_ylim = np.array(ax[6].get_ylim())

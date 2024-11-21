@@ -1,5 +1,5 @@
 r"""
-Plots the poloidal :math:`\theta - P_\theta`  or 
+Plots the poloidal :math:`\theta - P_\theta`  or
 :math:`\zeta - P_\zeta` drifts of a collection of particles.
 
 The x-axis (angle) limits can be either [-π,π] or [0,2π].
@@ -11,7 +11,7 @@ Example
 
     params = {"different_colors": False, "plot_initial": True}
     gcm.collection_drift(
-        collection, angle = "theta", 
+        collection, angle = "theta",
         lim = [-np.pi, np.pi], params=params
     )
 
