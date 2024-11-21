@@ -16,8 +16,8 @@ Example
 .. code-block:: python
 
     gcm.energy_contour(
-        cwp, theta_lim = [-np.pi ,np.pi], psi_lim="auto", 
-        plot_drift=True, contour_Phi=True, units="keV", 
+        cwp, theta_lim = [-np.pi ,np.pi], psi_lim="auto",
+        plot_drift=True, contour_Phi=True, units="keV",
         levels=20
     )
 
@@ -134,7 +134,10 @@ def collection_energy_contour(
 
         for quantity in must_be_the_same:
             if getattr(collection, "multiple_" + quantity):
-                error_str = f"Only the variables {can_be_different} may vary from particle to particle."
+                error_str = (
+                    f"Only the variables {can_be_different} "
+                    "may vary from particle to particle."
+                )
                 print(error_str)
                 logger.error(error_str)
                 return False
@@ -146,7 +149,8 @@ def collection_energy_contour(
 
         logger.info("Plotting Collection energy contour...")
 
-        nonlocal psi_lim, _internal_call, canvas, different_colors, plot_initial
+        nonlocal psi_lim, _internal_call, canvas
+        nonlocal different_colors, plot_initial
 
         if canvas is None:
             fig = plt.figure(**config["fig_parameters"])

@@ -11,7 +11,7 @@ Example
 
     params = {"different_colors": False, "plot_initial": True}
     gcm.collection_drift(
-        collection, angle = "theta", 
+        collection, angle = "theta",
         lim = [-np.pi, np.pi], params=params
     )
 

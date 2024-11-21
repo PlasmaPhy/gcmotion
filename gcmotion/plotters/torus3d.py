@@ -82,7 +82,8 @@ def torus3d(
         custom_kw["alpha"] = 1
         custom_kw["linewidth"] = 3 * config["torus3d_orbit_kw"]["linewidth"]
     logger.debug(
-        f"\tOrbit plot size: {bold} (linewidth = {custom_kw["linewidth"]}, alpha = {custom_kw["alpha"]})."
+        f"\tOrbit plot size: {bold} (linewidth = {custom_kw['linewidth']}, "
+        + "alpha = {custom_kw['alpha']})."
     )
 
     if white_background:

@@ -5,8 +5,6 @@ from tqdm import tqdm
 
 from gcmotion.classes.particle import Particle
 
-# from gcmotion.scripts.events import when_theta_trapped, when_theta_passing
-
 from gcmotion.utils.logger_setup import logger
 from gcmotion.utils.get_size import get_size
 from gcmotion.scripts.events import when_theta
@@ -61,16 +59,17 @@ class Collection:
         r"""
         Initializes a Collection of particles.
 
-        This class is a *Collection* of many independent particles, each one with
-        its own properties, configuration and initial condition. It reads all their
-        attributesform ``parameters.py`` file, which must be imported such:
+        This class is a *Collection* of many independent particles,
+        each one with its own properties, configuration and initial condition.
+        It reads all their attributesform ``parameters.py`` file, which must be
+        imported such:
 
         .. code-block:: python
 
             >>> from <path-to-file> import parameters
 
-        The file must contain a dict called "params" which contains all the information.
-        See example.
+        The file must contain a dict called "params" which contains all the
+        information. See example.
 
         The Collection can then calculate the particle's orbits.
 
@@ -115,8 +114,8 @@ class Collection:
         logger.info("Checking Data...")
 
         # Store the lenghts of each parameter and find the number of particles.
-        # The "lengths" dictionary has the same keys as "params", and the values
-        # are the length of the corresponding value in "params".
+        # The "lengths" dictionary has the same keys as "params", and the
+        # values are the length of the corresponding value in "params".
         self.lengths = {x: 1 for x in self.params}
         for key, value in self.params.items():
             if isinstance(value, pint.Quantity) and key != "t_eval":
@@ -125,19 +124,21 @@ class Collection:
             elif isinstance(value, (list, np.ndarray)):
                 self.lengths[key] = len(value)
 
-        # Number of particles "n" is assigned to be the length of the Quantity with
-        # the most values. Whether or not every Quantity has the same number of values
-        # is checked later.
+        # Number of particles "n" is assigned to be the length of the Quantity
+        # with the most values. Whether or not every Quantity has the same
+        # number of values is checked later.
         self.n = max(self.lengths.values())
         logger.debug(f"Number of particles found: {self.n}")
 
-        # Create a bool flag for every Quantity. True if multiple values are found, and
-        # False if single-valued
+        # Create a bool flag for every Quantity. True if multiple values are
+        # found, and False if single-valued.
         for key, value in self.lengths.items():
             setattr(self, "multiple_" + key, bool(value - 1))
-            logger.debug(f"Flag: 'multiple_{key}` = {bool(getattr(self, "multiple_" + key))}")  # fmt: skip
+            logger.debug(f"Flag: 'multiple_{key}` = {
+                         bool(getattr(self, "multiple_" + key))}")
 
-        # All Quantities must be either single-valued, or have a total of n values.
+        # All Quantities must be either single-valued, or have a total of n
+        # values.
         if all((_ == self.n) or (_ == 1) for _ in self.lengths.values()):
             print(f"Data is OK. Number of particles = {self.n}")
             logger.info(f"Data is OK. Number of particles = {self.n}")
@@ -146,7 +147,8 @@ class Collection:
             print(
                 "Error: Multiple valued parameters must all be of same length"
             )
-            logger.error("Error: Multiple valued parameters must all be of same length")  # fmt: skip
+            logger.error(
+                "Error: Multiple valued parameters must all be of same length")
             return False
 
     def _create(self):
@@ -154,10 +156,10 @@ class Collection:
 
         logger.info("Initializing particles...")
 
-        # Make a local, iterable copy of params by expanding all the single-valued
-        # Quantities to repeat n times.
-        # CAUTION! all objects of same value point to one single object.
-        # Changing one of them changes all of them.
+        # Make a local, iterable copy of params by expanding all the
+        # single-valued Quantities to repeat n times. CAUTION! all objects of
+        # same value point to one single object. Changing one of them changes
+        # all of them.
         params = self.params.copy()
         for key, value in params.items():
             if self.lengths[key] == 1:
@@ -198,28 +200,33 @@ class Collection:
     def run_all(
         self, orbit=True, terminal: int = 0, pole: int | float = np.pi / 2
     ):
-        r"""Calculates all the particle's orbit, by running Particle.run() itself.
+        r"""Calculates all the particle's orbit, by running Particle.run()
+        itself.
 
         Some plots and calculations, such as the parabolas and the orbit type
         calculation don't require the whole orbit to be calculated, since they
-        only depend on the initial conditions. We can therefore save valuable time.
+        only depend on the initial conditions. We can therefore save valuable
+        time.
 
         Also keeps statistics of calculation times and event triggers.
 
         .. caution::
-            The ``terminal`` parameter does not specify the number of *full periods*
-            before halting the solver, but rather the number that the :math:`psi`
-            coordinate has encountered the same value. For more info, see ``note``
-            in :py:func:`~gcmotion.scripts.events.when_psi`.
+            The ``terminal`` parameter does not specify the number of *full
+            periods* before halting the solver, but rather the number that the
+            :math:`psi` coordinate has encountered the same value. For more
+            info, see ``note`` in
+            :py:func:`~gcmotion.scripts.events.when_psi`.
 
         Parameters
         ----------
 
         orbit : bool, optional
-            Whether or not to calculate the particles' orbits. Defaults to True.
+            Whether or not to calculate the particles' orbits. Defaults to
+            True.
         terminal : int
-            The number of event triggers before stopping the orbit calculation of
-            each particle. Defaults to 0, which makes the event non-terminal.
+            The number of event triggers before stopping the orbit calculation
+            of each particle. Defaults to 0, which makes the event
+            non-terminal.
         pole : int | float
             The modulo pole used for the event that stops passing particles.
             Must be different than **ANY** of the initial theta0s, and should
@@ -240,7 +247,7 @@ class Collection:
             start = time()
             events = [
                 when_theta(p.theta0, 10)
-            ]  # FIXME: update events to work with Quantities
+            ]
             p.run(info=False, orbit=orbit, events=events)
             times.append(time() - start)
 
@@ -261,8 +268,10 @@ class Collection:
             f"\nTotal calculation time: {times.sum():.4g}s.\n"
             + f"Fastest particle: {times.min():.4g}s.\n"
             + f"Slowest particle: {times.max():.4g}s.\n"
-            + f"Average time: ({times.mean():.4g} \u00B1 {times.std():.4g})s.\n"
-            + f"{reached_end} particles reached the end of the integration interval.\n"
+            + "Average time: "
+            + f"({times.mean():.4g} \u00B1 {times.std():.4g})s.\n"
+            + f"{reached_end} particles reached "
+            + "the end of the integration interval.\n"
             + f"{terminated} particles were terminated early.\n"
         )
         print(time_str)

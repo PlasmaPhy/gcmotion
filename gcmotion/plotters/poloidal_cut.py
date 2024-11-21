@@ -1,5 +1,5 @@
 r"""
-Plots the Poloidal view of the torus and the 
+Plots the Poloidal view of the torus and the
 :math:`\theta - P_\theta` drift.
 
 Example
@@ -8,7 +8,7 @@ Example
 .. code-block:: python
 
     gcm.poloidal_cut(cwp, plot_initial=False)
-    
+
 .. rubric:: Function:
     :heading-level: 4
 
