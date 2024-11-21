@@ -57,8 +57,10 @@ def drifts(
         logger.enable("gcmotion")
 
     suffix = "NU" if units == "NU" else "" if units == "SI" else ""
-    logger.info(f"Plotting θ-Pθ and ζ-Pζ drifts in {"NU" if suffix=="NU" else "SI"}...")  # fmt: skip
-
+    logger.info(
+        "Plotting θ-Pθ and ζ-Pζ drifts in "
+        + f"{"NU" if suffix == "NU" else "SI"}..."
+    )
     # Unpack params
     _internal_call = params.pop("_internal_call", False)  # POP!
     canvas = params.pop("canvas", None)  # POP!
@@ -98,14 +100,17 @@ def drifts(
     ax[0].scatter(theta_plot, Ptheta, **config["scatter_args"])
     ax[1].scatter(zeta, Pzeta, **config["scatter_args"])
 
-    ax[0].set_xlabel(r"$\theta$" + f"[{theta.units:~P}]", fontsize=config["xfontsize"])  # fmt: skip
-    ax[1].set_xlabel(r"$\zeta$" + f"[{zeta.units:~P}]", fontsize=config["xfontsize"])  # fmt: skip
+    ax[0].set_xlabel(
+        r"$\theta$" + f"[{theta.units:~P}]", fontsize=config["xfontsize"])
+    ax[1].set_xlabel(
+        r"$\zeta$" + f"[{zeta.units:~P}]", fontsize=config["xfontsize"])
 
-    ax[0].set_ylabel(r"$P_\theta/\psi_{wall}$", fontsize=config["yfontsize"])  # fmt: skip
-    ax[1].set_ylabel(r"$P_ζ$" + rf"$[{Ptheta.units:~#P}]$", fontsize=config["yfontsize"])  # fmt: skip
+    ax[0].set_ylabel(r"$P_\theta/\psi_{wall}$", fontsize=config["yfontsize"])
+    ax[1].set_ylabel(
+        r"$P_ζ$" + rf"$[{Ptheta.units:~#P}]$", fontsize=config["yfontsize"])
 
     if plot_initial:
-        ax[0].scatter(theta_plot[0], Ptheta[0], c="k", s=10, zorder=3)  # fmt: skip
+        ax[0].scatter(theta_plot[0], Ptheta[0], c="k", s=10, zorder=3)
         ax[1].scatter(zeta[0], Pzeta[0], c="k", s=10, zorder=3)
 
     # Zoom out Pzeta y-axis
