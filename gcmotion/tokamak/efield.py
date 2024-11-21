@@ -300,5 +300,6 @@ class Radial(ElectricField):
     def __repr__(self):
         return (
             "Radial: "
-            + f"Ea={self.Ea:.4g~P}, peak={self.rpeak:.4g~P}, rw={self.rw:.4g~P}."
+            + f"Ea={self.Ea:.4g~P}, peak={self.rpeak:.4g~P}, "
+            + f"rw={self.rw:.4g~P}."
         )

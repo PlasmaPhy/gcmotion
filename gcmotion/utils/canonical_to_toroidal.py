@@ -52,7 +52,8 @@ def canonical_to_toroidal(
     # Torus shape parameters
     r_span = [r_torus.min(), r_torus.max()]
     logger.debug(
-        f"\tr-span calculated:[{r_span[0]:.4g}, {r_span[1]:.4g}]m, with a={a}m."
+        f"\tr-span calculated:[{r_span[0]:.4g}, {r_span[1]:.4g}]m, "
+        + f"with a={a}m."
     )
 
     if truescale:

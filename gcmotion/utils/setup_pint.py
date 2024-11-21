@@ -11,10 +11,11 @@ from gcmotion.configuration.particle_attributes import particle_attributes
 ureg = UnitRegistry(case_sensitive=False)
 ureg.setup_matplotlib()
 
+
 # fmt: off
 def setup_pint(R, a, B0, species):
-    r"""Creates all needed [NU] units, as well as some extra [SI] unit 
-    aliases and stores them in the UnitRegistry.
+    r"""Creates all needed [NU] units, as well as some extra [SI] unit aliases
+    and stores them in the UnitRegistry.
 
     Parameters
     ----------
@@ -22,7 +23,7 @@ def setup_pint(R, a, B0, species):
         The tokamak's major radius **in [m]**.
     a : float
         The tokamak's minor radius **in [m]**. Only used to create "psi_wall"
-        and "NUpsi_wall" as units of magnetic flux, so it is possible to setup 
+        and "NUpsi_wall" as units of magnetic flux, so it is possible to setup
         initial :math:`\psi_0` conditions with respect to the wall, instead of
         guessing.
     B0 : float
@@ -33,7 +34,7 @@ def setup_pint(R, a, B0, species):
     Returns
     -------
     2-tuple
-        The updated UnitRegistry and the UnitRegistry.Quantity object, which is 
+        The updated UnitRegistry and the UnitRegistry.Quantity object, which is
         used to create all other Quantities.
     """
 
@@ -45,21 +46,21 @@ def setup_pint(R, a, B0, species):
     # Base NU units
     mp = 1.672621923e-27
     qp = 1.602176634e-19
- 
+
     ureg.define(f"Proton_mass   = {mp} kilogram")  # Proton mass [kg]
     ureg.define(f"Proton_charge = {qp} coulomb")  # Proton charge [C]
-    
+
     M = particle_attributes[species.lower() + "_M"]
     Z = particle_attributes[species.lower() + "_Z"]
 
-    w0 = (Z / M) * qp / mp * B0 # s^-1
-    E0 = mp * w0**2 * R**2 # Joule
+    w0 = (Z / M) * qp / mp * B0  # s^-1
+    E0 = mp * w0**2 * R**2  # Joule
 
     ureg.define(f"NUsecond = {1/w0} second")  # Time [NU]
     ureg.define(f"NUw0     = {w0} hz")  # Cyclotron frequency
     ureg.define(f"NUmeter  = {R} meter")  # Tokamak major radius
     ureg.define(f"NUJoule  = {E0} Joule")  # Energy
-    ureg.define(f"NUkeV    = {qp} NUJoule") # Energy
+    ureg.define(f"NUkeV    = {qp} NUJoule")  # Energy
     ureg.define(f"NUTesla  = {M/Z} Proton_mass * NUw0 / Proton_charge ")  # Magnetic field strength
 
     # Additional NU quantities
@@ -73,7 +74,7 @@ def setup_pint(R, a, B0, species):
     # Also define psi_wall as a unit of Magnetic_flux, to assing psi initial
     # values with respect to it
     ureg.define(f"psi_wall = {B0 * a**2 / 2} Magnetic_flux")
-    ureg.define(f"NUpsi_wall = {(a / R)**2 / 2} NUMagnetic_flux") # not really need but sure
+    ureg.define(f"NUpsi_wall = {(a / R)**2 / 2} NUMagnetic_flux")  # not really need but sure
 
     # Assign custom values to Q for easier access.
     ureg.Quantity.w0 = w0
