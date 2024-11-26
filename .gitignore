@@ -1,5 +1,3 @@
-# Sphinx
-/docs/_build
 
 # Python
 /.venv
@@ -9,8 +7,9 @@ __pycache__
 # Pytest
 .pytest_cache/
 
-# Build
-/dist
+# Sphinx
+docs/build/*
+docs/source/reference/generated
 
 # User space
 usr/

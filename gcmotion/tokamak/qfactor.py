@@ -1,77 +1,75 @@
 r"""
-About q-Factor objects
-----------------------
+q-factor configurations
+=======================
 
-A q-Factor object is a class instance containing all the information about the
-q-factor profile of the system. It implements all the methods needed buy the
-solver and other calculations, and is called automatically wherever required.
+Here is a list of the availiable q-factor configurations:
 
-To add a new q-factor, simply copy-paste an already existing class and fill the
-:py:meth:`~gcmotion.tokamak.qfactor.QFactor.solverqNU()` and
-:py:meth:`~gcmotion.tokamak.qfactor.QFactor.psipNU()` methods to fit your
-q-factor. In case your q factor has extra parameters you want to pass as
-arguments, you must also create an
-:py:meth:`~gcmotion.tokamak.qfactor.QFactor.__init__()` method and declare
-them. A ``__repr__()`` method is also recommended for representing the system's
-qfactor, but not enforced. To avoid errors, your class should inherit the
-:py:class:`~gcmotion.tokamak.qfactor.QFactor` class.
+=======================      ==========================
+Unity q-factor               :py:class:`Unity`
+Parabolic q-factor           :py:class:`Parabolic`
+Hypergeometric q-factor      :py:class:`Hypergeometric`
+=======================      ==========================
 
-The general structure is this::
+Their parameters are documented below.
 
-    class MyQFactor(QFactor):
+Example
+-------
 
-        def __init__(self, *parameters):
-            "Parameter setup."
-
-        def solverqNU(self, psi):
-            "Returns the value q(ψ)."
-            return q
-
-        def psipNU(self, psi):
-            "Returns the value ψ_p(ψ)."
-            return pisp
-
-        def __repr__():
-            "optional, but recommended"
-            return string
+>>> import gcmotion as gcm
+>>>
+>>> # Quantity Constructor
+>>> Rnum = 1.6
+>>> anum = 0.5
+>>> B0num = 1
+>>> species = "p"
+>>> ureg, Q = gcm.setup_pint(R=Rnum, a=anum, B0=B0num, species=species)
+>>>
+>>> # Intermediate values
+>>> a = Q(anum, "meters")
+>>> B0 = Q(B0num, "Tesla")
+>>>
+>>> # Some qfactors
+>>> qfactor1 = gcm.qfactor.Unity()
+>>> qfactor3 = gcm.qfactor.Parabolic(a, B0, q0=1.1, q_wall=3.8)
+>>> qfactor3 = gcm.qfactor.Hypergeometric(a, B0, q0=1.1, q_wall=3.8, n=2)
 
 .. note::
-    The Qfactor's parameters should be Quantites. Conversions to [NU] and
-    intermediate values must be calculated in
-    :py:meth:`~gcmotion.tokamak.qfactor.QFactor.__init__()`.
 
-.. admonition:: For developers
+    The values of `a` and `B0` are necessary whenever we define the qfactor
+    with reference to its value at the wall.
 
-    For each attribute that is defined as a Quantity with SI units, another,
-    "hidden" attribite is automatically defined as its magnitude. This hidden
-    attribute is then used for all the purely numerical calculations. For
-    example:
+The functions `solverqNU` and `psipNU` work identically in every class, so I
+list their methods here as to not repeat myself:
 
-    .. code-block:: python
+.. autofunction:: gcmotion.qfactor.QFactor.solverqNU
 
-        def __init__(...):
-            self.psi_wall = (B0 * a**2 / 2).to("Magnetic_flux")
-            ...
-            self._psi_wall = self.psi_wall.magnitude
+.. autofunction:: gcmotion.qfactor.QFactor.psipNU
 
-    Here, :code:`self.psi_wall` is a Quantity with units of "Magnetic flux",
-    however only :code:`self._psi_wall` is used inside the methods. Also, by
-    defining it in :code:`__init__()` we avoid having to retrieve its magnitude
-    every time a method that needs it is called.
 
-.. rubric:: The 'QFactor' Abstract Base Class
+.. rubric:: Unity
 
-The base class that every other class inherits from. This class does nothing,
-it is only a template.
-
-.. autoclass:: QFactor
+.. autoclass:: Unity
     :member-order: bysource
-    :members: __init__, solverqNU, psipNU
+    :inherited-members: solverqNU, psipNU
+    :undoc-members: solverqNU, psipNU
+    :show-inheritance:
+
+.. rubric:: Parabolic
+
+.. autoclass:: Parabolic
+    :show-inheritance:
+
+.. rubric:: Hypergeometric
+
+.. autoclass:: Hypergeometric
+    :show-inheritance:
 
 """
 
 import pint
 import numpy as np
+
+from termcolor import colored
 from math import sqrt, atan
 from scipy.special import hyp2f1
 from abc import ABC, abstractmethod
@@ -138,25 +136,45 @@ class Unity(QFactor):
         pass
 
     def solverqNU(self, psi):
+        r"""Always returns 1."""
         return 1
 
     def psipNU(self, psi):
+        """Always returns `psi`."""
         return psi
 
     def __repr__(self):
-        return "Unity"
+        return colored("Unity", "light_blue")
 
 
 class Parabolic(QFactor):
     r"""Initializes an object q with
-    :math:`q(\psi) = q_0 + (q_{wall}-q_0)\bigg(\dfrac{\psi}{\psi_{wall}}\
-    \bigg)^2`
+
+    .. math::
+
+        q(\psi) = q_0 + (q_{wall}-q_0)\bigg(\dfrac{\psi}{\psi_{wall}}\
+        \bigg)^2
 
     :math:`\psi_p(\psi)` is calculated from:
 
-    :math:`\psi_p(\psi) = \dfrac{\psi_{wall}}{\sqrt{q_0 (q_{wall}-q_0)}}\
-    \arctan\bigg( \dfrac{\psi\sqrt{q_{wall}-q_0}}{\psi_{wall}\sqrt{q_0}}\
-    \bigg)`
+    .. math::
+
+        \psi_p(\psi) = \dfrac{\psi_{wall}}{\sqrt{q_0 (q_{wall}-q_0)}}\
+        \arctan\bigg( \dfrac{\psi\sqrt{q_{wall}-q_0}}{\psi_{wall}\sqrt{q_0}}\
+        \bigg)
+
+    Parameters
+    ----------
+    a : Quantity
+        float The tokamak's minor radius in [m].
+    B0 : Quantity
+        The Magnetic field's strength in [T]
+    q0 : float
+        q-value at the magnetic axis.
+    q_wall : float
+        q_value at the wall.
+    n : int
+        Order of equillibrium (1: peaked, 2: round, 4: flat).
 
     """
 
@@ -167,21 +185,7 @@ class Parabolic(QFactor):
         q0: float,
         q_wall: float,
     ):
-        r"""Parameters initialization.
-
-        Parameters
-        ----------
-        a : Quantity
-            float The tokamak's minor radius in [m].
-        B0 : Quantity
-            The Magnetic field's strength in [T]
-        q0 : float
-            q-value at the magnetic axis.
-        q_wall : float
-            q_value at the wall.
-        n : int
-            Order of equillibrium (1: peaked, 2: round, 4: flat).
-        """
+        r"""Parameters initialization."""
 
         # SI Quantities
         self.B0 = B0.to("Tesla")
@@ -215,21 +219,29 @@ class Parabolic(QFactor):
             )
 
     def __repr__(self):
-        return "Parabolic: " + f"q0={self.q0:.4g}, q_wall={self.q_wall:.4g}."
+        return (
+            colored("Parabolic", "light_blue")
+            + f": q0={self.q0:.4g}, q_wall={self.q_wall:.4g}."
+        )
 
 
 class Hypergeometric(QFactor):
     r"""Initializes an object q with:
-    :math:`q(\psi) = q_0\bigg\{ 1 + \bigg[ \bigg(\dfrac{q_{wall}}{q_0}\
-    \bigg)^n -1 \bigg] \
-    \bigg( \dfrac{\psi}{\psi_{wall}} \bigg)^n \bigg\}^{1/n}`.
+
+    .. math::
+
+        q(\psi) = q_0\bigg\{ 1 + \bigg[ \bigg(\dfrac{q_{wall}}{q_0}\
+        \bigg)^n -1 \bigg] \
+        \bigg( \dfrac{\psi}{\psi_{wall}} \bigg)^n \bigg\}^{1/n}
 
     :math:`\psi_p(\psi)` is calculated from:
 
-    :math:`\psi_p(\psi) = \dfrac{\psi}{q_0} \phantom{1}_2 F_1\
-    \bigg[ \dfrac{1}{n}, \dfrac{1}{n}, 1+\dfrac{1}{n},
-    \bigg(1 - \bigg( \dfrac{q_{wall}}{q_0} \bigg)^n\bigg)
-    \bigg( \dfrac{\psi}{\psi_{wall}} \bigg)^n \bigg]`,
+    .. math::
+
+        \psi_p(\psi) = \dfrac{\psi}{q_0} \phantom{1}_2 F_1\
+        \bigg[ \dfrac{1}{n}, \dfrac{1}{n}, 1+\dfrac{1}{n},
+        \bigg(1 - \bigg( \dfrac{q_{wall}}{q_0} \bigg)^n\bigg)
+        \bigg( \dfrac{\psi}{\psi_{wall}} \bigg)^n \bigg]
 
     where :math:`\phantom{1}_2 F_1` the hypergeometric function.
 
@@ -297,6 +309,6 @@ class Hypergeometric(QFactor):
 
     def __repr__(self):
         return (
-            "Hypergeometric: "
-            + f"q0={self.q0:.4g}, q_wall={self.q_wall:.4g}, n={self.n:.4g}."
+            colored("Hypergeometric", "light_blue")
+            + f": q0={self.q0:.4g}, q_wall={self.q_wall:.4g}, n={self.n:.4g}."
         )

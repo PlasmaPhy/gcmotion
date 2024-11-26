@@ -1,20 +1,34 @@
+from dataclasses import dataclass
+
 figsize = (16, 9)  # Global window size
 dpi = 90  # Global dpi
 
-time_evolution = {
 
+@dataclass(repr=False)
+class ProfileContourConfig:
+    fig_kw: tuple = (
+        ("figsize", figsize),
+        ("dpi", dpi),
+        ("layout", "tight"),
+    )
+    grid_density: int = 200
+    levels: int = 30
+    cmap: str = "plasma"
+    locator: str = "log"
+    log_base: float = 1.04
+
+
+time_evolution = {
     "fig_parameters": {
         "figsize": figsize,
         "dpi": dpi,
         "sharex": True,
     },
-
     "scatter_args": {
         "s": 0.2,
         "color": "blue",
         "marker": "o",
     },
-
     "labelpad": 45,
     "loc": "bottom",
     "ylabel_args": {
@@ -25,32 +39,27 @@ time_evolution = {
 
 qfactor_profile = {
     "figsize": (16, 6),
-
     "plot_params": {
         "color": "b",
         "linewidth": 2,
     },
-
     "vline_params": {
         "color": "r",
         "linewidth": 2,
-    }
+    },
 }
 
 magnetic_profile = {
     "figsize": (16, 6),
     "grid_density": 100,
-
     "bcontour_params": {
         "levels": 100,
         "cmap": "PuBuGn",
     },
-
     "icontour_params": {
         "levels": 100,
         "cmap": "YlOrRd",
     },
-
     "gcontour_params": {
         "levels": 100,
         "cmap": "Purples",
@@ -60,23 +69,19 @@ magnetic_profile = {
 electric_profile = {
     "figsize": (16, 6),
     "grid_density": 200,
-
     "aspect_ratio": 0.5,
-
     "contour_params": {
         "levels": 100,
         "cmap": "PuBuGn",
     },
-
     "plot_params": {
         "color": "b",
         "linewidth": 2,
     },
-
     "vline_params": {
         "color": "r",
         "linewidth": 2,
-    }
+    },
 }
 
 tokamak_profile = {
@@ -88,12 +93,10 @@ tokamak_profile = {
 }
 
 drift = {
-
     "fig_parameters": {
         "figsize": figsize,
         "dpi": dpi,
     },
-
     "scatter_args": {
         "s": 0.1,
         "color": "red",
@@ -104,12 +107,10 @@ drift = {
 }
 
 drifts = {
-
     "fig_parameters": {
         "figsize": figsize,
         "dpi": dpi,
     },
-
     "scatter_args": {
         "s": 0.1,
         "color": "red",
@@ -119,7 +120,6 @@ drifts = {
     "xfontsize": 12,
 }
 energy_contour = {
-
     "fig_parameters": {
         "figsize": figsize,
         "dpi": dpi,
@@ -136,12 +136,10 @@ energy_contour = {
 }
 
 parabolas = {
-
     "parabolas_normal_kw": {
         "color": "b",
         "linewidth": 0.6,
     },
-
     "parabolas_dashed_kw": {
         "color": "b",
         "linewidth": 0.6,
@@ -149,7 +147,6 @@ parabolas = {
 }
 
 orbit_point = {
-
     "orbit_point_kw": {
         "s": 15,
         "marker": "o",
@@ -159,14 +156,11 @@ orbit_point = {
 }
 
 torus2d = {
-
     "wall_points": 2000,
-
     "torus2d_wall_kw": {
         "color": "k",
         "s": 0.5,
     },
-
     "torus2d_orbit_kw": {
         "color": "blue",
         "s": 0.07,
@@ -178,12 +172,10 @@ torus3d = {
     "rstride": 5,
     "cstride": 5,
     "wall_points": 301,
-
     "torus3d_wall_kw": {
         "color": "cyan",
         "alpha": 0.3,
     },
-
     "torus3d_orbit_kw": {
         "color": "red",
         "alpha": 0.6,
@@ -194,20 +186,13 @@ torus3d = {
 poloidal_cut = {
     "ylim": 1.1,  # times the minor radius
     "wall_points": 2000,
-
-    "orbit_kw": {
-        "color": "blue",
-        "s": 0.05,
-        "marker": "."
-    },
-
+    "orbit_kw": {"color": "blue", "s": 0.05, "marker": "."},
     "axis_size": 60,
     "axis_kwargs": {
         "facecolor": "r",
         "edgecolor": "k",
         "linewidths": 2,
     },
-
     "wall_kw": {
         "color": "k",
         "s": 0.5,

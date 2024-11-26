@@ -1,85 +1,53 @@
 r"""
-About Magnetic field objects
-----------------------------
+Magnetic Field configurations
+=============================
 
-A Magnetic Field object is a class instance containing all the information
-about the magnetic field of the system. It implements all the methods needed
-buy the solver and other calculations, and is called automatically wherever
-required.
+Here is a list of the availiable bfield configurations.
 
-To add a new magnetic field, simply copy-paste an already existing class and
-fill the :py:meth:`~gcmotion.tokamak.bfield.MagneticField.bigNU()` and
-:py:meth:`~gcmotion.tokamak.bfield.MagneticField.solverbNU()` methods to fit
-your magnetic field. In case your field has extra parameters you want to pass
-as arguments, you must also create an
-:py:meth:`~gcmotion.tokamak.bfield.MagneticField.__init__()` method and declare
-them. A ``__repr__()`` method is also recommended for representing the system's
-magnetic field, but not enforced. To avoid errors, your class should inherit
-the :py:class:`~gcmotion.tokamak.bfield.MagneticField` class.
+==================     ===============
+Large Aspect Ratio     :py:class:`LAR`
+==================     ===============
 
-The general structure is this::
+Their parameters are documented below.
 
-    class MyMagneticField(MagneticField):
+Example
+-------
 
-        def __init__(self, *parameters):
-            "Parameter setup."
+>>> import gcmotion as gcm
+>>>
+>>> # Quantity Constructor
+>>> Rnum = 1.6
+>>> anum = 0.5
+>>> B0num = 1
+>>> species = "p"
+>>> ureg, Q = gcm.setup_pint(R=Rnum, a=anum, B0=B0num, species=species)
+>>>
+>>> # Intermediate values
+>>> B0 = Q(B0num, "Tesla")
+>>> i = Q(0, "NUPlasma_current")
+>>> g = Q(1, "NUPlasma_current")
+>>>
+>>> # A Magnetic field
+>>> bfield1 = gcm.bfield.LAR(B0=B0, i=i, g=g)
 
-        def bigNU(self, psi, theta)
-            return (b, g, i)
+The functions `bigNU` and `solverbNU` work identically in every class, so I
+list their methods here as to not repeat myself:
 
-        def solverbNU(self, psi, theta):
+.. autofunction:: gcmotion.bfield.MagneticField.bigNU
 
-            b, g, i = self.bigNU(psi, theta)
+.. autofunction:: gcmotion.bfield.MagneticField.solverbNU
 
-            b_der = (b_der_psi, b_der_theta)
-            currents = (i, g)
-            currents_der = (i_der, g_der)
+.. rubric:: LAR
 
-            return b, b_der, currents, currents_der
-
-        def __repr__():
-            "optional, but recommended"
-            return string
-
-.. note::
-    The Magnetic Fields's parameters should be Quantites. Conversions to [NU]
-    and intermediate values must be calculated in
-    :py:meth:`~gcmotion.tokamak.bfield.MagneticField.__init__()`.
-
-.. admonition:: For developers
-
-    For each attribute that is defined as a Quantity with SI units, another,
-    "hidden" attribite is automatically defined as its magnitude. This hidden
-    attribute is then used for all the purely numerical calculations. For
-    example:
-
-    .. code-block:: python
-
-        def __init__(...):
-            self.i = i.to("Plasma_Current")
-            self.iNU = i.to("NUPlasma_Current")
-            ...
-            self._i = self.i.magnitude
-            self._iNU = self.iNU.magnitude
-
-    Here, :code:`self.i` is a Quantity with units of "Plasma Current", however
-    only :code:`self._i` is used inside the methods. Also, by defining it in
-    :code:`__init__()` we avoid having to retrieve its magnitude every time a
-    method that needs it is called.
-
-.. rubric:: The 'MagneticField' Abstract Base Class
-
-The base class that every other class inherits from.
-This class does nothing, it is only a template.
-
-.. autoclass:: MagneticField
-    :member-order: bysource
-    :members: __init__, bigNU, solverbNU
+.. autoclass:: LAR
+    :show-inheritance:
 
 """
 
 import pint
 import numpy as np
+from termcolor import colored
+
 from math import cos, sin, sqrt
 from abc import ABC, abstractmethod
 
@@ -161,21 +129,22 @@ class MagneticField(ABC):
 
 
 class LAR(MagneticField):
-    r"""Initializes the standard Large Aspect Ratio magnetic field."""
+    r"""Initializes the standard Large Aspect Ratio magnetic field.
+
+    Parameters
+    -----------
+    B0 : Quantity
+        The strength of the magnetic field *on the magnetic axis*
+        in [T].
+    i : Quantity
+        The toroidal current in units of [Plasma Current].
+    g : Quantity
+        The poloidal current in units of [Plasma Current].
+
+    """
 
     def __init__(self, B0: Quantity, i: Quantity, g: Quantity):
-        r"""Parameters initialization.
-
-        Parameters
-        -----------
-        B0 : Quantity
-            The strength of the magnetic field *on the magnetic axis*
-            in [T].
-        i : Quantity
-            The toroidal current in units of [Plasma Current].
-        g : Quantity
-            The poloidal current in units of [Plasma Current].
-        """
+        r"""Parameters initialization."""
 
         # SI Quantities
         self.B0 = B0.to("Tesla")
@@ -231,6 +200,6 @@ class LAR(MagneticField):
 
     def __repr__(self):
         return (
-            "LAR: "
-            + f"B0={self.B0:.4g~P}, I={self.i:.4g~P}, g={self.g:.4g~P}."
+            colored("LAR", "light_blue")
+            + f": B0={self.B0:.4g~}, I={self.i:.4g~}, g={self.g:.4g~}."
         )

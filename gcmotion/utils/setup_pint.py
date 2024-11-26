@@ -6,9 +6,9 @@ Sets up the `pint <https://pint.readthedocs.io/en/stable/>`_ configuration.
 """
 
 from pint import UnitRegistry
-from gcmotion.configuration.particle_attributes import particle_attributes
+from gcmotion.configuration.physical_constants import PhysicalConstants
 
-ureg = UnitRegistry(case_sensitive=False)
+ureg = UnitRegistry(case_sensitive=False, on_redefinition="ignore")
 ureg.setup_matplotlib()
 
 
@@ -50,8 +50,8 @@ def setup_pint(R, a, B0, species):
     ureg.define(f"Proton_mass   = {mp} kilogram")  # Proton mass [kg]
     ureg.define(f"Proton_charge = {qp} coulomb")  # Proton charge [C]
 
-    M = particle_attributes[species.lower() + "_M"]
-    Z = particle_attributes[species.lower() + "_Z"]
+    M = getattr(PhysicalConstants, species.lower() + "_M")
+    Z = getattr(PhysicalConstants, species.lower() + "_Z")
 
     w0 = (Z / M) * qp / mp * B0  # s^-1
     E0 = mp * w0**2 * R**2  # Joule
@@ -77,6 +77,10 @@ def setup_pint(R, a, B0, species):
     ureg.define(f"NUpsi_wall = {(a / R)**2 / 2} NUMagnetic_flux")  # not really need but sure
 
     # Assign custom values to Q for easier access.
+    ureg.Quantity.R = R
+    ureg.Quantity.a = a
+    ureg.Quantity.B0 = B0
+    ureg.Quantity.species = species
     ureg.Quantity.w0 = w0
     ureg.Quantity.E0 = E0
 

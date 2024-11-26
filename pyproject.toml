@@ -2,6 +2,15 @@
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.black]
+line-length = 79
+
+[tool.pytest.ini_options]
+addopts = "--doctest-modules -vv --durations 2 -s"
+filterwarnings = [
+    "ignore::DeprecationWarning:jupyter_client.*",
+]
+
 [project]
 name = "gcmotion"
 version = "0.0.1"

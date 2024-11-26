@@ -1,13 +1,12 @@
 import numpy as np
-from collections import namedtuple
+
+from gcmotion.entities.profile import Profile
 
 
 def energy_Ptheta(
     psi: float | np.ndarray,
     theta: float | np.ndarray,
-    mu: float,
-    Pzeta: float,
-    profile: namedtuple,
+    profile: Profile,
     contour_Phi: bool,
 ):
     r"""Calculates the Energy and :math:`P_\theta` as a function of
@@ -23,12 +22,8 @@ def energy_Ptheta(
         The :math:`\psi` values in [NU]
     theta : float | np.array
         The :math:`\theta` values.
-    mu : float
-        The :math:`\mu` value in [NU].
-    Pzeta : float
-        the :math:`P_\zeta` value in [NU].
-    profile : namedtuple
-        The tokamak profile.
+    profile : Profile
+        The tokamak Rrofile.
     contour_Phi : bool
         Whether or not to add the electric potential term :math:`\Phi`.
 
@@ -39,6 +34,8 @@ def energy_Ptheta(
 
     """
     # Get all needed attributes first
+    mu = profile.muNU.m
+    Pzeta = profile.PzetaNU.m
     qfactor = profile.qfactor
     bfield = profile.bfield
     efield = profile.efield
