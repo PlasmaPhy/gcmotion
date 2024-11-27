@@ -17,8 +17,8 @@ This is how :py:func:`fixed_points_plot` can be called inside the function :py:f
             cwp,
             theta_lim=[-1.01 * np.pi, 1.01 * np.pi],
             psi_lim=psi_lim,
-            theta_density=theta_fixed_density,
-            P_theta_density=P_theta_fixed_density,
+            ic_theta_grid_density=ic_theta_grid_density,
+            ic_psi_grid_density=ic_psi_grid_density,
             _internal_call=True,
             dist_tol=dist_tol,
             info=True,
@@ -42,9 +42,9 @@ def fixed_points_plot(
     cwp,
     theta_lim: list,
     psi_lim: list,
-    theta_density: int = 5,
-    P_theta_density: int = 5,
     dist_tol: float = 1e-3,
+    ic_theta_grid_density: int = 800,
+    ic_psi_grid_density: int = 800,
     info: bool = False,
     **params,
 ):
@@ -63,17 +63,19 @@ def fixed_points_plot(
         List containing the limits for :math:`\theta` (x- axis limits).
     psi_lim : list
         List containing the limits for :math:`\psi` and
-        consequently :math:`P_{\theta}` (y- axis limits).
-    theta_density : int, optional
-        Integer dictating the number of initial conditions with regard to the
-        :math:`\theta` variable that will be passed into :py:func:`fixed_points`.
-    P_theta_density : int, optional
-        Integer dictating the number of initial conditions with regard to the
-        :math:`P_{\theta}` variable that will be passed into :py:func:`fixed_points`.
+        consequently :math:`\psi` (y- axis limits).
     dist_tol : float, optional
-        Tolerance that determines distinct fixed points. If both :math:`P_{\theta}` and
-        :math:`P_{\theta}` elements of a fixed point are less than :py:data:`dist_tol` apart
+        Tolerance that determines distinct fixed points. If both :math:`\theta` and
+        :math:`\psi` elements of a fixed point are less than :py:data:`dist_tol` apart
         the two fixed points are not considered distinct.
+    ic_theta_grid_density : int, optional
+        Integer dictating the theta density with regard to the :math:`\theta` variable
+        of the grid upon which the search for initial conditions for the :py:func:`differential_evolution`
+        will be conducted. Will be passed to :py:func:`fixed_points`.
+    ic_psi_grid_density : int, optional
+        Integer dictating the theta density with regard to the :math:`\psi` variable
+        of the grid upon which the search for initial conditions for the :py:func:`differential_evolution`
+        will be conducted.  Will be passed to :py:func:`fixed_points`.
     info : bool, optional
         Passed into ``fixed_poits()``. Determines weather to print information
         about the fixed points (number, values). Defaults to ``False``.
@@ -117,14 +119,15 @@ def fixed_points_plot(
         parameters=parameters,
         profile=profile,
         Q=cwp.Q,
-        theta_density=theta_density,
-        P_theta_density=P_theta_density,
         theta_lim=theta_lim,
         psi_lim=psi_lim,
         dist_tol=dist_tol,
+        ic_theta_grid_density=ic_theta_grid_density,
+        ic_psi_grid_density=ic_psi_grid_density,
         info=info,
     )
 
+    # CAUTION: The xoc function takes in psis_fixed but returns P_thetas_fixed
     X_points, O_points = xoc(
         unclassified_fixed_points=fixed_points,
         parameters=parameters,

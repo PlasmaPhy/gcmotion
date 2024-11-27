@@ -1,5 +1,5 @@
 r""" Function that uses SciPy's :py:func:`differential_evolution` in order to solve 
-the algebraic but complicated system of equations :math:`\dot{\theta} = 0 \& \dot{P_{\theta}} = 0`
+the algebraic but complicated system of equations :math:`\dot{\theta} = 0 \& \dot{\psi} = 0`
 
 Example
 -------
@@ -48,31 +48,28 @@ This is how :py:func:`fixed_points` can be called inside the function :py:func:`
         passed, not units as well
     profile : namedtuple
         Dict containing the tokamak configuration objects.
-    theta_density : int, optional
-        Integer dictating the number of initial conditions with regard to the 
-        :math:`\theta` variable
-    P_theta_density : int, optional
-        Integer dictating the number of initial conditions with regard to the 
-        :math:`P_{\theta}` variable
     theta_lim : list, optional
         Provides the limits for the solution search area with regards to the :math:`\theta`
           variable. It will be passed into the "bounds" argument of :py:func:`differential_evolution`. 
     psi_lim : list, optional
         Provides the limits (divided by psi_wall) for the solution search area with regards
-        to the :math:`P_{\theta}` variable. It will be passed into the "bounds" argument of
+        to the :math:`\psi` variable. It will be passed into the "bounds" argument of
         :py:func:`differential_evolution`. 
     dist_tol : float, optional
-        Tolerance that determines distinct fixed points. If both :math:`P_{\theta}` and
-        :math:`P_{\theta}` elements of a fixed point are less than :py:data:`dist_tol` apart
+        Tolerance that determines distinct fixed points. If both :math:`\theta` and
+        :math:`\psi` elements of a fixed point are less than :py:data:`dist_tol` apart
         the two fixed points are not considered distinct.
+    ic_theta_grid_density : int, optional
+        Integer dictating the theta density with regard to the :math:`\theta` variable 
+        of the grid upon which the search for initial conditions for the :py:func:`differential_evolution` 
+        will be conducted.
+    ic_psi_grid_density : int, optional
+        Integer dictating the theta density with regard to the :math:`\psi` variable 
+        of the grid upon which the search for initial conditions for the :py:func:`differential_evolution` 
+        will be conducted.
     info : bool, optional
         Boolean that dictates weather the fixed points and distinct fixed points found 
         will be printed alongside how many where found respectively.
-    scaled_P_thetas : bool, optional
-        Boolean that dictates weather the initial conditions regarding the variable
-        :math:`P_{\theta}` (initial conditions for fixed points search) will be scaled, so
-        as to increase the density of initial :math:`P_{\theta}`'s near the lower boundary
-        of the search area.
 
     .. note:: The parameters argument mus contain the parameters in Normalized Units (NU)
     and it must contain their magnitude, NOT the entire Quantity object.
@@ -83,17 +80,19 @@ This is how :py:func:`fixed_points` can be called inside the function :py:func:`
     num_of_dfp, distinct_fixed_points : tuple
         Tuple where the first element is the number of distinct fixed points found and
         the second element is a list containing the distinct points found in the form
-        :math:`[\theta_{fixed},P_{\theta_{fixed}}]`
+        :math:`[\theta_{fixed},\psi_{fixed}]`
 
 """
 
 import numpy as np
 import pint
-from scipy.optimize import differential_evolution
+from scipy.optimize import differential_evolution, fsolve
 
 from collections import namedtuple
 from gcmotion.utils.distinctify import distinctify
 from gcmotion.utils.energy_Ptheta import energy_Ptheta
+from gcmotion.scripts.fp_ic_scan import fp_ic_scan as ic_scanner
+from gcmotion.scripts.fp_ic_scan import fp_ic_scan as ic_scanner
 
 # Quantity alias for type annotations
 type Quantity = pint.UnitRegistry.Quantity
@@ -103,13 +102,12 @@ def fixed_points(
     parameters: namedtuple,
     profile: namedtuple,
     Q: Quantity,
-    theta_density: int = 5,
-    P_theta_density: int = 5,
     theta_lim: list = [-1.01 * np.pi, 1.01 * np.pi],
     psi_lim: list = [0.01, 1.3],
     dist_tol: float = 1e-3,
+    ic_theta_grid_density: int = 800,
+    ic_psi_grid_density: int = 800,
     info: bool = False,
-    scaled_P_thetas: bool = False,
     # polish=True,
     # init="sobol",
     # workers=-1,
@@ -136,14 +134,10 @@ def fixed_points(
     psi_lim = np.array(psi_lim) * Q("NUpsi_wall")
     psi_lim = psi_lim.to("NUmagnetic_flux").m
 
-    _, P_theta_lim = energy_Ptheta(
-        psi=psi_lim, theta=0, mu=mu, Pzeta=Pzeta0, profile=profile, contour_Phi=True
-    )
+    psi_min = psi_lim[0]
+    psi_max = psi_lim[1]
 
-    P_theta_min = P_theta_lim[0]
-    P_theta_max = P_theta_lim[1]
-
-    bounds = [(theta_min, theta_max), (P_theta_min, P_theta_max)]
+    bounds = [(theta_min, theta_max), (0.99 * psi_min, 1.01 * psi_max)]
 
     # Function to locate a single fixed point
     def fixed_point(initial_condition=None):
@@ -153,14 +147,14 @@ def fixed_points(
         # System of equations to be solved
         def system(vars):
 
-            theta, P_theta = vars
-            P_theta = max(P_theta, P_theta_min)
+            theta, psi = vars
+            psi = max(psi, psi_min)
 
             # Object methods calls
-            q = solverqNU(P_theta)
-            psi_p = psipNU(P_theta)
-            b, b_der, currents, currents_der = solverbNU(P_theta, theta)
-            phi_der_psi, phi_der_theta = solverPhiderNU(P_theta, theta)
+            q = solverqNU(psi)
+            psi_p = psipNU(psi)
+            b, b_der, currents, currents_der = solverbNU(psi, theta)
+            phi_der_psi, phi_der_theta = solverPhiderNU(psi, theta)
 
             # Unpack
             b_der_psi, b_der_theta = b_der
@@ -180,12 +174,8 @@ def fixed_points(
             # Canonical Equations
             theta_dot = (1 - rho * g_der) / D * rho * b**2 + q * g / D * bracket1
             psi_dot = -q * g / D * bracket2
-            rho_dot = -(1 - rho * g_der) / D * bracket2
 
-            # Canonical Momentum
-            P_theta_dot = psi_dot + rho_dot * i
-
-            return theta_dot**2 + P_theta_dot**2
+            return theta_dot**2 + psi_dot**2
 
         # Use differential evolution to find solutions
         result = differential_evolution(
@@ -193,51 +183,40 @@ def fixed_points(
             bounds,
             x0=initial_condition,
             tol=1e-7,
-            # atol=1e-15,
-            maxiter=10000,
+            atol=1e-15,
+            maxiter=15_000,
             popsize=15,
             mutation=(0.5, 1),
             recombination=0.7,
             strategy="best1bin",
         )
-        theta_solution, P_theta_solution = result.x
+        theta_solution, psi_solution = result.x
 
-        return theta_solution, P_theta_solution
+        return theta_solution, psi_solution
 
-    fixed_points = np.empty((theta_density * P_theta_density, 2))
+    initial_conditions = ic_scanner(
+        parameters=parameters,
+        profile=profile,
+        theta_grid_density=ic_theta_grid_density,
+        psi_grid_density=ic_psi_grid_density,
+        psi_lim=psi_lim,
+        theta_lim=theta_lim,
+        tol=1e-6,
+        info=info,
+    )
+
+    fixed_points = np.empty((len(initial_conditions), len(initial_conditions[0])))
     fixed_points[:] = np.nan
-
-    # Define the limits of the initial conditions to be certainly inside the
-    # limits of the "bounds" argument you have defined previously
-    if theta_min <= 0:
-        theta_min_init = theta_min * 0.999
-    else:
-        theta_min_init = theta_min * 1.001
-
-    theta_max_init = np.pi * 0.999
-
-    P_theta_min_init = P_theta_min * 1.001
-    P_theta_max_init = P_theta_max * 0.999
-
-    thetas_init = np.linspace(theta_min_init, theta_max_init, theta_density)
-    P_thetas_init = np.linspace(P_theta_min_init, P_theta_max_init, P_theta_density)
-
-    if scaled_P_thetas:
-        P_thetas_init_mod = np.sin(np.pi * P_thetas_init) ** 4  # (1 - np.cos(P_thetas_init)) / 2
-        P_thetas_init = P_theta_min_init + (P_theta_max_init - P_theta_min_init) * P_thetas_init_mod
 
     idx = 0
 
     # Run fixed_point() for multiple initial conditions in order to locate
     # multiple fixed points
-    for theta_init in thetas_init:
-        for P_theta_init in P_thetas_init:
+    for initial_condition in initial_conditions:
 
-            initial_condition = [theta_init, P_theta_init]
-
-            theta_fix, P_theta_fix = fixed_point(initial_condition=initial_condition)
-            fixed_points[idx] = [float(theta_fix), float(P_theta_fix)]
-            idx += 1
+        theta_fix, psi_fix = fixed_point(initial_condition=initial_condition)
+        fixed_points[idx] = [float(theta_fix), float(psi_fix)]
+        idx += 1
 
     # A lot of the fixed points that were found have identical values-->
     # find out how many distinct fixed points were located
