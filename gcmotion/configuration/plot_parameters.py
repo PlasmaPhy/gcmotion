@@ -1,16 +1,17 @@
 from dataclasses import dataclass
+from types import MappingProxyType  # Use as an immutable dict for dataclasses
 
 figsize = (16, 9)  # Global window size
 dpi = 90  # Global dpi
 
 
-@dataclass(repr=False)
-class ProfileContourConfig:
-    fig_kw: tuple = (
-        ("figsize", figsize),
-        ("dpi", dpi),
-        ("layout", "tight"),
-    )
+@dataclass(repr=False, frozen=True)
+class BaseProfileContourConfig:
+    fig_kw: MappingProxyType = {
+        "figsize": figsize,
+        "dpi": dpi,
+        "layout": "constrained",
+    }
     grid_density: int = 200
     levels: int = 30
     cmap: str = "plasma"
