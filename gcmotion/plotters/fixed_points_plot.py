@@ -18,7 +18,7 @@ This is how :py:func:`fixed_points_plot` can be called inside the function :py:f
             theta_lim=[-1.01 * np.pi, 1.01 * np.pi],
             psi_lim=psi_lim,
             ic_theta_grid_density=ic_theta_grid_density,
-            ic_P_theta_grid_density=ic_P_theta_grid_density,
+            ic_psi_grid_density=ic_psi_grid_density,
             _internal_call=True,
             dist_tol=dist_tol,
             info=True,
@@ -44,7 +44,7 @@ def fixed_points_plot(
     psi_lim: list,
     dist_tol: float = 1e-3,
     ic_theta_grid_density: int = 800,
-    ic_P_theta_grid_density: int = 800,
+    ic_psi_grid_density: int = 800,
     info: bool = False,
     **params,
 ):
@@ -72,7 +72,7 @@ def fixed_points_plot(
         Integer dictating the theta density with regard to the :math:`\theta` variable
         of the grid upon which the search for initial conditions for the :py:func:`differential_evolution`
         will be conducted. Will be passed to :py:func:`fixed_points`.
-    ic_P_theta_grid_density : int, optional
+    ic_psi_grid_density : int, optional
         Integer dictating the theta density with regard to the :math:`P_{\theta}` variable
         of the grid upon which the search for initial conditions for the :py:func:`differential_evolution`
         will be conducted.  Will be passed to :py:func:`fixed_points`.
@@ -123,7 +123,7 @@ def fixed_points_plot(
         psi_lim=psi_lim,
         dist_tol=dist_tol,
         ic_theta_grid_density=ic_theta_grid_density,
-        ic_P_theta_grid_density=ic_P_theta_grid_density,
+        ic_psi_grid_density=ic_psi_grid_density,
         info=info,
     )
 

@@ -34,7 +34,7 @@ def bifurcation_plot(
     psi_lim: list = [0.01, 1.3],
     dist_tol: float = 1e-3,
     ic_theta_grid_density: int = 800,
-    ic_P_theta_grid_density: int = 800,
+    ic_psi_grid_density: int = 800,
     info: bool = False,
 ):
     r"""Draws the bifurcation diagrams for the :math:`theta`'s  fixed,
@@ -64,7 +64,7 @@ def bifurcation_plot(
         Integer dictating the theta density with regard to the :math:`\theta` variable
         of the grid upon which the search for initial conditions for the :py:func:`differential_evolution`
         will be conducted. Will be passed to :py:func:`bifurcation`.
-    ic_P_theta_grid_density : int, optional
+    ic_psi_grid_density : int, optional
         Integer dictating the theta density with regard to the :math:`P_{\theta}` variable
         of the grid upon which the search for initial conditions for the :py:func:`differential_evolution`
         will be conducted.  Will be passed to :py:func:`bifurcation`.
@@ -81,7 +81,7 @@ def bifurcation_plot(
         psi_lim=psi_lim,
         dist_tol=dist_tol,
         ic_theta_grid_density=ic_theta_grid_density,
-        ic_P_theta_grid_density=ic_P_theta_grid_density,
+        ic_psi_grid_density=ic_psi_grid_density,
         info=info,
     )
 

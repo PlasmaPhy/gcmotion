@@ -17,7 +17,7 @@ This is how :py:func:`bifurcation` can be called inside the function :py:func:`b
             psi_lim=psi_lim,
             dist_tol=dist_tol,
             ic_theta_grid_dencity = 800,
-            ic_P_theta_grid_density = 1200,
+            ic_psi_grid_density = 1200,
             info=info,
         )
 
@@ -42,7 +42,7 @@ This is how :py:func:`bifurcation` can be called inside the function :py:func:`b
         Integer dictating the theta density with regard to the :math:`\theta` variable 
         of the grid upon which the search for initial conditions for the :py:func:`differential_evolution` 
         will be conducted. Will be passed to :py:func:`fixed_points`.
-    ic_P_theta_grid_density : int, optional
+    ic_psi_grid_density : int, optional
         Integer dictating the theta density with regard to the :math:`P_{\theta}` variable 
         of the grid upon which the search for initial conditions for the :py:func:`differential_evolution` 
         will be conducted.  Will be passed to :py:func:`fixed_points`.
@@ -75,7 +75,7 @@ def bifurcation(
     psi_lim: list = [0.01, 1.3],
     dist_tol: float = 1e-3,
     ic_theta_grid_density: int = 800,
-    ic_P_theta_grid_density: int = 800,
+    ic_psi_grid_density: int = 800,
     info: bool = False,
 ):
 
@@ -130,7 +130,7 @@ def bifurcation(
             psi_lim=psi_lim,
             dist_tol=dist_tol,
             ic_theta_grid_density=ic_theta_grid_density,
-            ic_P_theta_grid_density=ic_P_theta_grid_density,
+            ic_psi_grid_density=ic_psi_grid_density,
             info=False,
         )
 
