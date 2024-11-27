@@ -1,10 +1,24 @@
-from pint import Quantity
+r"""
+==============
+Tokamak Entity
+==============
+
+This module defines the "Tokamak" entity, which holds information about the
+devices dimensions, qfactor and electromagnetic field.
+
+The Physical values are stored as Quantites, as well as their NU counterparts.
+The device's psi_wall is also calculated and stored inside the Tokamak entity.
+"""
+
+import pint
 from termcolor import colored
 
 from gcmotion.utils.logger_setup import logger
 from gcmotion.tokamak.qfactor import QFactor
 from gcmotion.tokamak.bfield import MagneticField
 from gcmotion.tokamak.efield import ElectricField
+
+type Quantity = pint.Quantity
 
 
 class Tokamak:
@@ -59,7 +73,7 @@ class Tokamak:
     >>> anum = 0.5
     >>> B0num = 1
     >>> species = "p"
-    >>> ureg, Q = gcm.setup_pint(R=Rnum, a=anum, B0=B0num, species=species)
+    >>> Q = gcm.QuantityConstructor(R=Rnum, a=anum, B0=B0num, species=species)
     >>>
     >>> # Intermediate values
     >>> R = Q(Rnum, "meters")
@@ -88,7 +102,8 @@ class Tokamak:
         efield: ElectricField,
     ):
         r"""Sets up fields in the correct units."""
-        logger.info("==> Initializing Tokamak")
+        logger.info("==> Initializing Tokamak...")
+        check(R, a, qfactor, bfield, efield)
 
         # Construct objects
         self.qfactor = qfactor
@@ -112,7 +127,7 @@ class Tokamak:
         )
         self.psip_wall = self.psip_wallNU.to("Magnetic_flux")
 
-        logger.info("\tTokamak Initialization Complete")
+        logger.info("\tTokamak Initialization Complete.")
 
     def __repr__(self):
         return (
@@ -138,3 +153,19 @@ class Tokamak:
             + f"{'psip_wall':>23} : {f'{self.psip_wall:.4g~}':<16}"
             + f"({self.psip_wallNU:.4g~})"
         )
+
+
+def check(R, a, qfactor, bfield, efield):
+    r"""Checks the validity of the passed arguements."""
+    # Typechecking
+    assert isinstance(R, pint.Quantity), "'R' must be a Quantity!"
+    assert isinstance(a, pint.Quantity), "'a' must be a Quantity!"
+    assert R.dimensionality == {
+        "[length]": 1
+    }, "'R' must have dimensionality of [length]!"
+    assert a.dimensionality == {
+        "[length]": 1
+    }, "'a' must have dimensionality of [length]!"
+    assert isinstance(qfactor, QFactor), "qfactor not valid!"
+    assert isinstance(bfield, MagneticField), "bfield not valid!"
+    assert isinstance(efield, ElectricField), "efield not valid!"

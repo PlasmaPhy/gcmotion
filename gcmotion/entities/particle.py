@@ -22,12 +22,8 @@ type Quantity = pint.UnitRegistry.Quantity
 
 class Particle(Profile, InitialConditions):
     r"""
-    A particle holds its properties such as mass, species, etc as well as all
-    its calculated quantities as its attributes.
-
-    Physical properties and tokamak configuration are automatically setup upon
-    the particle's initialization, and its orbit is calculated upon calling its
-    :py:meth:`~Particle.run` method.
+    A particle entity represents a fully-fledged particle inside a specific
+    tokamak device, and defined initial conditions.
 
     Parameters
     ----------
@@ -48,7 +44,7 @@ class Particle(Profile, InitialConditions):
         init: InitialConditions,
     ):
         r"""Initializes particle Quantities and Tokamak configuration."""
-        logger.info(f"==> Initializing {profile.species_name}")
+        logger.info(f"==> Initializing {profile.species_name}...")
 
         # Grabb attributes from parents
         Profile.__init__(

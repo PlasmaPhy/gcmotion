@@ -1,63 +1,6 @@
 r"""
-Electric Field configurations
-=============================
-
-Here is a list of the availiable electric field configurations.
-
-=====================       ===================
-No Electric Field           :py:class:`Nofield`
-Radial Electric Field       :py:class:`Radial`
-=====================       ===================
-
-Example
--------
-
->>> import gcmotion as gcm
->>>
->>> # Quantity Constructor
->>> Rnum = 1.6
->>> anum = 0.5
->>> B0num = 1
->>> species = "p"
->>> ureg, Q = gcm.setup_pint(R=Rnum, a=anum, B0=B0num, species=species)
->>>
->>> # Intermediate values
->>> a = Q(anum, "meters")
->>> B0 = Q(B0num, "Tesla")
->>> Ea = Q(73.5, "kiloVolts/meter")
->>>
->>> # Some electric fields
->>> efield1 = gcm.efield.Nofield()
->>> efield2 = gcm.efield.Radial(a=a, Ea=Ea, B0=B0, peak=0.9, rw=1/50)
-
-.. note::
-
-    The values of `a` and `B0` are necessary whenever we define the qfactor
-    with reference to its value at the wall.
-
-The functions `solverPhiderNU`, `PhiNU` and `Er` work identically in every
-class, so I list their methods here as to not repeat myself:
-
-.. autofunction:: gcmotion.efield.ElectricField.solverPhiderNU
-
-.. autofunction:: gcmotion.efield.ElectricField.PhiNU
-
-.. autofunction:: gcmotion.efield.ElectricField.Er
-
-
-.. rubric:: Nofield
-
-.. autoclass:: Nofield
-    :member-order: bysource
-    :inherited-members: solverPhiderNU, PhiNU, ER
-    :undoc-members: solverPhiderNU, PhiNU, Er
-    :show-inheritance:
-
-.. rubric:: Radial
-
-.. autoclass:: Radial
-    :show-inheritance:
-
+Defines the ElectricField Base class and all available electric field
+configurations.
 """
 
 import pint
@@ -86,7 +29,7 @@ class ElectricField(ABC):
 
         Used inside the solver.
 
-        .. warning::
+        .. important::
             The derivatives are calculated with respect to :math:`\psi`, and
             **not** :math:`\psi_p`, which appear in the differential equations.
             This is accounted for inside the solver by multiplying by
@@ -200,6 +143,23 @@ class Radial(ElectricField):
 
     where :math:`\psi_w = r_w^2/2` and :math:`\psi_{peak} = r_{peak}^2/2`
 
+    Parameters
+    ----------
+
+    a : Quantity
+        The tokamak's minor radius in [m].
+    Ea : Quantity
+        The Electric field magnitude in [V/m].
+    B0 : Quantity
+        The Magnetic field's strength in [T].
+    peak : float
+        The Electric field's peak point with respect to
+        :math:`\psi_{wall}`.
+    rw : float
+        The Electric field's waist width relative to :math:`r_{wall}`,
+        defined as:
+        :math:`r_{waist} = \alpha\cdot \text{rw}`.
+
     """
 
     def __init__(
@@ -210,26 +170,7 @@ class Radial(ElectricField):
         peak: float,
         rw: float,
     ):
-        r"""Initializes the field's parameters.
-
-        Parameters
-        ----------
-
-        a : Quantity
-            The tokamak's minor radius in [m].
-        Ea : Quantity
-            The Electric field magnitude in [V/m].
-        B0 : Quantity
-            The Magnetic field's strength in [T].
-        peak : float
-            The Electric field's peak point with respect to
-            :math:`\psi_{wall}`.
-        rw : float
-            The Electric field's waist width relative to :math:`r_{wall}`,
-            defined as:
-            :math:`r_{waist} = \alpha\cdot \text{rw}`.
-
-        """
+        r"""Initializes the field's parameters."""
 
         # SI Quantities
         self.a = a.to("meters")

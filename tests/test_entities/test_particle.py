@@ -1,5 +1,7 @@
 import gcmotion as gcm
 import numpy as np
+from pint import get_application_registry
+
 
 # ========================== QUANTITY CONSTRUCTOR ==========================
 
@@ -7,7 +9,8 @@ Rnum = 1.65
 anum = 0.5
 B0num = 1
 species = "p"
-ureg, Q = gcm.setup_pint(R=Rnum, a=anum, B0=B0num, species=species)
+Q = gcm.QuantityConstructor(R=Rnum, a=anum, B0=B0num, species=species)
+ureg = get_application_registry()
 
 # ========================== BASE OBJECTS SETUP ===============================
 
@@ -106,3 +109,7 @@ def test_attrs_units():
     assert particle.rhoNU.units == ureg.NUmeters
     assert particle.PthetaNU.units == ureg.NUMagnetic_flux
     assert particle.PzetaNU.units == ureg.NUMagnetic_flux
+
+
+def test_quantitiesfunc():
+    """Make sure it doesn't print any errors"""

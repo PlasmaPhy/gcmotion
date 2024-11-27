@@ -1,5 +1,21 @@
+r"""
+==============
+Profile Entity
+==============
+
+This module defines the "Profile" entity, which is a child class of the
+"Tokamak" and "PhysicalParameters" classes.
+
+A lot of analysis can be done upon this class, since it essentially specifies a
+family of particles with the same 3 Constants of Motion, E, mu and Pzeta, in a
+specific tokamak device, which fully define their Hamiltonian.
+
+This class also constructs the QuantityConstructor to be used internally, so
+every subclass should grab it from here instead of redifining it.
+"""
+
 from gcmotion.utils.logger_setup import logger
-from gcmotion.utils.setup_pint import setup_pint
+from gcmotion.utils.quantity_constructor import QuantityConstructor
 
 from gcmotion.entities.tokamak import Tokamak
 from gcmotion.entities.physical_parameters import PhysicalParameters
@@ -20,6 +36,7 @@ class Profile(Tokamak, PhysicalParameters):
 
     Example
     -------
+    How to create a `Profile` object.
 
     >>> import gcmotion as gcm
     >>>
@@ -28,7 +45,7 @@ class Profile(Tokamak, PhysicalParameters):
     >>> anum = 0.5
     >>> B0num = 1
     >>> species = "p"
-    >>> ureg, Q = gcm.setup_pint(R=Rnum, a=anum, B0=B0num, species=species)
+    >>> Q = gcm.QuantityConstructor(R=Rnum, a=anum, B0=B0num, species=species)
     >>>
     >>> # Intermediate Quantities
     >>> R = Q(Rnum, "meters")
@@ -57,7 +74,7 @@ class Profile(Tokamak, PhysicalParameters):
     >>> # Create a Profile
     >>> profile = gcm.Profile(tokamak, params)
 
-    .. note::
+    .. admonition:: For Developers
 
         The Profile now has all the information to initialize the Quantity
         Constructor (again) to be used internally. All child classes should
@@ -92,7 +109,7 @@ class Profile(Tokamak, PhysicalParameters):
 
         # This is a good place to initialize Q, since we have everything we
         # need. Every child class should grab it from here.
-        _, self.Q = setup_pint(
+        self.Q = QuantityConstructor(
             R=self.R.magnitude,
             a=self.a.magnitude,
             B0=self.B0.magnitude,

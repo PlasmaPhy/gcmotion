@@ -1,4 +1,26 @@
-from pint import Quantity
+r"""
+=====================================================
+InitialConditions and _InitialConditionsFull Entities
+=====================================================
+
+This module defines the "InitialConditions" and "_InitialConditionsFull"
+entities.
+
+The former is in the main namespace and is used to define a
+particle's initial conditons. The latter is a private class which extends the
+first one by calculating all the values that can be calculated from the initial
+conditions only, such as "rho0" or the particle's energy. This object is
+created inside the "Particle" class, since it requires a "Profile" object as
+well.
+
+Note
+----
+If the "muB" arguement is specified, then it overwrites the
+"PhysicalParameters" entity's "mu" arguement.
+"""
+
+import pint
+import numpy as np
 from termcolor import colored
 
 from gcmotion.entities.profile import Profile
@@ -6,7 +28,8 @@ from gcmotion.configuration.physical_constants import PhysicalConstants
 
 from gcmotion.utils.logger_setup import logger
 
-type QuantityArray = Quantity
+type Quantity = pint.Quantity
+type QuantityArray = pint.Quantity
 
 
 class InitialConditions:
@@ -29,9 +52,13 @@ class InitialConditions:
         The time interval return values, [:math:`t_0, t_f, steps`],
         in dimensions of [time].
     muB : Quantity, optional
-        The particle's initial :math:`\mu B` value in units of [energy]. If
-        specified, this value overwrites the `mu` attribute in the
-        PhysicalParameters object.
+        This parameter will be parsed differently depending on its
+        dimensionality. If its dimensions are [energy], then it is parsed as
+        the particle's initial "perpandicular energy", :math:`\mu B`. If its
+        dimensions are [current][area] i.e. dimensions of magnetic moment, it
+        is parsed as the particle's magnetic moment, which is a Constant of
+        motion. Either way, if specified, this parameter overwrites the
+        "``params``" ``mu`` field.
 
     Notes
     -----
@@ -59,7 +86,7 @@ class InitialConditions:
     >>> anum = 0.5
     >>> B0num = 1
     >>> species = "p"
-    >>> ureg, Q = gcm.setup_pint(R=Rnum, a=anum, B0=B0num, species=species)
+    >>> Q = gcm.QuantityConstructor(R=Rnum, a=anum, B0=B0num, species=species)
     >>>
     >>> # Intermediate values
     >>> R = Q(Rnum, "meters")
@@ -92,7 +119,7 @@ class InitialConditions:
 
         # muB parsing
         # The actual decision is made in the Particle class.
-        self.muB = None if muB is None else muB.to("keV")
+        self.muB = None if muB is None else muB
 
         # Keep the angles' type
         self.theta0 = float(theta0)
@@ -141,7 +168,7 @@ class InitialConditions:
 
 class _InitialConditionsFull(InitialConditions, Profile):
     r"""Extends the InitialConditions class to include the extra initial
-    conditions :math:`\rho_0`, :math:`\psi_{p0}` and :math:`P_\theta_0`
+    conditions rho0, psip0 and Ptheta0, as well as the Energy.
     """
 
     def __init__(self, init, profile):
@@ -174,6 +201,7 @@ class _InitialConditionsFull(InitialConditions, Profile):
 
         self.mi = self.miNU.to("kilogram")
         self.qi = self.qiNU.to("Coulomb")
+
         # Initial (B,i,g) and Phi values
         # Note: bigNU() and PhiNU() input and output are in [NU]
         # Symbolize the magnitude of the repspective variable with a _
@@ -239,3 +267,40 @@ class _InitialConditionsFull(InitialConditions, Profile):
         self.ENU = self.E.to("NUJoule")
 
         logger.debug("\t _InitialConditionsFull initialization completed")
+
+
+def check(theta0, zeta0, psi0, t_eval, muB):
+    r"""Checks the validity of the passed arguements."""
+
+    # angles
+    assert isinstance(theta0, (int, float)), "'theta0' must be a float!"
+    assert isinstance(zeta0, (int, float)), "'zeta0' must be a float!"
+    # psi0
+    assert isinstance(psi0, pint.Quantity), "`psi0` must be a Quantity!"
+    assert psi0.dimensionality == {
+        "[current]": -1,
+        "[length]": 2,
+        "[mass]": 1,
+        "[time]": -2,
+    }, (
+        "'psi0' must have dimensionality of "
+        + "{[current]^-1[length]^2[mass][time]^-2 "
+        + "(Magnetic_flux)"
+    )
+    assert psi0 > 0, "'psi0' must be positive!"
+    # t_eval
+    assert isinstance(t_eval, pint.Quantity), "'t_eval' must be a Quantity!"
+    assert isinstance(
+        t_eval.m, np.ndarray
+    ), "'t_eval' must be a Quantity array!"
+    # muB
+    type_condition = (muB is None) or isinstance(muB, pint.Quantity)
+    assert type_condition, "'muB' must be either None or a Quantity!"
+    dim_condition = muB.dimensionality == (
+        {"[length]": 2, "[mass]": 1, "[time]": -2}
+        or {"[current]": 1, "[length]": 2}
+    )
+    assert dim_condition, (
+        "`muB` must dimensionality of either energy or"
+        + "{'[current]': 1, '[length]': 2} (magnetic moment)"
+    )

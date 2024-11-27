@@ -6,7 +6,9 @@ build-backend = "hatchling.build"
 line-length = 79
 
 [tool.pytest.ini_options]
-addopts = "--doctest-modules -vv --durations 2 -s"
+testpaths = "tests"
+addopts = "-vv --doctest-modules --durations 2"
+console_output_style = "progress-even-when-capture-no"
 filterwarnings = [
     "ignore::DeprecationWarning:jupyter_client.*",
 ]
@@ -29,6 +31,7 @@ dependencies = [
   "tqdm~=4.66",
   "loguru~=0.7",
   "pint~=0.24",
+  "termcolor~=2.5",
 ]
 
 

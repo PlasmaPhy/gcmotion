@@ -5,17 +5,16 @@ Pint setup
 Sets up the `pint <https://pint.readthedocs.io/en/stable/>`_ configuration.
 """
 
-from pint import UnitRegistry
+from pint import UnitRegistry, set_application_registry
 from gcmotion.configuration.physical_constants import PhysicalConstants
 
 ureg = UnitRegistry(case_sensitive=False, on_redefinition="ignore")
-ureg.setup_matplotlib()
+set_application_registry(ureg)  # Used only in testing
 
 
-# fmt: off
-def setup_pint(R, a, B0, species):
-    r"""Creates all needed [NU] units, as well as some extra [SI] unit aliases
-    and stores them in the UnitRegistry.
+def QuantityConstructor(R: float, a: float, B0: float, species: str):
+    r"""Extends pint's default Quantity Constructor to include NU units and
+    some extra SI unit aliases.
 
     Parameters
     ----------
@@ -36,7 +35,11 @@ def setup_pint(R, a, B0, species):
     2-tuple
         The updated UnitRegistry and the UnitRegistry.Quantity object, which is
         used to create all other Quantities.
+
     """
+
+    # Create the UnitRegistry
+    ureg.setup_matplotlib()
 
     # Additional SI quantites (= aliases, for display only)
     ureg.define("Magnetic_flux    = Tesla * m^2   = Tm^2")
@@ -56,32 +59,28 @@ def setup_pint(R, a, B0, species):
     w0 = (Z / M) * qp / mp * B0  # s^-1
     E0 = mp * w0**2 * R**2  # Joule
 
-    ureg.define(f"NUsecond = {1/w0} second")  # Time [NU]
-    ureg.define(f"NUw0     = {w0} hz")  # Cyclotron frequency
-    ureg.define(f"NUmeter  = {R} meter")  # Tokamak major radius
-    ureg.define(f"NUJoule  = {E0} Joule")  # Energy
-    ureg.define(f"NUkeV    = {qp} NUJoule")  # Energy
-    ureg.define(f"NUTesla  = {M/Z} Proton_mass * NUw0 / Proton_charge ")  # Magnetic field strength
+    ureg.define(f"NUsecond = {1/w0} second")
+    ureg.define(f"NUw0     = {w0} hz")
+    ureg.define(f"NUmeter  = {R} meter")
+    ureg.define(f"NUJoule  = {E0} Joule")
+    ureg.define(f"NUkeV    = {qp} NUJoule")
+    ureg.define(f"NUTesla  = {M/Z} Proton_mass * NUw0 / Proton_charge ")
 
     # Additional NU quantities
-    ureg.define("NUvelocity           = NUmeter * NUw0")
-    ureg.define("NUMagnetic_flux      = NUTesla * NUmeter^2                   = NUmf")
-    ureg.define("NUPlasma_current     = NUTesla * NUmeter                     = NUpc")
-    ureg.define("NUMagnetic_moment    = Proton_charge / NUsecond * NUmeter^2  = NUmu")
-    ureg.define("NUVolts              = NUJoule / Proton_charge               = NUV")
-    ureg.define("NUVolts_per_NUmeter  = NUVolts / NUmeter                     = NUV/NUm")
+    ureg.define("NUvelocity = NUmeter * NUw0")
+    ureg.define("NUMagnetic_flux = NUTesla * NUmeter^2 = NUmf")
+    ureg.define("NUPlasma_current = NUTesla * NUmeter = NUpc")
+    ureg.define(
+        "NUMagnetic_moment = Proton_charge / NUsecond * NUmeter^2 = NUmu"
+    )
+    ureg.define("NUVolts = NUJoule / Proton_charge = NUV")
+    ureg.define("NUVolts_per_NUmeter = NUVolts / NUmeter = NUV / NUm")
 
-    # Also define psi_wall as a unit of Magnetic_flux, to assing psi initial
-    # values with respect to it
+    # Also define psi_wall as a unit of Magnetic_flux, to assing psi
+    # initial values with respect to it
     ureg.define(f"psi_wall = {B0 * a**2 / 2} Magnetic_flux")
-    ureg.define(f"NUpsi_wall = {(a / R)**2 / 2} NUMagnetic_flux")  # not really need but sure
+    ureg.define(
+        f"NUpsi_wall = {(a / R)**2 / 2} NUMagnetic_flux"
+    )  # not really need but sure
 
-    # Assign custom values to Q for easier access.
-    ureg.Quantity.R = R
-    ureg.Quantity.a = a
-    ureg.Quantity.B0 = B0
-    ureg.Quantity.species = species
-    ureg.Quantity.w0 = w0
-    ureg.Quantity.E0 = E0
-
-    return ureg, ureg.Quantity
+    return ureg.Quantity

@@ -20,7 +20,7 @@ Example
 >>> anum = 0.5
 >>> B0num = 1
 >>> species = "p"
->>> ureg, Q = gcm.setup_pint(R=Rnum, a=anum, B0=B0num, species=species)
+>>> Q = gcm.QuantityConstructor(R=Rnum, a=anum, B0=B0num, species=species)
 >>>
 >>> # Intermediate values
 >>> B0 = Q(B0num, "Tesla")

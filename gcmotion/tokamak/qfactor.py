@@ -1,69 +1,5 @@
 r"""
-q-factor configurations
-=======================
-
-Here is a list of the availiable q-factor configurations:
-
-=======================      ==========================
-Unity q-factor               :py:class:`Unity`
-Parabolic q-factor           :py:class:`Parabolic`
-Hypergeometric q-factor      :py:class:`Hypergeometric`
-=======================      ==========================
-
-Their parameters are documented below.
-
-Example
--------
-
->>> import gcmotion as gcm
->>>
->>> # Quantity Constructor
->>> Rnum = 1.6
->>> anum = 0.5
->>> B0num = 1
->>> species = "p"
->>> ureg, Q = gcm.setup_pint(R=Rnum, a=anum, B0=B0num, species=species)
->>>
->>> # Intermediate values
->>> a = Q(anum, "meters")
->>> B0 = Q(B0num, "Tesla")
->>>
->>> # Some qfactors
->>> qfactor1 = gcm.qfactor.Unity()
->>> qfactor3 = gcm.qfactor.Parabolic(a, B0, q0=1.1, q_wall=3.8)
->>> qfactor3 = gcm.qfactor.Hypergeometric(a, B0, q0=1.1, q_wall=3.8, n=2)
-
-.. note::
-
-    The values of `a` and `B0` are necessary whenever we define the qfactor
-    with reference to its value at the wall.
-
-The functions `solverqNU` and `psipNU` work identically in every class, so I
-list their methods here as to not repeat myself:
-
-.. autofunction:: gcmotion.qfactor.QFactor.solverqNU
-
-.. autofunction:: gcmotion.qfactor.QFactor.psipNU
-
-
-.. rubric:: Unity
-
-.. autoclass:: Unity
-    :member-order: bysource
-    :inherited-members: solverqNU, psipNU
-    :undoc-members: solverqNU, psipNU
-    :show-inheritance:
-
-.. rubric:: Parabolic
-
-.. autoclass:: Parabolic
-    :show-inheritance:
-
-.. rubric:: Hypergeometric
-
-.. autoclass:: Hypergeometric
-    :show-inheritance:
-
+Defines the QFactor Base class and all available q-factor configurations.
 """
 
 import pint
@@ -75,7 +11,7 @@ from scipy.special import hyp2f1
 from abc import ABC, abstractmethod
 
 # Quantity alias for type annotations
-type Quantity = pint.UnitRegistry.Quantity
+type Quantity = pint.Quantity
 
 
 class QFactor(ABC):
@@ -88,7 +24,7 @@ class QFactor(ABC):
     @abstractmethod
     def solverqNU(self, psi: float) -> float:
         r"""Calculates :math:`q(\psi)`.
-        Input and output must both be floats, in [NU].
+        Input must be float, in [NU].
 
         Used inside the solver.
 
@@ -107,20 +43,17 @@ class QFactor(ABC):
     @abstractmethod
     def psipNU(self, psi: float | np.ndarray) -> float | np.ndarray:
         r"""Calculates :math:`\psi_p(\psi)`.
-        Input and output must can be both floats or np.ndarrays, in [NU].
-
-        Used in calculating :math:`\psi_p`'s time evolution from :math:`\psi`,
-        :math:`\psi_{p,wall}`, etc.
+        Input and output are both floats or np.ndarrays, in [NU].
 
         Parameters
         ----------
         psi : float | np.ndarray
-            Value(s) of ψ.
+            Value(s) of :math:`\psi` in NU.
 
         Returns
         -------
         float | np.ndarray
-            Calculated :math:`\psi_p(\psi)`.
+            Calculated :math:`\psi_p(\psi)` in NU.
 
         """
 

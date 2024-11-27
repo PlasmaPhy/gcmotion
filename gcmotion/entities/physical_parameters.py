@@ -1,6 +1,17 @@
+r"""
+=========================
+PhysicalParameters Entity
+=========================
+
+This module defines the "PhysicalParameters" entity, which represents a family
+of particles that are the same species, and have the same "mu" and "Pzeta"
+
+The Physical values are stored as Quantites, as well as their NU counterparts.
+"""
+
 from __future__ import annotations
 
-from pint import Quantity
+import pint
 from typing import Literal
 from termcolor import colored
 
@@ -8,6 +19,7 @@ from gcmotion.utils.logger_setup import logger
 from gcmotion.configuration.physical_constants import PhysicalConstants
 
 type SupportedSpecies = Literal["p", "e", "D", "T", "He3", "He4"]
+type Quantity = pint.Quantity
 
 
 class PhysicalParameters:
@@ -49,7 +61,7 @@ class PhysicalParameters:
     >>> anum = 0.5
     >>> B0num = 1
     >>> species = "p"
-    >>> ureg, Q = gcm.setup_pint(R=Rnum, a=anum, B0=B0num, species=species)
+    >>> Q = gcm.QuantityConstructor(R=Rnum, a=anum, B0=B0num, species=species)
     >>>
     >>> params = gcm.PhysicalParameters(
     ...     species=species,
@@ -64,6 +76,7 @@ class PhysicalParameters:
     ):
 
         logger.info("==> Initializing PhysicalParameters...")
+        check(species, mu, Pzeta)
 
         # Construct Quantities
         self.species = species.lower()
@@ -94,3 +107,32 @@ class PhysicalParameters:
             + f"{"Pzeta":>23} : {f'{self.Pzeta:.4g~}':<16}"
             + f"({self.PzetaNU:.4g~})\n"
         )
+
+
+def check(species, mu, Pzeta):
+    r"""Checks the validity of the arguements"""
+
+    assert species.lower() in [
+        "p",
+        "e",
+        "D",
+        "T",
+        "He3",
+        "He4",
+    ], "species can be on of 'p', 'e', 'D', 'T', 'He3', 'He4'"
+    assert isinstance(mu, pint.Quantity), "'mu' must be a Quantity!"
+    assert isinstance(Pzeta, pint.Quantity), "'Pzeta' must be a Quantity"
+    assert mu.dimensionality == {
+        "[current]": 1,
+        "[length]": 2,
+    }, "'mu' must have a dimensionality of [current][length]^2!"
+    assert Pzeta.dimensionality == {
+        "[current]": -1,
+        "[length]": 2,
+        "[mass]": 1,
+        "[time]": -2,
+    }, (
+        "'Pzeta' must have dimensionality of "
+        + "{[current]^-1[length]^2[mass][time]^-2 "
+        + "(Magnetic_flux)"
+    )

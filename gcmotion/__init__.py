@@ -1,7 +1,7 @@
 # Import the logger first
 from gcmotion.utils import logger_setup
 
-from gcmotion.utils.setup_pint import setup_pint
+from gcmotion.utils.quantity_constructor import QuantityConstructor
 from gcmotion.utils.get_size import get_size
 
 # main namespace
@@ -19,7 +19,7 @@ from gcmotion.entities.particle import Particle
 
 # main namespace
 __all__ = [
-    "setup_pint",
+    "Q",
     "get_size",
     # Tokamak objects
     "qfactor",

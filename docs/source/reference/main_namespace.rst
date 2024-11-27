@@ -14,10 +14,16 @@ Base Objects
 
    Tokamak configuration <tokamak>
 
-.. toctree::
-   :maxdepth: 1
+.. autosummary::
+   :toctree: generated/
+   :caption: main_namespace
 
-   tokamak
+   Tokamak
+   PhysicalParameters
+   InitialConditions
+
+   Profile
+   Particle
 
 Submodules
 ----------
