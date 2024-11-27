@@ -63,17 +63,17 @@ def fixed_points_plot(
         List containing the limits for :math:`\theta` (x- axis limits).
     psi_lim : list
         List containing the limits for :math:`\psi` and
-        consequently :math:`P_{\theta}` (y- axis limits).
+        consequently :math:`\psi` (y- axis limits).
     dist_tol : float, optional
-        Tolerance that determines distinct fixed points. If both :math:`P_{\theta}` and
-        :math:`P_{\theta}` elements of a fixed point are less than :py:data:`dist_tol` apart
+        Tolerance that determines distinct fixed points. If both :math:`\theta` and
+        :math:`\psi` elements of a fixed point are less than :py:data:`dist_tol` apart
         the two fixed points are not considered distinct.
     ic_theta_grid_density : int, optional
         Integer dictating the theta density with regard to the :math:`\theta` variable
         of the grid upon which the search for initial conditions for the :py:func:`differential_evolution`
         will be conducted. Will be passed to :py:func:`fixed_points`.
     ic_psi_grid_density : int, optional
-        Integer dictating the theta density with regard to the :math:`P_{\theta}` variable
+        Integer dictating the theta density with regard to the :math:`\psi` variable
         of the grid upon which the search for initial conditions for the :py:func:`differential_evolution`
         will be conducted.  Will be passed to :py:func:`fixed_points`.
     info : bool, optional
@@ -127,6 +127,7 @@ def fixed_points_plot(
         info=info,
     )
 
+    # CAUTION: The xoc function takes in psis_fixed but returns P_thetas_fixed
     X_points, O_points = xoc(
         unclassified_fixed_points=fixed_points,
         parameters=parameters,

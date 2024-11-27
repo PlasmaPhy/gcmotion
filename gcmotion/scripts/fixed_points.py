@@ -1,5 +1,5 @@
 r""" Function that uses SciPy's :py:func:`differential_evolution` in order to solve 
-the algebraic but complicated system of equations :math:`\dot{\theta} = 0 \& \dot{P_{\theta}} = 0`
+the algebraic but complicated system of equations :math:`\dot{\theta} = 0 \& \dot{\psi} = 0`
 
 Example
 -------
@@ -53,18 +53,18 @@ This is how :py:func:`fixed_points` can be called inside the function :py:func:`
           variable. It will be passed into the "bounds" argument of :py:func:`differential_evolution`. 
     psi_lim : list, optional
         Provides the limits (divided by psi_wall) for the solution search area with regards
-        to the :math:`P_{\theta}` variable. It will be passed into the "bounds" argument of
+        to the :math:`\psi` variable. It will be passed into the "bounds" argument of
         :py:func:`differential_evolution`. 
     dist_tol : float, optional
-        Tolerance that determines distinct fixed points. If both :math:`P_{\theta}` and
-        :math:`P_{\theta}` elements of a fixed point are less than :py:data:`dist_tol` apart
+        Tolerance that determines distinct fixed points. If both :math:`\theta` and
+        :math:`\psi` elements of a fixed point are less than :py:data:`dist_tol` apart
         the two fixed points are not considered distinct.
     ic_theta_grid_density : int, optional
         Integer dictating the theta density with regard to the :math:`\theta` variable 
         of the grid upon which the search for initial conditions for the :py:func:`differential_evolution` 
         will be conducted.
     ic_psi_grid_density : int, optional
-        Integer dictating the theta density with regard to the :math:`P_{\theta}` variable 
+        Integer dictating the theta density with regard to the :math:`\psi` variable 
         of the grid upon which the search for initial conditions for the :py:func:`differential_evolution` 
         will be conducted.
     info : bool, optional
@@ -80,7 +80,7 @@ This is how :py:func:`fixed_points` can be called inside the function :py:func:`
     num_of_dfp, distinct_fixed_points : tuple
         Tuple where the first element is the number of distinct fixed points found and
         the second element is a list containing the distinct points found in the form
-        :math:`[\theta_{fixed},P_{\theta_{fixed}}]`
+        :math:`[\theta_{fixed},\psi_{fixed}]`
 
 """
 

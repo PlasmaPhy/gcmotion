@@ -32,18 +32,18 @@ This is how :py:func:`bifurcation` can be called inside the function :py:func:`b
         :py:func:`fixed_points` 
     psi_lim : list, optional
         Provides the limits (divided by psi_wall) for the solution search area with regards
-        to the :math:`P_{\theta}` variable. It will be passed into the "bounds" argument of
+        to the :math:`\psi` variable. It will be passed into the "bounds" argument of
         :py:func:`fixed_points`. 
     dist_tol : float, optional
-        Tolerance that determines distinct fixed points. If both :math:`P_{\theta}` and
-        :math:`P_{\theta}` elements of a fixed point are less than :py:data:`dist_tol` apart
+        Tolerance that determines distinct fixed points. If both :math:`\theta` and
+        :math:`\psi` elements of a fixed point are less than :py:data:`dist_tol` apart
         the two fixed points are not considered distinct.
     ic_theta_grid_density : int, optional
         Integer dictating the theta density with regard to the :math:`\theta` variable 
         of the grid upon which the search for initial conditions for the :py:func:`differential_evolution` 
         will be conducted. Will be passed to :py:func:`fixed_points`.
     ic_psi_grid_density : int, optional
-        Integer dictating the theta density with regard to the :math:`P_{\theta}` variable 
+        Integer dictating the theta density with regard to the :math:`\psi` variable 
         of the grid upon which the search for initial conditions for the :py:func:`differential_evolution` 
         will be conducted.  Will be passed to :py:func:`fixed_points`.
     info : bool, optional
@@ -134,6 +134,7 @@ def bifurcation(
             info=False,
         )
 
+        # CAUTION: The xoc function takes in psis_fixed but returns P_thetas_fixed
         current_X_points, current_O_points = xoc(
             unclassified_fixed_points=current_fp,
             parameters=parameters,

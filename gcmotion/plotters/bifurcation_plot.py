@@ -54,18 +54,18 @@ def bifurcation_plot(
         :py:func:`bifurcation`
     psi_lim : list, optional
         Provides the limits (divided by psi_wall) for the solution search area with regards
-        to the :math:`P_{\theta}` variable. It will be passed into the "bounds" argument of
+        to the :math:`\psi` variable. It will be passed into the "bounds" argument of
         :py:func:`bifurcation`.
     dist_tol : float, optional
-        Tolerance that determines distinct fixed points. If both :math:`P_{\theta}` and
-        :math:`P_{\theta}` elements of a fixed point are less than :py:data:`dist_tol` apart
+        Tolerance that determines distinct fixed points. If both :math:`\theta` and
+        :math:`\psi` elements of a fixed point are less than :py:data:`dist_tol` apart
         the two fixed points are not considered distinct.
     ic_theta_grid_density : int, optional
         Integer dictating the theta density with regard to the :math:`\theta` variable
         of the grid upon which the search for initial conditions for the :py:func:`differential_evolution`
         will be conducted. Will be passed to :py:func:`bifurcation`.
     ic_psi_grid_density : int, optional
-        Integer dictating the theta density with regard to the :math:`P_{\theta}` variable
+        Integer dictating the theta density with regard to the :math:`\psi` variable
         of the grid upon which the search for initial conditions for the :py:func:`differential_evolution`
         will be conducted.  Will be passed to :py:func:`bifurcation`.
     info : bool, optional
@@ -75,6 +75,7 @@ def bifurcation_plot(
     """
 
     start = time()
+    # CAUTION: The bifurcation function takes in psis_fixed but returns P_thetas_fixed
     X_thetas, X_P_thetas, O_thetas, O_P_thetas, num_of_XP, num_of_OP = bifurcation(
         collection=collection,
         theta_lim=theta_lim,
