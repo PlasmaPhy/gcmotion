@@ -2,12 +2,14 @@ import numpy as np
 from collections import namedtuple, deque
 from gcmotion.utils.energy_Ptheta import energy_Ptheta
 from gcmotion.utils.second_derivative import higher_order_second_derivative
+from gcmotion.utils.second_derivative import higher_order_second_derivative
 
 
 def XO_points_classification(
     unclassified_fixed_points: np.ndarray,
     parameters: namedtuple,
     profile: namedtuple,
+    delta: float = 1e-5,
     delta: float = 1e-5,
 ):
     # Parameters

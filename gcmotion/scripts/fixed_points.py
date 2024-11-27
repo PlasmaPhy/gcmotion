@@ -92,6 +92,7 @@ from collections import namedtuple
 from gcmotion.utils.distinctify import distinctify
 from gcmotion.utils.energy_Ptheta import energy_Ptheta
 from gcmotion.scripts.fp_ic_scan import fp_ic_scan as ic_scanner
+from gcmotion.scripts.fp_ic_scan import fp_ic_scan as ic_scanner
 
 # Quantity alias for type annotations
 type Quantity = pint.UnitRegistry.Quantity
