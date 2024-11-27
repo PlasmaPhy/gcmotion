@@ -83,7 +83,6 @@ def fp_ic_scan(
         # Canonical Equations
         theta_dot = (1 - rho * g_der) / D * rho * b**2 + q * g / D * bracket1
         psi_dot = -q * g / D * bracket2
-        rho_dot = -(1 - rho * g_der) / D * bracket2
 
         return theta_dot**2 + psi_dot**2
 

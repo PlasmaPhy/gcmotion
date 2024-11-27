@@ -10,7 +10,6 @@ def XO_points_classification(
     parameters: namedtuple,
     profile: namedtuple,
     delta: float = 1e-5,
-    delta: float = 1e-5,
 ):
     # Parameters
     mu = parameters.mu
