@@ -48,12 +48,6 @@ This is how :py:func:`fixed_points` can be called inside the function :py:func:`
         passed, not units as well
     profile : namedtuple
         Dict containing the tokamak configuration objects.
-    theta_density : int, optional
-        Integer dictating the number of initial conditions with regard to the 
-        :math:`\theta` variable
-    P_theta_density : int, optional
-        Integer dictating the number of initial conditions with regard to the 
-        :math:`P_{\theta}` variable
     theta_lim : list, optional
         Provides the limits for the solution search area with regards to the :math:`\theta`
           variable. It will be passed into the "bounds" argument of :py:func:`differential_evolution`. 
@@ -65,14 +59,17 @@ This is how :py:func:`fixed_points` can be called inside the function :py:func:`
         Tolerance that determines distinct fixed points. If both :math:`P_{\theta}` and
         :math:`P_{\theta}` elements of a fixed point are less than :py:data:`dist_tol` apart
         the two fixed points are not considered distinct.
+    ic_theta_grid_density : int, optional
+        Integer dictating the theta density with regard to the :math:`\theta` variable 
+        of the grid upon which the search for initial conditions for the :py:func:`differential_evolution` 
+        will be conducted.
+    ic_P_theta_grid_density : int, optional
+        Integer dictating the theta density with regard to the :math:`P_{\theta}` variable 
+        of the grid upon which the search for initial conditions for the :py:func:`differential_evolution` 
+        will be conducted.
     info : bool, optional
         Boolean that dictates weather the fixed points and distinct fixed points found 
         will be printed alongside how many where found respectively.
-    scaled_P_thetas : bool, optional
-        Boolean that dictates weather the initial conditions regarding the variable
-        :math:`P_{\theta}` (initial conditions for fixed points search) will be scaled, so
-        as to increase the density of initial :math:`P_{\theta}`'s near the lower boundary
-        of the search area.
 
     .. note:: The parameters argument mus contain the parameters in Normalized Units (NU)
     and it must contain their magnitude, NOT the entire Quantity object.
@@ -89,7 +86,7 @@ This is how :py:func:`fixed_points` can be called inside the function :py:func:`
 
 import numpy as np
 import pint
-from scipy.optimize import differential_evolution
+from scipy.optimize import differential_evolution, fsolve
 
 from collections import namedtuple
 from gcmotion.utils.distinctify import distinctify
@@ -107,6 +104,8 @@ def fixed_points(
     theta_lim: list = [-1.01 * np.pi, 1.01 * np.pi],
     psi_lim: list = [0.01, 1.3],
     dist_tol: float = 1e-3,
+    ic_theta_grid_density: int = 800,
+    ic_P_theta_grid_density: int = 800,
     info: bool = False,
     # polish=True,
     # init="sobol",
@@ -192,7 +191,7 @@ def fixed_points(
             x0=initial_condition,
             tol=1e-7,
             atol=1e-15,
-            maxiter=10000,
+            maxiter=20_000,
             popsize=15,
             mutation=(0.5, 1),
             recombination=0.7,
@@ -205,7 +204,8 @@ def fixed_points(
     initial_conditions = ic_scanner(
         parameters=parameters,
         profile=profile,
-        grid_density=900,
+        theta_grid_density=ic_theta_grid_density,
+        P_theta_grid_density=ic_P_theta_grid_density,
         psi_lim=psi_lim,
         theta_lim=theta_lim,
         tol=1e-6,

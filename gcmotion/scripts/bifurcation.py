@@ -13,11 +13,11 @@ This is how :py:func:`bifurcation` can be called inside the function :py:func:`b
 
         thetas_fixed, P_thetas_fixed, num_of_fp = bifurcation(
             collection=collection,
-            theta_density=theta_density,
-            P_theta_density=P_theta_density,
             theta_lim=theta_lim,
             psi_lim=psi_lim,
             dist_tol=dist_tol,
+            ic_theta_grid_dencity = 800,
+            ic_P_theta_grid_density = 1200,
             info=info,
         )
 
@@ -26,12 +26,6 @@ This is how :py:func:`bifurcation` can be called inside the function :py:func:`b
     
     collection : :py:class:`~gcmotion.classes.collection.Collection`
         The collection of particles
-    theta_density : int, optional
-        Integer dictating the number of initial conditions with regard to the 
-        :math:`\theta` variable that will be passed into :py:func:`fixed_points`.
-    P_theta_density : int, optional
-        Integer dictating the number of initial conditions with regard to the 
-        :math:`P_{\theta}` variable that will be passed into :py:func:`fixed_points`.
     theta_lim : list, optional
         Provides the limits for the solution search area for fixed points
         with regards to the :math:`\theta` variable. It will be passed into 
@@ -44,6 +38,14 @@ This is how :py:func:`bifurcation` can be called inside the function :py:func:`b
         Tolerance that determines distinct fixed points. If both :math:`P_{\theta}` and
         :math:`P_{\theta}` elements of a fixed point are less than :py:data:`dist_tol` apart
         the two fixed points are not considered distinct.
+    ic_theta_grid_density : int, optional
+        Integer dictating the theta density with regard to the :math:`\theta` variable 
+        of the grid upon which the search for initial conditions for the :py:func:`differential_evolution` 
+        will be conducted. Will be passed to :py:func:`fixed_points`.
+    ic_P_theta_grid_density : int, optional
+        Integer dictating the theta density with regard to the :math:`P_{\theta}` variable 
+        of the grid upon which the search for initial conditions for the :py:func:`differential_evolution` 
+        will be conducted.  Will be passed to :py:func:`fixed_points`.
     info : bool, optional
         Boolean that dictates weather the :math:`P_{\zeta0}` of the particle whose
         fixed points have just been calculated, will be printed alongside the fixed points
@@ -63,6 +65,7 @@ from collections import deque, namedtuple
 
 from gcmotion.scripts.XO_points_classification import XO_points_classification as xoc
 from gcmotion.scripts.fixed_points import fixed_points
+from gcmotion.utils.energy_Ptheta import energy_Ptheta
 from gcmotion.classes.collection import Collection
 
 
@@ -71,6 +74,8 @@ def bifurcation(
     theta_lim: list = [-np.pi, np.pi],
     psi_lim: list = [0.01, 1.3],
     dist_tol: float = 1e-3,
+    ic_theta_grid_density: int = 800,
+    ic_P_theta_grid_density: int = 800,
     info: bool = False,
 ):
 
@@ -124,6 +129,8 @@ def bifurcation(
             theta_lim=theta_lim,
             psi_lim=psi_lim,
             dist_tol=dist_tol,
+            ic_theta_grid_density=ic_theta_grid_density,
+            ic_P_theta_grid_density=ic_P_theta_grid_density,
             info=False,
         )
 

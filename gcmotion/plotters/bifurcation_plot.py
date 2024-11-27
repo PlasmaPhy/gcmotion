@@ -33,6 +33,8 @@ def bifurcation_plot(
     theta_lim: list = [-np.pi, np.pi],
     psi_lim: list = [0.01, 1.3],
     dist_tol: float = 1e-3,
+    ic_theta_grid_density: int = 800,
+    ic_P_theta_grid_density: int = 800,
     info: bool = False,
 ):
     r"""Draws the bifurcation diagrams for the :math:`theta`'s  fixed,
@@ -45,14 +47,7 @@ def bifurcation_plot(
     ----------
     collection : :py:class:`~gcmotion.classes.collection.Collection`
         The collection of particles
-    theta_density : int, optional
-        Integer dictating the number of initial conditions with regard to the
-        :math:`\theta` variable that will be passed into :py:func:`bifurcation`
-        and then :py:func:`fixed_points`.
-    P_theta_density : int, optional
-        Integer dictating the number of initial conditions with regard to the
-        :math:`P_{\theta}` variable that will be passed into :py:func:`bifurcation`
-        and then :py:func:`fixed_points`.
+
     theta_lim : list, optional
         Provides the limits for the solution search area for fixed points
         with regards to the :math:`\theta` variable. It will be passed into
@@ -65,6 +60,14 @@ def bifurcation_plot(
         Tolerance that determines distinct fixed points. If both :math:`P_{\theta}` and
         :math:`P_{\theta}` elements of a fixed point are less than :py:data:`dist_tol` apart
         the two fixed points are not considered distinct.
+    ic_theta_grid_density : int, optional
+        Integer dictating the theta density with regard to the :math:`\theta` variable
+        of the grid upon which the search for initial conditions for the :py:func:`differential_evolution`
+        will be conducted. Will be passed to :py:func:`bifurcation`.
+    ic_P_theta_grid_density : int, optional
+        Integer dictating the theta density with regard to the :math:`P_{\theta}` variable
+        of the grid upon which the search for initial conditions for the :py:func:`differential_evolution`
+        will be conducted.  Will be passed to :py:func:`bifurcation`.
     info : bool, optional
         Boolean that dictates weather the :math:`P_{\zeta0}` of the particle whose
         fixed points have just been calculated, will be printed alongside the fixed points
@@ -77,6 +80,8 @@ def bifurcation_plot(
         theta_lim=theta_lim,
         psi_lim=psi_lim,
         dist_tol=dist_tol,
+        ic_theta_grid_density=ic_theta_grid_density,
+        ic_P_theta_grid_density=ic_P_theta_grid_density,
         info=info,
     )
 

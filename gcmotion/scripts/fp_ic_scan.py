@@ -11,7 +11,8 @@ type Quantity = pint.UnitRegistry.Quantity
 def fp_ic_scan(
     parameters: namedtuple,
     profile: namedtuple,
-    grid_density: int = 450,
+    theta_grid_density: int = 800,
+    P_theta_grid_density: int = 800,
     theta_lim: list = [-1.01 * np.pi, 1.01 * np.pi],
     psi_lim: list = [0.01, 1.8],
     tol: float = 1e-6,
@@ -50,8 +51,8 @@ def fp_ic_scan(
 
     # Create the grid
     theta_grid, P_thetaNU_grid = np.meshgrid(
-        np.linspace(theta_min, theta_max, grid_density),
-        np.linspace(P_theta_min, P_theta_max, grid_density),
+        np.linspace(theta_min, theta_max, theta_grid_density),
+        np.linspace(P_theta_min, P_theta_max, P_theta_grid_density),
     )
 
     grid_shape = theta_grid.shape
