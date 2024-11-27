@@ -30,7 +30,7 @@ This is how :py:func:`fixed_points_plot` can be called inside the function :py:f
 """
 
 from gcmotion.scripts.fixed_points import fixed_points as fp
-from gcmotion.scripts.XO_points_classification import XO_points_classification as xoc
+from gcmotion.utils.XO_points_classification import XO_points_classification as xoc
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -43,8 +43,8 @@ def fixed_points_plot(
     theta_lim: list,
     psi_lim: list,
     dist_tol: float = 1e-3,
-    ic_theta_grid_density: int = 800,
-    ic_psi_grid_density: int = 800,
+    ic_theta_grid_density: int = 1000,
+    ic_psi_grid_density: int = 1000,
     info: bool = False,
     **params,
 ):

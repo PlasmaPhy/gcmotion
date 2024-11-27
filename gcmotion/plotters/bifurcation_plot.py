@@ -33,8 +33,8 @@ def bifurcation_plot(
     theta_lim: list = [-np.pi, np.pi],
     psi_lim: list = [0.01, 1.3],
     dist_tol: float = 1e-3,
-    ic_theta_grid_density: int = 800,
-    ic_psi_grid_density: int = 800,
+    ic_theta_grid_density: int = 1000,
+    ic_psi_grid_density: int = 1000,
     info: bool = False,
 ):
     r"""Draws the bifurcation diagrams for the :math:`theta`'s  fixed,

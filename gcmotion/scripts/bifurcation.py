@@ -63,9 +63,8 @@ This is how :py:func:`bifurcation` can be called inside the function :py:func:`b
 import numpy as np
 from collections import deque, namedtuple
 
-from gcmotion.scripts.XO_points_classification import XO_points_classification as xoc
+from gcmotion.utils.XO_points_classification import XO_points_classification as xoc
 from gcmotion.scripts.fixed_points import fixed_points
-from gcmotion.utils.energy_Ptheta import energy_Ptheta
 from gcmotion.classes.collection import Collection
 
 
@@ -74,8 +73,8 @@ def bifurcation(
     theta_lim: list = [-np.pi, np.pi],
     psi_lim: list = [0.01, 1.3],
     dist_tol: float = 1e-3,
-    ic_theta_grid_density: int = 800,
-    ic_psi_grid_density: int = 800,
+    ic_theta_grid_density: int = 1000,
+    ic_psi_grid_density: int = 1000,
     info: bool = False,
 ):
 

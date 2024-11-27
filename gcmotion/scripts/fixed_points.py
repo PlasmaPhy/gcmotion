@@ -86,13 +86,11 @@ This is how :py:func:`fixed_points` can be called inside the function :py:func:`
 
 import numpy as np
 import pint
-from scipy.optimize import differential_evolution, fsolve
 
 from collections import namedtuple
 from gcmotion.utils.distinctify import distinctify
-from gcmotion.utils.energy_Ptheta import energy_Ptheta
-from gcmotion.scripts.fp_ic_scan import fp_ic_scan as ic_scanner
-from gcmotion.scripts.fp_ic_scan import fp_ic_scan as ic_scanner
+from gcmotion.utils.fp_ic_scan import fp_ic_scan as ic_scanner
+from gcmotion.utils.single_fixed_point import fixed_point
 
 # Quantity alias for type annotations
 type Quantity = pint.UnitRegistry.Quantity
@@ -105,28 +103,13 @@ def fixed_points(
     theta_lim: list = [-1.01 * np.pi, 1.01 * np.pi],
     psi_lim: list = [0.01, 1.3],
     dist_tol: float = 1e-3,
-    ic_theta_grid_density: int = 800,
-    ic_psi_grid_density: int = 800,
+    ic_theta_grid_density: int = 1000,
+    ic_psi_grid_density: int = 1000,
     info: bool = False,
     # polish=True,
     # init="sobol",
     # workers=-1,
 ):
-
-    # Tokamak profile
-    qfactor = profile.qfactor
-    bfield = profile.bfield
-    efield = profile.efield
-
-    # Define quantites for the solver for clarity
-    solverqNU = qfactor.solverqNU
-    psipNU = qfactor.psipNU
-    solverbNU = bfield.solverbNU
-    solverPhiderNU = efield.solverPhiderNU
-
-    # Parameters ()
-    mu = parameters.mu
-    Pzeta0 = parameters.Pzeta0
 
     theta_min = theta_lim[0]
     theta_max = theta_lim[1]
@@ -138,61 +121,6 @@ def fixed_points(
     psi_max = psi_lim[1]
 
     bounds = [(theta_min, theta_max), (0.99 * psi_min, 1.01 * psi_max)]
-
-    # Function to locate a single fixed point
-    def fixed_point(initial_condition=None):
-
-        Pzeta = Pzeta0
-
-        # System of equations to be solved
-        def system(vars):
-
-            theta, psi = vars
-            psi = max(psi, psi_min)
-
-            # Object methods calls
-            q = solverqNU(psi)
-            psi_p = psipNU(psi)
-            b, b_der, currents, currents_der = solverbNU(psi, theta)
-            phi_der_psi, phi_der_theta = solverPhiderNU(psi, theta)
-
-            # Unpack
-            b_der_psi, b_der_theta = b_der
-            i, g = currents
-            i_der, g_der = currents_der
-            # Multiply current derivatives by q to get their derivatives with
-            # respect to psi instead of psip
-            i_der, g_der = q * i_der, q * g_der
-
-            # Intermediate values
-            rho = (Pzeta + psi_p) / g
-            par = mu + rho**2 * b
-            bracket1 = -par * b_der_psi + phi_der_psi
-            bracket2 = par * b_der_theta + phi_der_theta
-            D = g * q + i + rho * (g * i_der - i * g_der)
-
-            # Canonical Equations
-            theta_dot = (1 - rho * g_der) / D * rho * b**2 + q * g / D * bracket1
-            psi_dot = -q * g / D * bracket2
-
-            return theta_dot**2 + psi_dot**2
-
-        # Use differential evolution to find solutions
-        result = differential_evolution(
-            system,
-            bounds,
-            x0=initial_condition,
-            tol=1e-7,
-            atol=1e-15,
-            maxiter=15_000,
-            popsize=15,
-            mutation=(0.5, 1),
-            recombination=0.7,
-            strategy="best1bin",
-        )
-        theta_solution, psi_solution = result.x
-
-        return theta_solution, psi_solution
 
     initial_conditions = ic_scanner(
         parameters=parameters,
@@ -214,7 +142,13 @@ def fixed_points(
     # multiple fixed points
     for initial_condition in initial_conditions:
 
-        theta_fix, psi_fix = fixed_point(initial_condition=initial_condition)
+        theta_fix, psi_fix = fixed_point(
+            initial_condition=initial_condition,
+            bounds=bounds,
+            parameters=parameters,
+            profile=profile,
+            psi_min=psi_min,
+        )
         fixed_points[idx] = [float(theta_fix), float(psi_fix)]
         idx += 1
 
