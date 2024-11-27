@@ -22,7 +22,7 @@ type Quantity = pint.Quantity
 
 
 class Tokamak:
-    r"""Returns a Tokamak entity.
+    r"""Creates a tokamak device.
 
     A Tokamak entity holds all information about a device's dimensions, as well
     as the q-factor, and the magnetic and electric field inside it.

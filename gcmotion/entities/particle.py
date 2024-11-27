@@ -21,7 +21,9 @@ type Quantity = pint.UnitRegistry.Quantity
 
 
 class Particle(Profile, InitialConditions):
-    r"""
+    r"""Creates a specific Particle with specific Profile and
+    InitialConditions.
+
     A particle entity represents a fully-fledged particle inside a specific
     tokamak device, and defined initial conditions.
 
@@ -141,7 +143,7 @@ class Particle(Profile, InitialConditions):
             solve_time = self.Q(end - start, "seconds")
             logger.info(
                 f"Calculation complete. Took {
-                        solve_time:.4g~#P}."
+                    solve_time:.4g~#P}."
             )
 
             self.theta = self.Q(solution.theta, "radians")
@@ -171,7 +173,7 @@ class Particle(Profile, InitialConditions):
 
             logger.info(
                 f"Conversion completed. Took {
-                        conversion_time:.4g~#P}."
+                    conversion_time:.4g~#P}."
             )
 
             # Percentage of t_eval

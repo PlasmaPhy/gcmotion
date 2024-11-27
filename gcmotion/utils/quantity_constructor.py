@@ -1,7 +1,4 @@
 """
-Pint setup
-----------
-
 Sets up the `pint <https://pint.readthedocs.io/en/stable/>`_ configuration.
 """
 
@@ -32,9 +29,8 @@ def QuantityConstructor(R: float, a: float, B0: float, species: str):
 
     Returns
     -------
-    2-tuple
-        The updated UnitRegistry and the UnitRegistry.Quantity object, which is
-        used to create all other Quantities.
+    pint.Quantity
+        The updated pint Quantity Constructor
 
     """
 

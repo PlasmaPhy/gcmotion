@@ -1,6 +1,8 @@
-############################
-Magnetic field configuration
-############################
+.. _bfield_configuration:
+
+###############
+gcmotion.bfield
+###############
 
 .. currentmodule:: gcmotion.bfield
 
@@ -39,8 +41,10 @@ The functions `bigNU` and `solverbNU` work identically in every class, so I
 list their methods here as to not repeat myself:
 
 .. autofunction:: gcmotion.bfield.MagneticField.bigNU
+   :no-index:
 
 .. autofunction:: gcmotion.bfield.MagneticField.solverbNU
+   :no-index:
 
 .. _available_bfields:
 
@@ -52,3 +56,4 @@ Available magnetic fields
 
 .. autoclass:: LAR
    :class-doc-from: class
+   :no-index:

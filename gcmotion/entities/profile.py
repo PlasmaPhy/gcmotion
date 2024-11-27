@@ -22,7 +22,7 @@ from gcmotion.entities.physical_parameters import PhysicalParameters
 
 
 class Profile(Tokamak, PhysicalParameters):
-    r"""Returns a Profile entity.
+    r"""
 
     A Profile entity represents the subset of all Particles of certain species,
     :math:`\mu` and :math:`P_\zeta` in a specific tokamak configuration.

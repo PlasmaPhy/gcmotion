@@ -1,6 +1,8 @@
-############################
-Electric field configuration
-############################
+.. _efield_configuration:
+
+###############
+gcmotion.efield
+###############
 
 .. currentmodule:: gcmotion.efield
 

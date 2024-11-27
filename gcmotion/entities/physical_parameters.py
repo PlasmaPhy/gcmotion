@@ -23,7 +23,8 @@ type Quantity = pint.Quantity
 
 
 class PhysicalParameters:
-    r"""Returns a PhysicalParameters entity.
+    r"""Creates a set specifying the particles' species, mu and Pzeta
+    constants.
 
     Contains the constants of motion :math:`\mu` and :math:`P_\zeta`, as well
     as the particle species.

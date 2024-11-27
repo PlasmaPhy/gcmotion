@@ -33,7 +33,7 @@ type QuantityArray = pint.Quantity
 
 
 class InitialConditions:
-    r"""Returns an InitialConditions entity.
+    r"""Creates a set of initial conditions for a particle
 
     This entity's only atrributes are its given arguements and their
     corresponding values in NU.
@@ -138,7 +138,8 @@ class InitialConditions:
         t0 = self.t_eval[0].m
         dt = self.t_eval[1].m - t0
         tf = self.t_eval[-1].m
-        muB = f"{self.muB:.4g~P}" if isinstance(self.muB, Quantity) else None
+        muB = f"{self.muB:.4g~P}" if isinstance(
+            self.muB, pint.Quantity) else None
 
         return (
             f"theta0 = {self.theta0:.4g}, "
@@ -152,7 +153,8 @@ class InitialConditions:
         t0 = self.t_eval[0].m
         dt = self.t_eval[1].m - t0
         tf = self.t_eval[-1].m
-        muB = f"{self.muB:.4g~P}" if isinstance(self.muB, Quantity) else None
+        muB = f"{self.muB:.4g~P}" if isinstance(
+            self.muB, pint.Quantity) else None
 
         return (
             colored("\nInitial Conditions :\n", "green")

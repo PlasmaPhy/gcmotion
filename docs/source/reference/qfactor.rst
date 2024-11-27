@@ -1,6 +1,8 @@
-######################
-q-factor configuration
-######################
+.. _qfactor_configuration:
+
+################
+gcmotion.qfactor
+################
 
 .. currentmodule:: gcmotion.qfactor
 
