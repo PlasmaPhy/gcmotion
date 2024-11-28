@@ -28,7 +28,7 @@ def tokamak():
     )
 
 
-class TestInitialization:
+class TestTokamakInitialization:
 
     @pytest.fixture(autouse=True)
     def _set_tokamak(self, tokamak):

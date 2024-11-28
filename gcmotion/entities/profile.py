@@ -14,11 +14,16 @@ This class also constructs the QuantityConstructor to be used internally, so
 every subclass should grab it from here instead of redifining it.
 """
 
+import pint
+
 from gcmotion.utils.logger_setup import logger
 from gcmotion.utils.quantity_constructor import QuantityConstructor
 
 from gcmotion.entities.tokamak import Tokamak
 from gcmotion.entities.physical_parameters import PhysicalParameters
+from gcmotion.configuration.physical_constants import PhysicalConstants
+
+type Quantity = pint.Quantity
 
 
 class Profile(Tokamak, PhysicalParameters):
@@ -83,7 +88,6 @@ class Profile(Tokamak, PhysicalParameters):
     """
 
     def __init__(self, tokamak: Tokamak, params: PhysicalParameters):
-
         logger.info("==> Initializing Profile...")
 
         # Grab attributes from parents
@@ -116,7 +120,104 @@ class Profile(Tokamak, PhysicalParameters):
             species=self.species,
         )
 
+        # Calculate mass and charge
+        _miNU = getattr(PhysicalConstants, self.species+"_M", None)
+        _qiNU = getattr(PhysicalConstants, self.species+"_Z", None)
+        self.miNU = self.Q(_miNU, "Proton_mass")
+        self.qiNU = self.Q(_qiNU, "Proton_charge")
+        self.mi = self.miNU.to("kilogram")
+        self.qi = self.qiNU.to("Coulomb")
+
         logger.info("\tProfile setup complete.")
+
+    def findPtheta(self, psi: Quantity):
+        r"""Calculates Ptheta from psi.
+
+        Parameters
+        ----------
+        psi : Quantity
+            The psi Quantity.
+
+        Returns
+        -------
+        Quantity
+            The calculated Ptheta Quantity.
+        """
+        # Store input units
+        input_units = psi.units
+
+        # All Quantities and operations are in NU, and the conversion to input
+        # units takes place at the end.
+        psiNU = psi.to("NUMagnetic_flux")
+        _psiNU = psiNU.magnitude
+
+        # Calculate and Quantify currents
+        _, _iNU, _gNU = self.bfield.bigNU(_psiNU, 0)
+        iNU = self.Q(_iNU, "NUPlasma_current")
+        gNU = self.Q(_gNU, "NUPlasma_current")
+
+        # Calculate and Quantify psip
+        _psipNU = self.qfactor.psipNU(_psiNU)
+        psipNU = self.Q(_psipNU, "NUmagnetic_flux")
+
+        rhoNU = (self.PzetaNU + psipNU)/gNU
+        PthetaNU = psiNU + rhoNU * iNU
+
+        # Convert to input units and return
+        return PthetaNU.to(input_units)
+
+    def findEnergy(self, psi: Quantity, theta: float, units: str,
+                   potential: bool = True):
+        r"""Calculates the Energy of a particle characterized by a (psi, theta)
+        pair.
+
+        Parameters
+        ----------
+        psi : Quantity
+            The particle's psi Quantity.
+        theta : float
+            The particle's :math:`\theta` angle.
+        units : str
+            The returned Energy units.
+        potential : bool
+            Whether or not to add the electric potential term in the energy.
+            Defaults to True.
+
+        Returns
+        -------
+        Quantity
+            The calculated Energy Quantity.
+        """
+        # All Quantities and operations are in NU, and the conversion to input
+        # units takes place at the end.
+        psiNU = psi.to("NUMagnetic_flux")
+        _psiNU = psiNU.magnitude
+
+        # Calculate and Quantify bfield and currents
+        _bNU, _iNU, _gNU = self.bfield.bigNU(_psiNU, theta)
+        bNU = self.Q(_bNU, "NUTesla")
+        iNU = self.Q(_iNU, "NUPlasma_current")
+        gNU = self.Q(_gNU, "NUPlasma_current")
+
+        # Calculate and Quantify psip
+        _psipNU = self.qfactor.psipNU(_psiNU)
+        psipNU = self.Q(_psipNU, "NUmagnetic_flux")
+
+        rhoNU = (self.PzetaNU + psipNU)/gNU
+
+        EnergyNU = (
+            (self.qiNU**2/(2*self.miNU))
+            * rhoNU**2 * bNU**2
+            + self.muNU*bNU  # Without potential
+        )
+
+        if potential:
+            _PhiNU = self.efield.PhiNU(_psiNU, theta)
+            PhiNU = self.Q(_PhiNU, "NUVolts")
+            EnergyNU += self.qiNU*PhiNU
+
+        # Convert to input units and return
+        return EnergyNU.to(units)
 
     def __repr__(self):
         return PhysicalParameters.__repr__(self) + Tokamak.__repr__(self)

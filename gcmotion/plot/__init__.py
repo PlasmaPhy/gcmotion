@@ -1,3 +1,3 @@
-from .profile_contour import profile_contour
+from gcmotion.plot.base.base_profile_contour import base_profile_contour
 
-__all__ = ["profile_contour"]
+__all__ = ["base_profile_contour"]

@@ -1,22 +1,40 @@
 from dataclasses import dataclass
-from types import MappingProxyType  # Use as an immutable dict for dataclasses
+from numpy import pi
 
-figsize = (16, 9)  # Global window size
+figsize = 16, 9  # Global window size
 dpi = 90  # Global dpi
 
 
 @dataclass(repr=False, frozen=True)
 class BaseProfileContourConfig:
-    fig_kw: MappingProxyType = {
-        "figsize": figsize,
-        "dpi": dpi,
-        "layout": "constrained",
-    }
+    # Default parameter values
+    thetalim: tuple = (-pi, pi)
+    psilim: tuple = (0, 1.2)  # times psi_wall
+    levels: int = 25
+    E_units: str = "keV"
+    flux_units: str = "Tesla * meter^2"
+    potential: bool = True
+    wall: bool = True
+    # Figure keywords
+    figsize: tuple = figsize
+    dpi: int = dpi
+    layout: str = "constrained"
+    # Contour parameters
     grid_density: int = 200
-    levels: int = 30
     cmap: str = "plasma"
     locator: str = "log"
-    log_base: float = 1.04
+    log_base: float = 1.001
+    labelsize: float = 15
+    ticknum: int = 10
+    ticksize: float = 12
+
+
+@dataclass(repr=False, frozen=True)
+class ProfileContourConfig:
+    # Figure keywords
+    figsize: tuple = figsize
+    dpi: int = dpi
+    layout: str = "constrained"
 
 
 time_evolution = {
