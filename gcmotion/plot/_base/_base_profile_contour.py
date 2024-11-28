@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import ticker
 from matplotlib.patches import Rectangle
+from matplotlib.axes import Axes
 
 from gcmotion.utils.logger_setup import logger
 from gcmotion.configuration.plot_parameters import (
@@ -10,66 +11,32 @@ from gcmotion.configuration.plot_parameters import (
 from gcmotion.entities.profile import Profile
 
 
-def base_profile_contour(profile: Profile, **args):
-    r"""Plots a basic theta-psi/Ptheta-Hamiltonian contour.
+def _base_profile_contour(profile: Profile, ax: Axes, **args):
+    r"""Base plotting function. Only draws upon a given axis without showing
+    any figures.
 
     Parameters
     ----------
-    thetalim : list, optional
-        The :math:`\theta` span in radians. Defaults to [-π,π].
-    psilim : list, optional
-        The :math:`\psi` span in units of *psi_wall*. Defaults to [0, 1.2].
-    levels : int, optional
-        The number of contour lines. Defaults to 25.
-    flux_units : str, optional
-        The units of the psi/Ptheta axis. Can be "Magnetic_flux"(same as "Tesla
-        * meters^2"), "NUmagnetic_flux" (same as "NUTesla * NUmeters^2"),
-        "psi_wall", "NUpsi_wall", or any other pint unit with the same
-        dimensionality. Defaults to "Tesla * meters^2".
-    E_units : str, optional
-        The Energy units. Can be "eV", "keV", "Joule", "NUJoule" or any other
-        pint unit with the same dimensionality. Defaults to "keV".
-    potential : bool, optional
-        Whether or not to add the potential Φ term when calculating the Energy.
-        Defaults to True.
-    wall : bool, optional
-        Whether or not to shade the area above :math:`\psi_wall`. Defaults to
-        True.
-
-    Notes
-    -----
-
-    This function cal also take some extra, hidden parameters to add
-    functionality when used inside a plotting pipeline:
-
-        #.  canvas
-        #.  show
+    profile : Profile
+        The profile entity.
+    ax : Axes
+        The ax upon which to draw.
+    args : dict
+        The optional arguement dictionary.
     """
 
     logger.info("==> Plotting Base Profile Contour...")
 
     # Unpack parameters
     # Default values are also defined here
-    _thetalim = args.get("thetalim", config.thetalim)
-    _psilim = args.get("psilim", config.psilim)
-    levels = args.get("levels", config.levels)
-    flux_units = args.get("flux_units", config.flux_units)
-    E_units = args.get("units", config.E_units)
-    potential = args.get("potential", config.potential)
-    wall = args.get("wall", config.wall)
-    show = args.get("show", True)
-    canvas = args.get("canvas", None)
-    del args
-
-    # Create figure
-    # An ax is created unless an already existing one is passed in args.
-    figkw = {
-        "figsize": config.figsize,
-        "dpi": config.dpi,
-        "layout": config.layout,
-    }
-    fig = canvas[0] if canvas is not None else plt.figure(**figkw)
-    ax = canvas[1] if canvas is not None else fig.subplots()
+    _thetalim = args.get("thetalim")
+    _psilim = args.get("psilim")
+    levels = args.get("levels")
+    flux_units = args.get("flux_units")
+    E_units = args.get("E_units")
+    potential = args.get("potential")
+    wall = args.get("wall")
+    cursor = args.get("cursor")
 
     # Setup meshgrid
     # The Energy calculation and y axis limits are always set with respect to
@@ -84,7 +51,8 @@ def base_profile_contour(profile: Profile, **args):
 
     # Calculate Energy values
     Energy = profile.findEnergy(
-        psigrid, thetagrid.m, E_units, potential=potential)
+        psigrid, thetagrid.m, E_units, potential=potential
+    )
 
     # Define data to be plotted
     # Take only the magnitudes to supress warnings
@@ -108,28 +76,29 @@ def base_profile_contour(profile: Profile, **args):
     kw = {
         "cmap": config.cmap,
         "locator": locator,
-        "zorder":  0,
+        "zorder": 0,
     }
 
     # Contour plot
-    ax.contourf("theta", "flux", "Energy", data=data, **kw)
-    plt.rcParams['axes.autolimit_mode'] = 'round_numbers'
+    C = ax.contourf("theta", "flux", "Energy", data=data, **kw)
+    plt.rcParams["axes.autolimit_mode"] = "round_numbers"
     # Setup labels.
     # Also add a second axis for Ptheta
     ax.set_ylabel(rf"$\psi$ [{psigrid.units:.4g~P}]", size=config.labelsize)
     ax.set_xlabel(r"$\theta$ [radians]", size=config.labelsize)
     ax.tick_params(labelsize=config.ticksize)
     ax.set_xticks(
-        np.linspace(-2*np.pi, 2*np.pi, 9),
+        np.linspace(-2 * np.pi, 2 * np.pi, 9),
         ["-2π", "-3π/2", "-π", "-π/2", "0", "π/2", "π", "3π/2", "2π"],
-        size=config.ticksize
+        size=config.ticksize,
     )
     ax.set_xlim(thetalim.m)
     ax.yaxis.set_major_locator(ticker.MaxNLocator(config.ticknum))
 
     ax2 = ax.twinx()
-    ax2.set_ylabel(rf"$P_\theta$ [{psigrid.units:.4g~P}]",
-                   size=config.labelsize)
+    ax2.set_ylabel(
+        rf"$P_\theta$ [{psigrid.units:.4g~P}]", size=config.labelsize
+    )
     psiticks = profile.Q(ax.get_yticks(), flux_units)
     Pthetamin = profile.findPtheta(psiticks.min())
     Pthetamax = profile.findPtheta(psiticks.max())
@@ -148,5 +117,50 @@ def base_profile_contour(profile: Profile, **args):
         )
         ax.add_patch(rect)
 
-    if show:
-        plt.show()
+    # Re-format cursor
+    # if cursor:
+    #     Pthetagrid = profile.findPtheta(psigrid)
+    #
+    #     ax.format_coord = grid_cursor_format_coord(
+    #         thetagrid.m,
+    #         psigrid.m,
+    #         Energy.m,
+    #         profile,
+    #         flux_units,
+    #         E_units,
+    #     )
+
+    # Return the contour object
+    return C
+
+
+# def grid_cursor_format_coord(
+#     theta: np.ndarray,
+#     psi: np.ndarray,
+#     Energy: np.ndarray,
+#     profile: Profile,
+#     flux_units: str,
+#     z_label: str = "",
+# ):
+#     r"""Creates a data cursor on the contour plot."""
+#
+#     thetaFlat, psiFlat, EnergyFlat = (
+#         theta.flatten(),
+#         psi.flatten(),
+#         Energy.flatten(),
+#     )
+#
+#     def fmt(x, y):
+#         # get closest point with known data
+#         dist = np.linalg.norm(np.vstack([thetaFlat - x, psiFlat - y]), axis=0)
+#         idx = np.argmin(dist)
+#         # y2 = PthetaFlat[idx]
+#         y2 = profile.findPtheta(profile.Q(y, flux_units))
+#         z = EnergyFlat[idx]
+#         return (
+#             f"theta={x:.3g},"
+#             + f"psi={y:.4g},Ptheta={y2:.4g},"
+#             + f"E={z:.4g}[{z_label}]"
+#         )
+#
+#     return fmt

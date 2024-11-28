@@ -7,20 +7,8 @@ dpi = 90  # Global dpi
 
 @dataclass(repr=False, frozen=True)
 class BaseProfileContourConfig:
-    # Default parameter values
-    thetalim: tuple = (-pi, pi)
-    psilim: tuple = (0, 1.2)  # times psi_wall
-    levels: int = 25
-    E_units: str = "keV"
-    flux_units: str = "Tesla * meter^2"
-    potential: bool = True
-    wall: bool = True
-    # Figure keywords
-    figsize: tuple = figsize
-    dpi: int = dpi
-    layout: str = "constrained"
     # Contour parameters
-    grid_density: int = 200
+    grid_density: int = 100
     cmap: str = "plasma"
     locator: str = "log"
     log_base: float = 1.001
@@ -31,10 +19,22 @@ class BaseProfileContourConfig:
 
 @dataclass(repr=False, frozen=True)
 class ProfileContourConfig:
+    # Default parameter values
+    thetalim: tuple = (-pi, pi)
+    psilim: tuple = (0, 1.2)  # times psi_wall
+    levels: int = 25
+    E_units: str = "keV"
+    flux_units: str = "Tesla * meter^2"
+    potential: bool = True
+    wall: bool = True
+    cursor: bool = True  # Mild performance hit
     # Figure keywords
     figsize: tuple = figsize
     dpi: int = dpi
     layout: str = "constrained"
+    # Colorbar
+    labelsize: int = 12
+    numticks: int = 10
 
 
 time_evolution = {
