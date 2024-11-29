@@ -35,7 +35,9 @@ def bifurcation_plot(
     dist_tol: float = 1e-3,
     ic_theta_grid_density: int = 1000,
     ic_psi_grid_density: int = 1000,
+    random_fp_init_cond: bool = False,
     info: bool = False,
+    fp_ic_info: bool = False,
 ):
     r"""Draws the bifurcation diagrams for the :math:`theta`'s  fixed,
     the :math:`P_{theta}`'s fixed and the number of fixed points found for
@@ -83,7 +85,9 @@ def bifurcation_plot(
         dist_tol=dist_tol,
         ic_theta_grid_density=ic_theta_grid_density,
         ic_psi_grid_density=ic_psi_grid_density,
+        random_fp_init_cond=random_fp_init_cond,
         info=info,
+        fp_ic_info=fp_ic_info,
     )
 
     print(f"BIFURCATION RUN IN {(time() - start)/60:.1f} mins")

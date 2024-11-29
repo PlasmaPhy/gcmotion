@@ -86,6 +86,7 @@ This is how :py:func:`fixed_points` can be called inside the function :py:func:`
 
 import numpy as np
 import pint
+from itertools import product
 
 from collections import namedtuple
 from gcmotion.utils.distinctify import distinctify
@@ -105,7 +106,9 @@ def fixed_points(
     dist_tol: float = 1e-3,
     ic_theta_grid_density: int = 1000,
     ic_psi_grid_density: int = 1000,
+    random_init_cond: bool = False,
     info: bool = False,
+    ic_info: bool = False,
     # polish=True,
     # init="sobol",
     # workers=-1,
@@ -122,16 +125,24 @@ def fixed_points(
 
     bounds = [(theta_min, theta_max), (0.99 * psi_min, 1.01 * psi_max)]
 
-    initial_conditions = ic_scanner(
-        parameters=parameters,
-        profile=profile,
-        theta_grid_density=ic_theta_grid_density,
-        psi_grid_density=ic_psi_grid_density,
-        psi_lim=psi_lim,
-        theta_lim=theta_lim,
-        tol=1e-6,
-        info=info,
-    )
+    if random_init_cond:
+        theta_ic = np.linspace(theta_min, theta_max, ic_theta_grid_density)
+        psi_ic = np.linspace(psi_min, psi_max, ic_psi_grid_density)
+
+        initial_conditions = [
+            [theta_init, psi_init] for theta_init, psi_init in product(theta_ic, psi_ic)
+        ]
+
+    else:
+        initial_conditions = ic_scanner(
+            parameters=parameters,
+            profile=profile,
+            theta_grid_density=ic_theta_grid_density,
+            psi_grid_density=ic_psi_grid_density,
+            psi_lim=psi_lim,
+            theta_lim=theta_lim,
+            tol=1e-6,
+        )
 
     fixed_points = np.empty((len(initial_conditions), len(initial_conditions[0])))
     fixed_points[:] = np.nan
@@ -147,7 +158,6 @@ def fixed_points(
             bounds=bounds,
             parameters=parameters,
             profile=profile,
-            psi_min=psi_min,
         )
         fixed_points[idx] = [float(theta_fix), float(psi_fix)]
         idx += 1
@@ -157,11 +167,16 @@ def fixed_points(
     distinct_fixed_points = distinctify(fixed_points, tol=dist_tol)
     num_of_dfp = distinct_fixed_points.shape[0]
 
-    if info:
+    if ic_info:
+        initial_conditions_print = [[float(x), float(y)] for x, y in initial_conditions]
+        print(f"\nInitial Conditions:{initial_conditions_print}\n")
+        print(f"\nNumber of Initial Conditions: {len(initial_conditions_print)}\n")
 
+    if info and fixed_points.shape[0] <= 50:
         print(f"\nFixed Points: {fixed_points}\n")
         print(f"Number of Fixed Points: {fixed_points.shape[0]}")
 
+    if info:
         print(f"\nDistinct Fixed Points: {distinct_fixed_points}\n")
         print(f"Number of Distinct Fixed Points: {distinct_fixed_points.shape[0]}\n")
 

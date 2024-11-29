@@ -53,7 +53,9 @@ def energy_contour(
     dist_tol: float = 1e-3,
     ic_fp_theta_grid_density: int = 800,
     ic_fp_psi_grid_density: int = 800,
+    fp_random_init_cond: bool = False,
     fixed_points_info: bool = False,
+    fixed_points_ic_info: bool = False,
     contour_Phi: bool = True,
     units: str = "SI",
     levels: int = None,
@@ -237,8 +239,10 @@ def energy_contour(
             dist_tol=dist_tol,
             ic_theta_grid_density=ic_fp_theta_grid_density,
             ic_psi_grid_density=ic_fp_psi_grid_density,
+            random_init_cond=fp_random_init_cond,
             _internal_call=True,
             info=fixed_points_info,
+            ic_info=fixed_points_ic_info,
             canvas=canvas,
         )
         logger.debug("\tPlotting particle's fixed points in contour.")

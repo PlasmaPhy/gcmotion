@@ -75,7 +75,9 @@ def bifurcation(
     dist_tol: float = 1e-3,
     ic_theta_grid_density: int = 1000,
     ic_psi_grid_density: int = 1000,
+    random_fp_init_cond: bool = False,
     info: bool = False,
+    fp_ic_info: bool = False,
 ):
 
     num_of_XP = deque([])
@@ -130,7 +132,9 @@ def bifurcation(
             dist_tol=dist_tol,
             ic_theta_grid_density=ic_theta_grid_density,
             ic_psi_grid_density=ic_psi_grid_density,
-            info=False,
+            random_init_cond=random_fp_init_cond,
+            info=info,
+            ic_info=fp_ic_info,
         )
 
         # CAUTION: The xoc function takes in psis_fixed but returns P_thetas_fixed

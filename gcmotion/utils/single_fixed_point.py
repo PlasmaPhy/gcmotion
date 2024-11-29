@@ -6,15 +6,12 @@ from gcmotion.utils.fp_system import system
 
 
 # Function to locate a single fixed point
-def fixed_point(
-    initial_condition, bounds: list, parameters: namedtuple, profile: namedtuple, psi_min: float
-):
+def fixed_point(initial_condition, bounds: list, parameters: namedtuple, profile: namedtuple):
 
     # System of equations to be solved
     def fixed_point_system(vars):
 
         theta, psi = vars
-        psi = max(psi, psi_min)
 
         # We calculate the quantity theta_dot**2+psi_dot**2
         theta_dot_sq_psi_dot_sq_sum = system(
@@ -31,10 +28,10 @@ def fixed_point(
         tol=1e-7,
         atol=1e-15,
         maxiter=15_000,
-        popsize=15,
-        mutation=(0.5, 1),
-        recombination=0.7,
-        strategy="best1bin",
+        popsize=15,  # 20,
+        mutation=(0.5, 1),  # (0.7, 1.5),
+        recombination=0.7,  # 0.8,
+        strategy="best1bin",  # "best2bin",
     )
     theta_solution, psi_solution = result.x
 

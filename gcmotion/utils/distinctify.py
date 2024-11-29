@@ -5,8 +5,8 @@ determine which points [x,y] can be considered distinct.
 
     Parameters
     ----------
-    x : list
-        List that contains sublists that are to be examined for uniquness.
+    points : np.ndarray | list | deque
+        Iterable (np.ndarray, list, deque) that contains sublists that are to be examined for uniquness.
     tol : list
         If two sublists have both elements that are less than tol (tolerance) apart, they
         are considered idenical.
@@ -19,9 +19,13 @@ determine which points [x,y] can be considered distinct.
 """
 
 import numpy as np
+from collections import deque
 
 
-def distinctify(points: np.ndarray, tol: float):
+def distinctify(points: np.ndarray | list | deque, tol: float):
+
+    if isinstance(points, deque):
+        points = np.array(points)
 
     def are_considered_equal(sublist1, sublist2, tol=tol):
         return abs(sublist1[0] - sublist2[0]) <= tol and abs(sublist1[1] - sublist2[1]) <= tol

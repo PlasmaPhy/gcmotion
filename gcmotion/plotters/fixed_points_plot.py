@@ -34,6 +34,7 @@ from gcmotion.utils.XO_points_classification import XO_points_classification as 
 import matplotlib.pyplot as plt
 import numpy as np
 
+from time import time
 from collections import namedtuple
 from gcmotion.utils.logger_setup import logger
 
@@ -45,7 +46,9 @@ def fixed_points_plot(
     dist_tol: float = 1e-3,
     ic_theta_grid_density: int = 1000,
     ic_psi_grid_density: int = 1000,
+    random_init_cond: bool = False,
     info: bool = False,
+    ic_info: bool = False,
     **params,
 ):
     r"""Draws fixed points plot.
@@ -114,6 +117,7 @@ def fixed_points_plot(
         mu=cwp.muNU.magnitude,
     )
 
+    start = time()
     # Calculate fixed points
     _, fixed_points = fp(
         parameters=parameters,
@@ -124,8 +128,11 @@ def fixed_points_plot(
         dist_tol=dist_tol,
         ic_theta_grid_density=ic_theta_grid_density,
         ic_psi_grid_density=ic_psi_grid_density,
+        random_init_cond=random_init_cond,
         info=info,
+        ic_info=ic_info,
     )
+    print(f"\n FIXED POINTS RUN IN {(time() - start):.1f}s\n")
 
     # CAUTION: The xoc function takes in psis_fixed but returns P_thetas_fixed
     X_points, O_points = xoc(
