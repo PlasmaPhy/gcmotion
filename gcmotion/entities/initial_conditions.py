@@ -138,23 +138,30 @@ class InitialConditions:
         t0 = self.t_eval[0].m
         dt = self.t_eval[1].m - t0
         tf = self.t_eval[-1].m
-        muB = f"{self.muB:.4g~P}" if isinstance(
-            self.muB, pint.Quantity) else None
+        muB = (
+            f"{self.muB:.4g~P}"
+            if isinstance(self.muB, pint.Quantity)
+            else None
+        )
 
         return (
-            f"theta0 = {self.theta0:.4g}, "
+            "InitialConditions: "
+            + f"theta0 = {self.theta0:.4g}, "
             + f"zeta0 = {self.zeta0:.4g}, "
             + f"psi0 = {self.psi0:.4g~P}, "
             + f"t_eval: [t0, tf, dt]=[{t0:.4g}, {tf:.4g}, {dt:.4g}]s, "
-            + f"muB = {muB}, "
+            + f"muB = {muB}"
         )
 
     def __str__(self):
         t0 = self.t_eval[0].m
         dt = self.t_eval[1].m - t0
         tf = self.t_eval[-1].m
-        muB = f"{self.muB:.4g~P}" if isinstance(
-            self.muB, pint.Quantity) else None
+        muB = (
+            f"{self.muB:.4g~P}"
+            if isinstance(self.muB, pint.Quantity)
+            else None
+        )
 
         return (
             colored("\nInitial Conditions :\n", "green")
@@ -164,7 +171,7 @@ class InitialConditions:
             + f"({self.psi0NU:.4g})\n"
             + f"{"t_eval":>23} : "
             + f"{f'[t0, tf, dt] = [{t0:.4g}, {tf:.4g}, {dt:.4g}]s':<16}\n"
-            + f"{"muB":>23} : {muB}"
+            + f"{"muB":>23} : {muB}\n"
         )
 
 
@@ -193,6 +200,9 @@ class _InitialConditionsFull(InitialConditions, Profile):
             tokamak=profile.tokamak,
             params=profile.params,
         )
+
+        self.init = init
+        self.profile = profile
 
         # Grab particle's mass and charge
         M = getattr(PhysicalConstants, profile.species + "_M")
@@ -245,7 +255,7 @@ class _InitialConditionsFull(InitialConditions, Profile):
             "NUMagnetic_flux",
         ).to("Magnetic_flux")
 
-        self.rho0 = ((self.Pzeta + self.psip0) / g_init).to(
+        self.rho0 = ((self.Pzeta0 + self.psip0) / g_init).to(
             "meters"
         )  # Note: [rho] = Magnetic_flux / Plasma_current = meters)
 
@@ -267,6 +277,10 @@ class _InitialConditionsFull(InitialConditions, Profile):
         self.rho0NU = self.rho0.to("NUMeters")
         self.Ptheta0NU = self.Ptheta0.to("NUMagnetic_flux")
         self.ENU = self.E.to("NUJoule")
+
+        # Update profile
+        self.profile.mu = self.mu
+        self.profile.muNU = self.muNU
 
         logger.debug("\t _InitialConditionsFull initialization completed")
 

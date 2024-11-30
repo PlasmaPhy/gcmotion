@@ -1,6 +1,7 @@
 import numpy as np
 import pint
 from collections import namedtuple
+from termcolor import colored
 from time import time
 
 from gcmotion.utils.logger_setup import logger
@@ -21,11 +22,13 @@ type Quantity = pint.UnitRegistry.Quantity
 
 
 class Particle(Profile, InitialConditions):
-    r"""Creates a specific Particle with specific Profile and
+    r"""Creates a specific Particle in a specific Profile and with specific
     InitialConditions.
 
     A particle entity represents a fully-fledged particle inside a specific
     tokamak device, and defined initial conditions.
+
+    :members: run
 
     Parameters
     ----------
@@ -38,6 +41,61 @@ class Particle(Profile, InitialConditions):
         Base object containing the :math:`\theta_0, \zeta_0, \psi_0` and
         :math:`t_{eval}` Quantities.
 
+    Example
+    -------
+    Here is how a particle is created:
+
+
+    >>> import gcmotion as gcm
+    >>> import gcmotion.plot as gplt
+    >>> import numpy as np
+    >>>
+    >>> # Quantity Constructor
+    >>> Rnum = 1.65
+    >>> anum = 0.5
+    >>> B0num = 1
+    >>> species = "p"
+    >>> Q = gcm.QuantityConstructor(R=Rnum, a=anum, B0=B0num, species=species)
+    >>>
+    >>> # Intermediate Quantities
+    >>> R = Q(Rnum, "meters")
+    >>> a = Q(anum, "meters")
+    >>> B0 = Q(B0num, "Tesla")
+    >>> i = Q(10, "NUPlasma_current")
+    >>> g = Q(1, "NUPlasma_current")
+    >>> Ea = Q(73500, "Volts/meter")
+    >>>
+    >>> # Construct a Tokamak
+    >>> tokamak = gcm.Tokamak(
+    ...     R=R,
+    ...     a=a,
+    ...     qfactor=gcm.qfactor.Hypergeometric(a, B0, q0=1.1, q_wall=3.8, n=2),
+    ...     bfield=gcm.bfield.LAR(B0=B0, i=i, g=g),
+    ...     efield=gcm.efield.Radial(a, Ea, B0, peak=0.98, rw=1 / 50),
+    ... )
+    >>>
+    >>> # Setup Physical Parameters
+    >>> params = gcm.PhysicalParameters(
+    ...     species=species,
+    ...     mu=Q(1e-5, "NUMagnetic_moment"),
+    ...     Pzeta0=Q(-0.0272, "NUMagnetic_flux"),
+    ... )
+    >>>
+    >>> # Setup Initial Conditions
+    ... init = gcm.InitialConditions(
+    ...     muB=Q(0.5, "keV"),
+    ...     theta0=0,
+    ...     zeta0=0,
+    ...     psi0=Q(1.0, "psi_wall"),
+    ...     t_eval=Q(np.linspace(0, 3 * 1e-3, 10000), "seconds"),
+    ... )
+    >>>
+    >>> # Create the profile
+    >>> profile = gcm.Profile(tokamak, params)
+    >>>
+    >>> # Create the particle and calculate its obrit
+    >>> particle = gcm.Particle(profile, init)
+    >>> particle.run()
     """
 
     def __init__(
@@ -62,6 +120,8 @@ class Particle(Profile, InitialConditions):
         )
 
         # Store those for easier reference
+        self.tokamak = profile.tokamak
+        self.params = profile.params
         self.profile = profile
         self.init = init
 
@@ -74,8 +134,6 @@ class Particle(Profile, InitialConditions):
         everything: bool = False,
     ):
         """Prints the pint Quantities of the object.
-
-        :meta public:
 
         Parameters
         ----------
@@ -107,15 +165,13 @@ class Particle(Profile, InitialConditions):
     def run(
         self,
         orbit=True,
-        info: bool = True,
+        info: bool = False,
         events: list = [],
     ):
         r"""
         Calls :py:meth:`~Particle._orbit` to calculate the particle's orbit,
         which returns the solution in [NU]. Then it stores the results in both
         [SI] and [NU].
-
-        :meta public:
 
         Parameters
         ----------
@@ -124,7 +180,7 @@ class Particle(Profile, InitialConditions):
             studying particle properties that only depend on initial
             conditions. Defaults to True.
         info : bool, optional
-            Whether or not to print an output message. Defaults to True.
+            Whether or not to print an output message. Defaults to False.
         events : list, optional
             The list of :py:mod:`~gcmotion.scripts.events` to be passed to the
             solver. Defaults to [].
@@ -180,8 +236,7 @@ class Particle(Profile, InitialConditions):
             percentage = 100 * (self.t_eval[-1] / tfinal).magnitude
 
             self.solver_output = (
-                "\nSolver output:\n"
-                + f"{'Message':>23} : "
+                colored("\nSolver output: ", "red")
                 + f"{message}\n"
                 + f"{'Percentage':>23} : "
                 + f"{percentage:.1f}%\n"
@@ -193,7 +248,8 @@ class Particle(Profile, InitialConditions):
 
         else:
             self.solver_output = (
-                "\nSolver output: Orbit Calculation deliberately skipped.\n"
+                colored("\nSolver output", "red")
+                + ": Orbit Calculation deliberately skipped.\n"
             )
             logger.info("\tOrbit calculation deliberately skipped.")
 
@@ -301,11 +357,11 @@ class Particle(Profile, InitialConditions):
 
         parameters = Parameters(
             theta0=self.theta0,
-            psi0=self.psi0NU.magnitude,
             zeta0=self.zeta0,
+            psi0=self.psi0NU.magnitude,
             rho0=self.rho0NU.magnitude,
-            mu=self.muNU.magnitude,
             t=self.t_evalNU.magnitude,
+            mu=self.muNU.magnitude,
         )
 
         profile = self.profile
@@ -313,10 +369,15 @@ class Particle(Profile, InitialConditions):
         return orbit(parameters, profile, events=events)
 
     def __str__(self):
-        return "foo"
+        string = self.profile.__str__()
+        string += self.init.__str__()
+        string += self.solver_output
+        return string
 
     def __repr__(self):
-        return "foo"
+        string = self.profile.__repr__()
+        string += self.init.__repr__()
+        return string
 
     def __getitem__(self, item):
         item = getattr(self, item)

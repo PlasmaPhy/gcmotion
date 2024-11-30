@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import ticker
 
 from gcmotion.plot._base._base_profile_contour import _base_profile_contour
+from gcmotion.plot._base._base_contour_colorbar import _base_contour_colorabar
 from gcmotion.configuration.plot_parameters import (
     ProfileContourConfig as config,
 )
@@ -38,6 +38,7 @@ def profile_contour(profile, **args):
 
     # Unpack parameters
     # Default values are also defined here
+    # Contour ax options:
     args["thetalim"] = args.get("thetalim", config.thetalim)
     args["psilim"] = args.get("psilim", config.psilim)
     args["levels"] = args.get("levels", config.levels)
@@ -46,6 +47,12 @@ def profile_contour(profile, **args):
     args["potential"] = args.get("potential", config.potential)
     args["wall"] = args.get("wall", config.wall)
     args["cursor"] = args.get("cursor", config.cursor)
+    # Colobar options;
+    args["numticks"] = args.get("numticks", config.numticks)
+    args["cbarlabel"] = args.get("cbarlabel", f"Energy [{args["E_units"]}]")
+    args["cbarlabelsize"] = args.get("cbarlabelsize", config.cbarlabelsize)
+    # Whether or not to open interactive plot
+    show = args.get("show", True)
 
     # Create figure
     fig_kw = {
@@ -64,17 +71,8 @@ def profile_contour(profile, **args):
     # the `ax=contour`
     cbar = fig.colorbar(Contour, cax=None, ax=contourax)
 
-    # Colorbar Ticks
-    ticks = np.linspace(
-        Contour.levels.min(), Contour.levels[:-1].max(), config.numticks
-    )
-    cbar.set_ticks(
-        ticks=ticks,
-        labels=[f"{x:.4g}" for x in ticks],
-    )
-    cbar.ax.set_title(
-        f"Energy [{args["E_units"]}]",
-        size=config.labelsize,
-    )
+    # Now that the colorbar is created, pass its "ax" to be customized
+    _base_contour_colorabar(ax=cbar.ax, contour=Contour, **args)
 
-    plt.show()
+    if show:
+        plt.show()

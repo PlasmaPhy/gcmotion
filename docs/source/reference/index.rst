@@ -17,5 +17,6 @@ API Definition
    :hidden:
    
    gcmotion <main_namespace>
+   gcmotion.plot <plot/index>
 
 GCMotion Structure

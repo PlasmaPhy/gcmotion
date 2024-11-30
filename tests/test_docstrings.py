@@ -4,6 +4,7 @@ from gcmotion.entities import (
     physical_parameters,
     initial_conditions,
     profile,
+    particle,
 )
 
 V = False  # Verbosity
@@ -26,4 +27,9 @@ def test_initial_conditions_docstring():
 
 def test_profile_docstring():
     doctest_results = doctest.testmod(m=profile, verbose=V)
+    assert doctest_results.failed == 0
+
+
+def test_particle_docstring():
+    doctest_results = doctest.testmod(m=particle, verbose=V)
     assert doctest_results.failed == 0

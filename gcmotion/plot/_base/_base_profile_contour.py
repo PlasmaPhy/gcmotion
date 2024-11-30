@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib import ticker
 from matplotlib.patches import Rectangle
 from matplotlib.axes import Axes
+from scipy.interpolate import RectBivariateSpline
 
 from gcmotion.utils.logger_setup import logger
 from gcmotion.configuration.plot_parameters import (
@@ -36,7 +37,7 @@ def _base_profile_contour(profile: Profile, ax: Axes, **args):
     E_units = args.get("E_units")
     potential = args.get("potential")
     wall = args.get("wall")
-    cursor = args.get("cursor")
+    # cursor = args.get("cursor")
 
     # Setup meshgrid
     # The Energy calculation and y axis limits are always set with respect to
@@ -95,6 +96,7 @@ def _base_profile_contour(profile: Profile, ax: Axes, **args):
     ax.set_xlim(thetalim.m)
     ax.yaxis.set_major_locator(ticker.MaxNLocator(config.ticknum))
 
+    # Add secondary axes with Ptheta
     ax2 = ax.twinx()
     ax2.set_ylabel(
         rf"$P_\theta$ [{psigrid.units:.4g~P}]", size=config.labelsize
@@ -117,50 +119,31 @@ def _base_profile_contour(profile: Profile, ax: Axes, **args):
         )
         ax.add_patch(rect)
 
-    # Re-format cursor
-    # if cursor:
-    #     Pthetagrid = profile.findPtheta(psigrid)
-    #
-    #     ax.format_coord = grid_cursor_format_coord(
-    #         thetagrid.m,
-    #         psigrid.m,
-    #         Energy.m,
-    #         profile,
-    #         flux_units,
-    #         E_units,
-    #     )
+    # Format cursor
+    # The format must be applied to the second ax for some reason. This means
+    # we have to transform data from one ax to the other. This little manouver
+    # is a bit costly but I haven't found a better way.
+    cursorx = data["theta"][:, 0]
+    cursory = data["flux"][0]
+    cursorz = data["Energy"]
+    values = RectBivariateSpline(cursorx, cursory, cursorz)
+    flux_label = f"{psigrid.units:~P}"
+
+    def cursor_format(x, y):
+        # I have no idea why this works but it does :')
+        Ptheta = y
+        x, y = ax2.transData.transform((x, y))
+        x, y = ax.transData.inverted().transform((x, y))
+        z = np.take(values(x, y), 0)
+        x /= np.pi
+        return (
+            f"θ={x:.4g}π,  "
+            + f"ψ={y:.4g} {flux_label},  "
+            + f"Ρθ = {Ptheta:.4g} {flux_label},  "
+            + f"Energy = {z:.4g} {E_units}"
+        )
+
+    ax2.format_coord = cursor_format
 
     # Return the contour object
     return C
-
-
-# def grid_cursor_format_coord(
-#     theta: np.ndarray,
-#     psi: np.ndarray,
-#     Energy: np.ndarray,
-#     profile: Profile,
-#     flux_units: str,
-#     z_label: str = "",
-# ):
-#     r"""Creates a data cursor on the contour plot."""
-#
-#     thetaFlat, psiFlat, EnergyFlat = (
-#         theta.flatten(),
-#         psi.flatten(),
-#         Energy.flatten(),
-#     )
-#
-#     def fmt(x, y):
-#         # get closest point with known data
-#         dist = np.linalg.norm(np.vstack([thetaFlat - x, psiFlat - y]), axis=0)
-#         idx = np.argmin(dist)
-#         # y2 = PthetaFlat[idx]
-#         y2 = profile.findPtheta(profile.Q(y, flux_units))
-#         z = EnergyFlat[idx]
-#         return (
-#             f"theta={x:.3g},"
-#             + f"psi={y:.4g},Ptheta={y2:.4g},"
-#             + f"E={z:.4g}[{z_label}]"
-#         )
-#
-#     return fmt

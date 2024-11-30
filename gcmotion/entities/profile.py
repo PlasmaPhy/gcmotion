@@ -73,7 +73,7 @@ class Profile(Tokamak, PhysicalParameters):
     >>> params = gcm.PhysicalParameters(
     ...     species=species,
     ...     mu=Q(1e-5, "NUMagnetic_moment"),
-    ...     Pzeta=Q(-0.0272, "NUMagnetic_flux"),
+    ...     Pzeta0=Q(-0.0272, "NUMagnetic_flux"),
     ... )
     >>>
     >>> # Create a Profile
@@ -104,7 +104,7 @@ class Profile(Tokamak, PhysicalParameters):
             self,
             species=params.species,
             mu=params.mu,
-            Pzeta=params.Pzeta,
+            Pzeta0=params.Pzeta0,
         )
 
         # Store those for easier reference
@@ -121,8 +121,8 @@ class Profile(Tokamak, PhysicalParameters):
         )
 
         # Calculate mass and charge
-        _miNU = getattr(PhysicalConstants, self.species+"_M", None)
-        _qiNU = getattr(PhysicalConstants, self.species+"_Z", None)
+        _miNU = getattr(PhysicalConstants, self.species + "_M", None)
+        _qiNU = getattr(PhysicalConstants, self.species + "_Z", None)
         self.miNU = self.Q(_miNU, "Proton_mass")
         self.qiNU = self.Q(_qiNU, "Proton_charge")
         self.mi = self.miNU.to("kilogram")
@@ -160,14 +160,15 @@ class Profile(Tokamak, PhysicalParameters):
         _psipNU = self.qfactor.psipNU(_psiNU)
         psipNU = self.Q(_psipNU, "NUmagnetic_flux")
 
-        rhoNU = (self.PzetaNU + psipNU)/gNU
+        rhoNU = (self.Pzeta0NU + psipNU) / gNU
         PthetaNU = psiNU + rhoNU * iNU
 
         # Convert to input units and return
         return PthetaNU.to(input_units)
 
-    def findEnergy(self, psi: Quantity, theta: float, units: str,
-                   potential: bool = True):
+    def findEnergy(
+        self, psi: Quantity, theta: float, units: str, potential: bool = True
+    ):
         r"""Calculates the Energy of a particle characterized by a (psi, theta)
         pair.
 
@@ -196,31 +197,28 @@ class Profile(Tokamak, PhysicalParameters):
         # Calculate and Quantify bfield and currents
         _bNU, _iNU, _gNU = self.bfield.bigNU(_psiNU, theta)
         bNU = self.Q(_bNU, "NUTesla")
-        iNU = self.Q(_iNU, "NUPlasma_current")
         gNU = self.Q(_gNU, "NUPlasma_current")
 
         # Calculate and Quantify psip
         _psipNU = self.qfactor.psipNU(_psiNU)
         psipNU = self.Q(_psipNU, "NUmagnetic_flux")
 
-        rhoNU = (self.PzetaNU + psipNU)/gNU
+        rhoNU = (self.Pzeta0NU + psipNU) / gNU
 
         EnergyNU = (
-            (self.qiNU**2/(2*self.miNU))
-            * rhoNU**2 * bNU**2
-            + self.muNU*bNU  # Without potential
-        )
+            self.qiNU**2 / (2 * self.miNU)
+        ) * rhoNU**2 * bNU**2 + self.muNU * bNU  # Without potential
 
         if potential:
             _PhiNU = self.efield.PhiNU(_psiNU, theta)
             PhiNU = self.Q(_PhiNU, "NUVolts")
-            EnergyNU += self.qiNU*PhiNU
+            EnergyNU += self.qiNU * PhiNU
 
         # Convert to input units and return
         return EnergyNU.to(units)
 
     def __repr__(self):
-        return PhysicalParameters.__repr__(self) + Tokamak.__repr__(self)
+        return Tokamak.__repr__(self) + PhysicalParameters.__repr__(self)
 
     def __str__(self):
-        return PhysicalParameters.__str__(self) + Tokamak.__str__(self)
+        return Tokamak.__str__(self) + PhysicalParameters.__str__(self)

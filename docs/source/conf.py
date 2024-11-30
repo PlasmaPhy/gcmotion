@@ -22,8 +22,8 @@ release = "0.0.1"
 
 extensions = []
 
-templates_path = ["_templates"]
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+templates_path = ["._templates"]
+exclude_patterns = ["build", "Thumbs.db", ".DS_Store"]
 
 extensions = [
     "sphinx.ext.autodoc",
@@ -44,11 +44,12 @@ autodoc_type_aliases = {
 
 autodoc_mock_imports = ["math", "ABC", "abc"]
 autosummary_mock_imports = ["math", "ABC", "abc"]
+
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = "pydata_sphinx_theme"
-html_static_path = ["_static"]
+# html_static_path = ["_static"]
 html_theme_options = {
     # "secondary_sidebar_items": ["page-toc"],
     "collapse_navigation": False,

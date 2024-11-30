@@ -23,11 +23,19 @@ type Quantity = pint.Quantity
 
 
 class PhysicalParameters:
-    r"""Creates a set specifying the particles' species, mu and Pzeta
+    r"""Creates a set specifying the particles' species, mu and Pzeta0
     constants.
 
-    Contains the constants of motion :math:`\mu` and :math:`P_\zeta`, as well
+    Contains the constants of motion :math:`\mu` and :math:`P_\zeta0`, as well
     as the particle species.
+
+    .. important::
+
+        In the case of a non-perturbed system, :math:`P_\zeta0 = P_\zeta` is
+        indeed a constant of motion. This isn't true in the presence of
+        perturbation. In that case, Pzeta varies with time, and
+        :math:`\psi(P_\zeta)` is no longer 1-1.
+
 
     Parameters
     ----------
@@ -35,7 +43,7 @@ class PhysicalParameters:
         The particle's species. This field is case-insensitive.
     mu : Quantity
         The magnetic moment COM in units of [current][length]^2.
-    Pzeta : Quantity
+    Pzeta0 : Quantity
         The :math:`P_\zeta` canonical momentum COM in units of magnetic
         flux.
 
@@ -46,7 +54,7 @@ class PhysicalParameters:
 
         #. mu, muNU : Quantities
             The magnetic moment in SI/NU.
-        #. Pzeta, PzetaNU : Quantites
+        #. Pzeta0, Pzeta0NU : Quantites
             The :math:`P_\zeta` canonical momentum COM in SI/NU.
         #. species, species_name : str
             The species abbreviated and full name.
@@ -67,17 +75,17 @@ class PhysicalParameters:
     >>> params = gcm.PhysicalParameters(
     ...     species=species,
     ...     mu=Q(1e-5, "NUMagnetic_moment"),
-    ...     Pzeta=Q(-0.025, "NUMagnetic_flux"),
+    ...     Pzeta0=Q(-0.025, "NUMagnetic_flux"),
     ... )
 
     """
 
     def __init__(
-        self, species: SupportedSpecies, mu: Quantity, Pzeta: Quantity
+        self, species: SupportedSpecies, mu: Quantity, Pzeta0: Quantity
     ):
 
         logger.info("==> Initializing PhysicalParameters...")
-        check(species, mu, Pzeta)
+        check(species, mu, Pzeta0)
 
         # Construct Quantities
         self.species = species.lower()
@@ -85,17 +93,18 @@ class PhysicalParameters:
             PhysicalConstants, self.species + "_name", None
         )
         self.mu = mu.to("Magnetic_moment")
-        self.Pzeta = Pzeta.to("Magnetic_flux")
+        self.Pzeta0 = Pzeta0.to("Magnetic_flux")
 
         # Corresponding NU Quantities
         self.muNU = self.mu.to("NUMagnetic_moment")
-        self.PzetaNU = self.Pzeta.to("NUmagnetic_flux")
+        self.Pzeta0NU = self.Pzeta0.to("NUmagnetic_flux")
 
     def __repr__(self):
         return (
-            f"species = {self.species}, "
+            "PhysicalParameters: "
+            + f"species = {colored(self.species, "light_blue")}, "
             + f"mu = {self.mu:.4g~}, "
-            + f"Pzeta= {self.Pzeta:.4g~}"
+            + f"Pzeta0= {self.Pzeta0:.4g~}\n"
         )
 
     def __str__(self):
@@ -105,12 +114,12 @@ class PhysicalParameters:
             + f"{colored(self.species_name, "light_blue"):<16}\n"
             + f"{"mu":>23} : {f'{self.mu:.4g~}':<16}"
             + f"({self.muNU:.4g~})\n"
-            + f"{"Pzeta":>23} : {f'{self.Pzeta:.4g~}':<16}"
-            + f"({self.PzetaNU:.4g~})\n"
+            + f"{"Pzeta0":>23} : {f'{self.Pzeta0:.4g~}':<16}"
+            + f"({self.Pzeta0NU:.4g~})\n"
         )
 
 
-def check(species, mu, Pzeta):
+def check(species, mu, Pzeta0):
     r"""Checks the validity of the arguements"""
 
     assert species.lower() in [
@@ -122,18 +131,18 @@ def check(species, mu, Pzeta):
         "He4",
     ], "species can be on of 'p', 'e', 'D', 'T', 'He3', 'He4'"
     assert isinstance(mu, pint.Quantity), "'mu' must be a Quantity!"
-    assert isinstance(Pzeta, pint.Quantity), "'Pzeta' must be a Quantity"
+    assert isinstance(Pzeta0, pint.Quantity), "'Pzeta0' must be a Quantity"
     assert mu.dimensionality == {
         "[current]": 1,
         "[length]": 2,
     }, "'mu' must have a dimensionality of [current][length]^2!"
-    assert Pzeta.dimensionality == {
+    assert Pzeta0.dimensionality == {
         "[current]": -1,
         "[length]": 2,
         "[mass]": 1,
         "[time]": -2,
     }, (
-        "'Pzeta' must have dimensionality of "
+        "'Pzeta0' must have dimensionality of "
         + "{[current]^-1[length]^2[mass][time]^-2 "
         + "(Magnetic_flux)"
     )

@@ -30,7 +30,7 @@ tokamak = gcm.Tokamak(
 params = gcm.PhysicalParameters(
     species=species,
     mu=Q(1e-5, "NUMagnetic_moment"),
-    Pzeta=Q(-0.027, "NUmagnetic_flux"),
+    Pzeta0=Q(-0.027, "NUmagnetic_flux"),
 )
 
 profile = gcm.Profile(tokamak, params)

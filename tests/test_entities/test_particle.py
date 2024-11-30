@@ -32,7 +32,7 @@ tokamak = gcm.Tokamak(
 params = gcm.PhysicalParameters(
     species=species,
     mu=Q(1e-5, "NUMagnetic_moment"),
-    Pzeta=Q(-0.0272, "NUMagnetic_flux"),
+    Pzeta0=Q(-0.0272, "NUMagnetic_flux"),
 )
 
 init = gcm.InitialConditions(
@@ -65,7 +65,7 @@ def test_attrs_units():
     assert isinstance(particle.theta0, (int, float))
     assert isinstance(particle.zeta0, (int, float))
     assert particle.psi0.units == ureg.Magnetic_flux
-    assert particle.Pzeta.units == ureg.Magnetic_flux
+    assert particle.Pzeta0.units == ureg.Magnetic_flux
     assert particle.t_eval.units == ureg.seconds
     assert particle.mu.units == ureg.keV / ureg.Tesla
     assert particle.muB.units == ureg.keV
@@ -86,7 +86,7 @@ def test_attrs_units():
     assert particle.psip_wallNU.units == ureg.NUMagnetic_flux
 
     assert particle.psi0NU.units == ureg.NUMagnetic_flux
-    assert particle.PzetaNU.units == ureg.NUMagnetic_flux
+    assert particle.Pzeta0NU.units == ureg.NUMagnetic_flux
     assert particle.t_evalNU.units == ureg.NUseconds
     assert particle.muNU.units == ureg.NUMagnetic_moment
     assert particle.muBNU.units == ureg.NUJoule
@@ -102,13 +102,13 @@ def test_attrs_units():
     assert particle.psip.units == ureg.Magnetic_flux
     assert particle.rho.units == ureg.meters
     assert particle.Ptheta.units == ureg.Magnetic_flux
-    assert particle.Pzeta.units == ureg.Magnetic_flux
+    assert particle.Pzeta0.units == ureg.Magnetic_flux
 
     assert particle.psiNU.units == ureg.NUMagnetic_flux
     assert particle.psipNU.units == ureg.NUMagnetic_flux
     assert particle.rhoNU.units == ureg.NUmeters
     assert particle.PthetaNU.units == ureg.NUMagnetic_flux
-    assert particle.PzetaNU.units == ureg.NUMagnetic_flux
+    assert particle.Pzeta0NU.units == ureg.NUMagnetic_flux
 
 
 def test_quantitiesfunc():

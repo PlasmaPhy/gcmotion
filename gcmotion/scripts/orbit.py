@@ -145,10 +145,14 @@ def orbit(
     solverPhiderNU = efield.solverPhiderNU
 
     logger.debug(f"\tSolver: Using i={bfield.iNU:.4g~P}, g={bfield.gNU:.4g~P}")
-    logger.debug(f"\tSolver: (t0, tf, steps)=({
-                 t[0]:.4g}, {t[-1]:.4g}, {len(t)})")
-    logger.debug(f"\tSolver: theta0={S0[0]:.4g}, psi0={
-                 S0[1]:.4g}, zeta0={S0[2]:.4g}, rho0={S0[3]:.4g}")
+    logger.debug(
+        f"\tSolver: (t0, tf, steps)=({
+                 t[0]:.4g}, {t[-1]:.4g}, {len(t)})"
+    )
+    logger.debug(
+        f"\tSolver: theta0={S0[0]:.4g}, psi0={
+                 S0[1]:.4g}, zeta0={S0[2]:.4g}, rho0={S0[3]:.4g}"
+    )
     logger.debug(f"\tSolver: mu={mu:.4g}")
 
     def dSdt(t, S):
@@ -205,7 +209,7 @@ def orbit(
     t_eval = sol.t
     t_events = sol.t_events
     y_events = sol.y_events
-    message = f"{sol.status}: {sol.message}"
+    message = sol.message
 
     # Calculate psip and Canonical Momenta
     _, i, g = bfield.bigNU(psi, theta)

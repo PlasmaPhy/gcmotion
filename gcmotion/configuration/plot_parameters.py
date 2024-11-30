@@ -19,6 +19,11 @@ class BaseProfileContourConfig:
 
 @dataclass(repr=False, frozen=True)
 class ProfileContourConfig:
+    # Figure keywords
+    figsize: tuple = figsize
+    dpi: int = dpi
+    layout: str = "constrained"
+    facecolor: str = "lightskyblue"
     # Default parameter values
     thetalim: tuple = (-pi, pi)
     psilim: tuple = (0, 1.2)  # times psi_wall
@@ -28,13 +33,30 @@ class ProfileContourConfig:
     potential: bool = True
     wall: bool = True
     cursor: bool = True  # Mild performance hit
+    # Colorbar
+    numticks: int = 10
+    cbarlabelsize: int = 12
+
+
+@dataclass(repr=False, frozen=False)
+class ParticleEvolution:
     # Figure keywords
     figsize: tuple = figsize
     dpi: int = dpi
     layout: str = "constrained"
-    # Colorbar
-    labelsize: int = 12
-    numticks: int = 10
+    facecolor: str = "lightskyblue"
+    titlesize: float = 20
+    titlecolor: str = "blue"
+    # Default parameter values
+    which: str = "all"
+    units: str = "SI"
+    percentage: int = 100
+    # Scatter kw
+    s: float = 0.2
+    color: str = "blue"
+    marker: str = "o"
+    labelsize: int = 10
+    labelpad: float = 8
 
 
 time_evolution = {
