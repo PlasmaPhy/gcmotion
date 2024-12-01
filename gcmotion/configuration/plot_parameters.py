@@ -11,7 +11,7 @@ class BaseProfileContourConfig:
     grid_density: int = 100
     cmap: str = "plasma"
     locator: str = "log"
-    log_base: float = 1.001
+    log_base: float = 1.0001
     labelsize: float = 15
     ticknum: int = 10
     ticksize: float = 12

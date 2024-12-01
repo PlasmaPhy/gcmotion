@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from gcmotion.plot._base._base_profile_contour import _base_profile_contour
-from gcmotion.plot._base._base_contour_colorbar import _base_contour_colorabar
+from gcmotion.plot._base._base_contour_colorbar import _base_contour_colorbar
 from gcmotion.configuration.plot_parameters import (
     ProfileContourConfig as config,
 )
@@ -72,7 +72,7 @@ def profile_contour(profile, **args):
     cbar = fig.colorbar(Contour, cax=None, ax=contourax)
 
     # Now that the colorbar is created, pass its "ax" to be customized
-    _base_contour_colorabar(ax=cbar.ax, contour=Contour, **args)
+    _base_contour_colorbar(ax=cbar.ax, contour=Contour, **args)
 
     if show:
         plt.show()

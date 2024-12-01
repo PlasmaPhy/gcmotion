@@ -131,7 +131,10 @@ class Profile(Tokamak, PhysicalParameters):
         logger.info("\tProfile setup complete.")
 
     def findPtheta(self, psi: Quantity):
-        r"""Calculates Ptheta from psi.
+        r"""Calculates Ptheta from psi. Output units are the same as input
+        units.
+
+        Only applicable in the absence of perturbations.
 
         Parameters
         ----------

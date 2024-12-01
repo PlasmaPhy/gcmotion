@@ -16,6 +16,8 @@ from gcmotion.entities.initial_conditions import InitialConditions
 from gcmotion.entities.profile import Profile
 from gcmotion.entities.particle import Particle
 
+from gcmotion.scripts.freq import frequency
+
 
 # main namespace
 __all__ = [
@@ -32,4 +34,6 @@ __all__ = [
     # Entities
     "Profile",
     "Particle",
+    # Scripts
+    "frequency",
 ]

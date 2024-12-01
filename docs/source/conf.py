@@ -22,7 +22,7 @@ release = "0.0.1"
 
 extensions = []
 
-templates_path = ["._templates"]
+templates_path = ["_templates"]
 exclude_patterns = ["build", "Thumbs.db", ".DS_Store"]
 
 extensions = [

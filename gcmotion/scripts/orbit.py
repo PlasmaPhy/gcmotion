@@ -26,49 +26,6 @@ are calculated afterwards.
     functions are much faster than numpy's when calculating single values
     (often by a factor of 10 or more).
 
-Example
--------
-
-This is how ``orbit`` is called inside the class :py:class:`Particle`:
-
-.. code-block:: python
-
-    parameters = Parameters(
-        theta0 = self.theta0.magnitude,
-        psi0   = self.psi0NU.magnitude,
-        zeta0  = self.zeta0.magnitude,
-        rho0   = self.rho0NU.magnitude,
-        mu     = self.muNU.magnitude,
-        t      = self.t_evalNU.magnitude
-    )
-
-    profile = Profile(
-        qfactor = self.qfactor,
-        bfield  = self.bfield,
-        efield  = self.efield,
-    )
-
-    return orbit(parameters, profile, events=events)
-
-And this is how the solution is unpacked:
-
-.. code-block:: python
-
-    self.theta      = self.Q(solution.theta, "radians")
-    self.zeta       = self.Q(solution.zeta, "radians")
-    self.psiNU      = self.Q(solution.psi, "NUMagnetic_flux")
-    self.rhoNU      = self.Q(solution.rho, "NUmeters")
-    self.psipNU     = self.Q(solution.psip, "NUMagnetic_flux")
-    self.PthetaNU   = self.Q(solution.Ptheta, "NUMagnetic_flux")
-    self.PzetaNU    = self.Q(solution.Pzeta, "NUMagnetic_flux")
-    self.t_evalNU   = self.Q(solution.t_eval, "NUseconds")
-    self.t_eventsNU = self.Q(solution.t_events, "NUseconds")
-    self.y_events   = solution.y_events
-    message         = solution.message
-
-
-.. rubric:: Function:
-    :heading-level: 4
 """
 
 from scipy.integrate import solve_ivp
@@ -76,8 +33,8 @@ from collections import namedtuple
 
 from gcmotion.utils.logger_setup import logger
 
-from gcmotion.configuration.solver_configuration import (
-    solver_configuration as config,
+from gcmotion.configuration.scripts_configuration import (
+    SolverConfig as config,
 )
 
 
@@ -196,8 +153,8 @@ def orbit(
         t_span=t_span,
         y0=S0,
         t_eval=t,
-        atol=config["atol"],
-        rtol=config["rtol"],
+        atol=config.atol,
+        rtol=config.rtol,
         events=events,
         dense_output=True,
     )

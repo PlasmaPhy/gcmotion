@@ -1,3 +1,7 @@
+r"""
+.. automethod:: run
+"""
+
 import numpy as np
 import pint
 from collections import namedtuple
@@ -27,8 +31,6 @@ class Particle(Profile, InitialConditions):
 
     A particle entity represents a fully-fledged particle inside a specific
     tokamak device, and defined initial conditions.
-
-    :members: run
 
     Parameters
     ----------
@@ -146,7 +148,7 @@ class Particle(Profile, InitialConditions):
                 #. "NU" or "SI":
                     Print the respective subset of Quantities
 
-            Options can be chained together, for example "initNU"
+            Options can be chained together, for example "initNU".
             Defaults to "" (prints all *Quantites*)
 
         everything : bool, optional
@@ -157,7 +159,7 @@ class Particle(Profile, InitialConditions):
 
         units = "NU" if "NU" in which else "SI" if "SI" in which else ""
 
-        if "init" in which:
+        if "init" in which:  # TODO: maybe use regex instead
             pprint_dict(self.input_vars, everything=everything, units=units)
         else:
             pprint_dict(self.__dict__, everything=everything, units=units)
@@ -169,9 +171,8 @@ class Particle(Profile, InitialConditions):
         events: list = [],
     ):
         r"""
-        Calls :py:meth:`~Particle._orbit` to calculate the particle's orbit,
-        which returns the solution in [NU]. Then it stores the results in both
-        [SI] and [NU].
+        Calculates the particle's orbit. The results are stored in both SI and
+        NU.
 
         Parameters
         ----------
@@ -351,11 +352,11 @@ class Particle(Profile, InitialConditions):
         namedtuple
             The ``solution`` tuple returned by the solver.
         """
-        Parameters = namedtuple(
+        OrbitParameters = namedtuple(
             "Orbit_Parameters", ["theta0", "psi0", "zeta0", "rho0", "mu", "t"]
         )
 
-        parameters = Parameters(
+        parameters = OrbitParameters(
             theta0=self.theta0,
             zeta0=self.zeta0,
             psi0=self.psi0NU.magnitude,

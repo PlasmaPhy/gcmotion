@@ -40,7 +40,6 @@ Essential Entities
 .. autosummary::
    :toctree: generated/
    :caption: main_namespace
-   :template: class.rst
 
    Tokamak
    PhysicalParameters

@@ -37,6 +37,7 @@ def _base_profile_contour(profile: Profile, ax: Axes, **args):
     E_units = args.get("E_units")
     potential = args.get("potential")
     wall = args.get("wall")
+    grid_density = args.get("grid_density", config.grid_density)
     # cursor = args.get("cursor")
 
     # Setup meshgrid
@@ -46,8 +47,8 @@ def _base_profile_contour(profile: Profile, ax: Axes, **args):
     thetalim = profile.Q(_thetalim, "radians")
     psilim = profile.Q(_psilim, "psi_wall").to(flux_units)
     psigrid, thetagrid = np.meshgrid(
-        np.linspace(psilim[0], psilim[1], config.grid_density),
-        np.linspace(thetalim[0], thetalim[1], config.grid_density),
+        np.linspace(psilim[0], psilim[1], grid_density),
+        np.linspace(thetalim[0], thetalim[1], grid_density),
     )
 
     # Calculate Energy values
