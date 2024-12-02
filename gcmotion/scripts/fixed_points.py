@@ -172,7 +172,7 @@ def fixed_points(
         print(f"\nInitial Conditions:{initial_conditions_print}\n")
         print(f"\nNumber of Initial Conditions: {len(initial_conditions_print)}\n")
 
-    if info and fixed_points.shape[0] <= 50:
+    if info and fixed_points.shape[0] <= 30:
         print(f"\nFixed Points: {fixed_points}\n")
         print(f"Number of Fixed Points: {fixed_points.shape[0]}")
 

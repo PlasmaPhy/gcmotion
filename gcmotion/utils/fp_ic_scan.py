@@ -1,19 +1,12 @@
 import numpy as np
 import pint
 from collections import namedtuple, deque
-from functools import lru_cache
 from numba import njit
 
 from gcmotion.utils.fp_system import system  # Assuming this is available
 
 # Quantity alias for type annotations
 type Quantity = pint.UnitRegistry.Quantity
-
-
-# Cached version of system
-@lru_cache(maxsize=None)
-def cached_system(theta, psi, parameters, profile):
-    return system(theta, psi, parameters=parameters, profile=profile)
 
 
 @njit
@@ -57,9 +50,7 @@ def fp_ic_scan(
     system_values = np.empty_like(theta_grid)
     for i in range(grid_shape[0]):
         for j in range(grid_shape[1]):
-            system_values[i, j] = cached_system(
-                theta_grid[i, j], psi_grid[i, j], parameters, profile
-            )
+            system_values[i, j] = system(theta_grid[i, j], psi_grid[i, j], parameters, profile)
 
     # Find fixed_point_candidates (minima/maxima/saddle points) using a combination
     # of neighbor checks

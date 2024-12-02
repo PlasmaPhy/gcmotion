@@ -21,7 +21,7 @@ def system(theta: float, psi: float, parameters: namedtuple, profile: namedtuple
     Pzeta0 = parameters.Pzeta0
     Pzeta = Pzeta0
 
-    psi = max(psi, 0)
+    psi = max(psi, 1e-5)
 
     # Object methods calls
     q = solverqNU(psi)
