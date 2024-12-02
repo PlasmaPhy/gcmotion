@@ -104,6 +104,7 @@ def fixed_points(
     theta_lim: list = [-1.01 * np.pi, 1.01 * np.pi],
     psi_lim: list = [0.01, 1.3],
     dist_tol: float = 1e-3,
+    fp_ic_scan_tol: float = 5 * 1e-8,
     ic_theta_grid_density: int = 1000,
     ic_psi_grid_density: int = 1000,
     random_init_cond: bool = False,
@@ -141,7 +142,7 @@ def fixed_points(
             psi_grid_density=ic_psi_grid_density,
             psi_lim=psi_lim,
             theta_lim=theta_lim,
-            tol=1e-6,
+            tol=fp_ic_scan_tol,
         )
 
     fixed_points = np.empty((len(initial_conditions), len(initial_conditions[0])))

@@ -32,7 +32,7 @@ def fp_ic_scan(
     psi_grid_density: int = 800,
     theta_lim: list = [-1.01 * np.pi, 1.01 * np.pi],
     psi_lim: list = [0.01, 1.8],
-    tol: float = 1e-6,
+    tol: float = 5 * 1e-8,
 ):
     # Define theta and psi bounds
     theta_min, theta_max = theta_lim
