@@ -37,7 +37,8 @@ def bifurcation_plot(
     ic_theta_grid_density: int = 1000,
     ic_psi_grid_density: int = 1000,
     random_fp_init_cond: bool = False,
-    info: bool = False,
+    fp_info: bool = False,
+    bif_info: bool = False,
     fp_ic_info: bool = False,
 ):
     r"""Draws the bifurcation diagrams for the :math:`theta`'s  fixed,
@@ -88,7 +89,8 @@ def bifurcation_plot(
         ic_theta_grid_density=ic_theta_grid_density,
         ic_psi_grid_density=ic_psi_grid_density,
         random_fp_init_cond=random_fp_init_cond,
-        info=info,
+        fp_info=fp_info,
+        bif_info=bif_info,
         fp_ic_info=fp_ic_info,
     )
 

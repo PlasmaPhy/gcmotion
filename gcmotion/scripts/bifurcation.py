@@ -77,7 +77,8 @@ def bifurcation(
     ic_theta_grid_density: int = 1000,
     ic_psi_grid_density: int = 1000,
     random_fp_init_cond: bool = False,
-    info: bool = False,
+    fp_info: bool = False,
+    bif_info: bool = False,
     fp_ic_info: bool = False,
 ):
 
@@ -95,6 +96,8 @@ def bifurcation(
 
     p1 = collection[0]
     p_last = collection[-1]
+
+    N = len(collection.particles)
 
     # Check if the partcles have different Pzeta0's
     if p1.Pzeta0 == p_last.Pzeta0:
@@ -135,7 +138,7 @@ def bifurcation(
             ic_theta_grid_density=ic_theta_grid_density,
             ic_psi_grid_density=ic_psi_grid_density,
             random_init_cond=random_fp_init_cond,
-            info=info,
+            info=fp_info,
             ic_info=fp_ic_info,
         )
 
@@ -154,9 +157,9 @@ def bifurcation(
             zip(*current_O_points) if current_O_points else ([], [])
         )
 
-        if info:
+        if bif_info:
             print(
-                f"\nCurrent Step: {idx+1} at P_z = {current_P_zeta} with {current_num_of_fp} fixed points"
+                f"\nCurrent Step: {idx+1}/{N} {((idx+1)/N):.1f} at P_z = {current_P_zeta} with {current_num_of_fp} fixed points"
             )
             print(f"Current Fixed Points: {current_fp}\n")
             print(
