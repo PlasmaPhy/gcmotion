@@ -9,7 +9,7 @@ from re import split, IGNORECASE
 
 from gcmotion.utils.logger_setup import logger
 
-from gcmotion.configuration.plot_parameters import ParticleEvolution as config
+from gcmotion.configuration.plot_parameters import ParticleEvolutionConfig
 from gcmotion.entities.particle import Particle
 
 
@@ -34,25 +34,29 @@ def particle_evolution(particle: Particle, **args):
         The unit system. Can be either 'SI' or 'NU'. Defauls to "SI".
     """
     # Unpack parameters
-    which = args.get("which", config.which)
-    units = args.get("units", config.units)
-    percentage = args.get("percentage", config.percentage)
+    config = ParticleEvolutionConfig()
+    for key, value in args.items():
+        setattr(config, key, value)
 
     # This suffix is used to yank the correct attributes from particle.
-    suffix = "NU" if units == "NU" else "" if units == "SI" else ""
+    suffix = (
+        "NU" if config.units == "NU" else "" if config.units == "SI" else ""
+    )
     logger.info(
         "Plotting time evolutions in "
         + f"{"NU" if suffix == "NU" else "SI"}..."
     )
 
     # Make sure percentage is a valid number
-    if percentage < 1 or percentage > 100:
-        percentage = 100
+    if config.percentage < 1 or config.percentage > 100:
+        config.percentage = 100
         logger.warning("Invalid percentage: Plotting the whole thing...")
-    points = int(np.floor(particle.t_eval.shape[0] * percentage / 100) - 1)
+    points = int(
+        np.floor(particle.t_eval.shape[0] * config.percentage / 100) - 1
+    )
 
     # Parse "which" and yank the respective attributes form particle
-    which = format_which(which)
+    which = format_which(config.which)
     # The returned dict looks something like this:
     # which = ["theta", "zeta", "rho", "Pzeta"]
     # Now only the variables we want to plot appear, and in the correct order

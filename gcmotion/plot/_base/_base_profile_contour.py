@@ -6,9 +6,9 @@ from matplotlib.axes import Axes
 from scipy.interpolate import RectBivariateSpline
 
 from gcmotion.utils.logger_setup import logger
-from gcmotion.configuration.plot_parameters import (
-    BaseProfileContourConfig as config,
-)
+
+from gcmotion.plot._base._config import _ProfileContourConfig
+
 from gcmotion.entities.profile import Profile
 
 
@@ -24,36 +24,37 @@ def _base_profile_contour(profile: Profile, ax: Axes, **args):
         The ax upon which to draw.
     args : dict
         The optional arguement dictionary.
-    """
 
+    Notes
+    -----
+    For a full list of all available optional parameters, see the dataclass
+    _ProfileContour at gcmotion/plot/_base/_config. The defaults values are set
+    there, and are overwritten if passed as arguements.
+    """
     logger.info("==> Plotting Base Profile Contour...")
 
     # Unpack parameters
-    # Default values are also defined here
-    _thetalim = args.get("thetalim")
-    _psilim = args.get("psilim")
-    levels = args.get("levels")
-    flux_units = args.get("flux_units")
-    E_units = args.get("E_units")
-    potential = args.get("potential")
-    wall = args.get("wall")
-    grid_density = args.get("grid_density", config.grid_density)
-    # cursor = args.get("cursor")
+    config = _ProfileContourConfig()
+    for key, value in args.items():
+        setattr(config, key, value)
 
     # Setup meshgrid
     # The Energy calculation and y axis limits are always set with respect to
     # psilim. Pthetalim only acts as a way to move the axis window at the end,
     # or zoom to a certain area with respect to Ptheta.
-    thetalim = profile.Q(_thetalim, "radians")
-    psilim = profile.Q(_psilim, "psi_wall").to(flux_units)
+    thetalim = profile.Q(config.thetalim, "radians")
+    psilim = profile.Q(config.psilim, "psi_wall").to(config.flux_units)
     psigrid, thetagrid = np.meshgrid(
-        np.linspace(psilim[0], psilim[1], grid_density),
-        np.linspace(thetalim[0], thetalim[1], grid_density),
+        np.linspace(psilim[0], psilim[1], config.grid_density),
+        np.linspace(thetalim[0], thetalim[1], config.grid_density),
     )
 
     # Calculate Energy values
     Energy = profile.findEnergy(
-        psigrid, thetagrid.m, E_units, potential=potential
+        psigrid,
+        thetagrid.m,
+        config.E_units,
+        potential=config.potential,
     )
 
     # Define data to be plotted
@@ -70,20 +71,20 @@ def _base_profile_contour(profile: Profile, ax: Axes, **args):
 
     # Locator setup
     locator = (
-        ticker.LogLocator(base=config.log_base, numticks=levels)
+        ticker.LogLocator(base=config.log_base, numticks=config.levels)
         if config.locator == "log"
-        else ticker.MaxNLocator(nbins=levels)
+        else ticker.MaxNLocator(nbins=config.levels)
     )
 
     kw = {
         "cmap": config.cmap,
         "locator": locator,
-        "zorder": 0,
+        "zorder": config.zorder,
     }
 
     # Contour plot
     C = ax.contourf("theta", "flux", "Energy", data=data, **kw)
-    plt.rcParams["axes.autolimit_mode"] = "round_numbers"
+
     # Setup labels.
     # Also add a second axis for Ptheta
     ax.set_ylabel(rf"$\psi$ [{psigrid.units:.4g~P}]", size=config.labelsize)
@@ -98,21 +99,25 @@ def _base_profile_contour(profile: Profile, ax: Axes, **args):
     ax.yaxis.set_major_locator(ticker.MaxNLocator(config.ticknum))
 
     # Add secondary axes with Ptheta
-    ax2 = ax.twinx()
-    ax2.set_ylabel(
-        rf"$P_\theta$ [{psigrid.units:.4g~P}]", size=config.labelsize
-    )
-    psiticks = profile.Q(ax.get_yticks(), flux_units)
-    Pthetamin = profile.findPtheta(psiticks.min())
-    Pthetamax = profile.findPtheta(psiticks.max())
-    ax2.yaxis.set_major_locator(ticker.MaxNLocator(config.ticknum))
-    ax2.set_ylim([Pthetamin.m, Pthetamax.m])
-    ax2.tick_params(labelsize=config.ticksize)
+    if config.Pthetaax:
+        ax2 = ax.twinx()
+        ax2.set_ylabel(
+            rf"$P_\theta$ [{psigrid.units:.4g~P}]", size=config.labelsize
+        )
+        psiticks = profile.Q(ax.get_yticks(), config.flux_units)
+        Pthetamin = profile.findPtheta(psiticks.min())
+        Pthetamax = profile.findPtheta(psiticks.max())
+        ax2.yaxis.set_major_locator(ticker.MaxNLocator(config.ticknum))
+        ax2.set_ylim([Pthetamin.m, Pthetamax.m])
+        ax2.tick_params(labelsize=config.ticksize)
 
     # Add a shade above psi_wall
-    if wall:
+    if config.wall:
         rect = Rectangle(
-            (thetalim.min().m, profile.Q(1, "psi_wall").to(flux_units).m),
+            (
+                thetalim.min().m,
+                profile.Q(1, "psi_wall").to(config.flux_units).m,
+            ),
             width=abs(thetalim[1].m - thetalim[0].m),
             height=psigrid[0][-1].m,
             alpha=0.2,
@@ -130,21 +135,35 @@ def _base_profile_contour(profile: Profile, ax: Axes, **args):
     values = RectBivariateSpline(cursorx, cursory, cursorz)
     flux_label = f"{psigrid.units:~P}"
 
-    def cursor_format(x, y):
-        # I have no idea why this works but it does :')
-        Ptheta = y
-        x, y = ax2.transData.transform((x, y))
-        x, y = ax.transData.inverted().transform((x, y))
-        z = np.take(values(x, y), 0)
-        x /= np.pi
-        return (
-            f"θ={x:.4g}π,  "
-            + f"ψ={y:.4g} {flux_label},  "
-            + f"Ρθ = {Ptheta:.4g} {flux_label},  "
-            + f"Energy = {z:.4g} {E_units}"
-        )
+    if config.Pthetaax and config.cursor:
 
-    ax2.format_coord = cursor_format
+        def cursor_format(x, y):
+            # I have no idea why this works but it does :')
+            Ptheta = y
+            x, y = ax2.transData.transform((x, y))
+            x, y = ax.transData.inverted().transform((x, y))
+            z = np.take(values(x, y), 0)
+            x /= np.pi
+            return (
+                f"θ={x:.4g}π,  "
+                + f"ψ={y:.4g} {flux_label},  "
+                + f"Ρθ = {Ptheta:.4g} {flux_label},  "
+                + f"Energy = {z:.4g} {config.E_units}"
+            )
+
+        ax2.format_coord = cursor_format
+    elif not config.Pthetaax and config.cursor:
+
+        def cursor_format(x, y):
+            z = np.take(values(x, y), 0)
+            x /= np.pi
+            return (
+                f"θ={x:.4g}π,  "
+                + f"ψ={y:.4g} {flux_label},  "
+                + f"Energy = {z:.4g} {config.E_units}"
+            )
+
+        ax.format_coord = cursor_format
 
     # Return the contour object
     return C

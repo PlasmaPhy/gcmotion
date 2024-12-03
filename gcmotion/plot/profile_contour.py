@@ -3,9 +3,7 @@ import matplotlib.pyplot as plt
 
 from gcmotion.plot._base._base_profile_contour import _base_profile_contour
 from gcmotion.plot._base._base_contour_colorbar import _base_contour_colorbar
-from gcmotion.configuration.plot_parameters import (
-    ProfileContourConfig as config,
-)
+from gcmotion.configuration.plot_parameters import ProfileContourConfig
 
 
 def profile_contour(profile, **args):
@@ -37,28 +35,16 @@ def profile_contour(profile, **args):
     """
 
     # Unpack parameters
-    # Default values are also defined here
-    # Contour ax options:
-    args["thetalim"] = args.get("thetalim", config.thetalim)
-    args["psilim"] = args.get("psilim", config.psilim)
-    args["levels"] = args.get("levels", config.levels)
-    args["flux_units"] = args.get("flux_units", config.flux_units)
-    args["E_units"] = args.get("E_units", config.E_units)
-    args["potential"] = args.get("potential", config.potential)
-    args["wall"] = args.get("wall", config.wall)
-    args["cursor"] = args.get("cursor", config.cursor)
-    # Colobar options;
-    args["numticks"] = args.get("numticks", config.numticks)
-    args["cbarlabel"] = args.get("cbarlabel", f"Energy [{args["E_units"]}]")
-    args["cbarlabelsize"] = args.get("cbarlabelsize", config.cbarlabelsize)
-    # Whether or not to open interactive plot
-    show = args.get("show", True)
+    config = ProfileContourConfig()
+    for key, value in args.items():
+        setattr(config, key, value)
 
     # Create figure
     fig_kw = {
         "figsize": config.figsize,
         "dpi": config.dpi,
         "layout": config.layout,
+        "facecolor": config.facecolor,
     }
     fig = plt.figure(**fig_kw)
     contourax = fig.subplots()
@@ -74,5 +60,11 @@ def profile_contour(profile, **args):
     # Now that the colorbar is created, pass its "ax" to be customized
     _base_contour_colorbar(ax=cbar.ax, contour=Contour, **args)
 
+    # Add the title on the cbar's ax
+    cbar.ax.set_title(
+        label=f"Energy [{config.E_units}]", size=config.cbarlabelsize
+    )
+
+    show = args.get("show", True)
     if show:
         plt.show()

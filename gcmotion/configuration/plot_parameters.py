@@ -5,19 +5,7 @@ figsize = 16, 9  # Global window size
 dpi = 90  # Global dpi
 
 
-@dataclass(repr=False, frozen=True)
-class BaseProfileContourConfig:
-    # Contour parameters
-    grid_density: int = 100
-    cmap: str = "plasma"
-    locator: str = "log"
-    log_base: float = 1.0001
-    labelsize: float = 15
-    ticknum: int = 10
-    ticksize: float = 12
-
-
-@dataclass(repr=False, frozen=True)
+@dataclass()
 class ProfileContourConfig:
     # Figure keywords
     figsize: tuple = figsize
@@ -27,7 +15,7 @@ class ProfileContourConfig:
     # Default parameter values
     thetalim: tuple = (-pi, pi)
     psilim: tuple = (0, 1.2)  # times psi_wall
-    levels: int = 25
+    levels: int = 30
     E_units: str = "keV"
     flux_units: str = "Tesla * meter^2"
     potential: bool = True
@@ -38,8 +26,12 @@ class ProfileContourConfig:
     cbarlabelsize: int = 12
 
 
-@dataclass(repr=False, frozen=False)
-class ParticleEvolution:
+@dataclass()
+class ParticleEvolutionConfig:
+    # Default parameter values
+    which: str = "all"
+    units: str = "SI"
+    percentage: int = 100
     # Figure keywords
     figsize: tuple = figsize
     dpi: int = dpi

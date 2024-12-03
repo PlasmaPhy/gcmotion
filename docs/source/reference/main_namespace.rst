@@ -44,7 +44,23 @@ Essential Entities
    Tokamak
    PhysicalParameters
    InitialConditions
-
    Profile
    Particle
 
+Scripts
+=======
+
+.. autosummary::
+   :toctree: generated/
+   :caption: main_namespace
+
+   frequency
+
+Utilities
+=========
+
+.. autosummary::
+   :toctree: generated/
+   :caption: main_namespace
+
+   get_size
