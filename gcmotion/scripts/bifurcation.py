@@ -159,7 +159,7 @@ def bifurcation(
 
         if bif_info:
             print(
-                f"\nCurrent Step: {idx+1}/{N} ({(idx+1)/N:.1f}%) at P_z = {current_P_zeta} with {current_num_of_fp} fixed points"
+                f"\nCurrent Step: {idx+1}/{N} ({100*(idx+1)/N:.1f}%) at P_z = {current_P_zeta} with {current_num_of_fp} fixed points"
             )
             print(f"Current Fixed Points: {current_fp}\n")
             print(
