@@ -58,7 +58,7 @@ def profile_contour(profile, **args):
     cbar = fig.colorbar(Contour, cax=None, ax=contourax)
 
     # Now that the colorbar is created, pass its "ax" to be customized
-    _base_contour_colorbar(ax=cbar.ax, contour=Contour, **args)
+    _base_contour_colorbar(ax=cbar.ax, contour=Contour, numticks=10)
 
     # Add the title on the cbar's ax
     cbar.ax.set_title(

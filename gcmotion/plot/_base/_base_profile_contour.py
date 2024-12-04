@@ -83,7 +83,10 @@ def _base_profile_contour(profile: Profile, ax: Axes, **args):
     }
 
     # Contour plot
-    C = ax.contourf("theta", "flux", "Energy", data=data, **kw)
+    if config.mode == "lines":
+        C = ax.contour("theta", "flux", "Energy", data=data, **kw)
+    else:
+        C = ax.contourf("theta", "flux", "Energy", data=data, **kw)
 
     # Setup labels.
     # Also add a second axis for Ptheta

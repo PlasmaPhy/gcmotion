@@ -23,6 +23,7 @@ class FrequencyConfig:
     E_units: str = "keV"
     potential: bool = True
     wall: bool = True
+    st_end_points: bool = False
     # Filters
     theta_rtol: float = (4 * np.pi) / 100
     psi_rtol: float = 1 / 100

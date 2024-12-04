@@ -4,6 +4,7 @@ from math import isclose
 
 from gcmotion.entities.profile import Profile
 from gcmotion.plot._base._base_profile_contour import _base_profile_contour
+from gcmotion.plot._base._base_contour_colorbar import _base_contour_colorbar
 
 from gcmotion.configuration.scripts_configuration import FrequencyConfig
 
@@ -13,6 +14,7 @@ def frequency(profile: Profile, **args):
 
     # Unpack parameters
     args.pop("thetalim", None)
+    args.pop("mode", None)
     config = FrequencyConfig()
     for key, value in args.items():
         setattr(config, key, value)
@@ -36,146 +38,97 @@ def frequency(profile: Profile, **args):
         profile=profile,
         ax=ax_dict["contour"],
         thetalim=[-2 * np.pi, 2 * np.pi],
+        mode="lines",
         **args,
     )
-    composite_paths = C.get_paths()
+    segments = C.allsegs
 
-    # It seems that the number 79 appears inside path.codes once for every
-    # different path.
-    # This also transposes the path vertices
-    paths = split_composite_paths(composite_paths)
+    # Unpack segments and store as paths (2xN)
+    paths = flatten_segments(segments)
 
-    # Remove ALL points that lie on the bounding box
-    psilim = profile.Q(config.psilim, "psi_wall").to(config.flux_units).m
-    paths = remove_edges(paths, psilim)
+    # Remove empty paths
+    paths = remove_empty(paths)
 
     # Sort paths' points with respect to their theta coord
-    paths = sort_paths(paths)
-
-    for path in paths:
-        # ax_dict["passing"].scatter(path[0], path[1], s=1)
-        ax_dict["passing"].plot(path[0], path[1])
-
-    plt.show()
-    return paths
+    # paths = sort_paths(paths)
 
     # Every contour path that touches the wall (e.g passing) contains both
-    # -np.pi and np.pi in its vertices. Classify them accordingly:.
+    # -2np.pi and 2np.pi in its vertices. Classify them accordingly:.
     passing, trapped = classify_paths(paths)
 
-    # # NOTE: For the passing, make sure that they indeed span (-2π,2π)
-    # iterpaths = passing
-    # passing = []
-    # for path in iterpaths:
-    #     if abs(np.max(path[0]) - np.min(path[0])) > 12:  # 4π = 12.5...
-    #         passing.append(path)
-    #
-    # # NOTE: For all the paths, we must remove the edges and add the two
-    # # points (-2*np.pi, 0) and (2*np.pi, 0).
-    # psilim = profile.Q(args["psilim"], "psi_wall").to(args["flux_units"]).m
-    # cropped_trapped = []
-    # cropped_passing = []
-    # for path in trapped:
-    #     cropped_trapped.append(remove_edges(path, psilim))
-    # for path in passing:
-    #     cropped_passing.append(remove_edges(path, psilim))
-    # trapped = cropped_trapped
-    # passing = cropped_passing
-    #
-    # # For the trapped paths, keep the ones that are closed
-    # iterpaths = trapped
-    # trapped = []
-    # for path in iterpaths:
-    #     if path.shape[1] > 4:
-    #         if abs(np.max(np.diff(path, axis=1))) < 0.3:
-    #             trapped.append(path)
-    #
-    # # For all the paths, discard those with points to close to the upper
-    # # and lower limit
-    # iterpaths = trapped
-    # trapped = []
-    # for path in iterpaths:
-    #     psimax = np.max(path[1])
-    #     if (
-    #         psimax < 0.95 * psilim[1]  # if it touches the wall
-    #         and psimax > 0.03 * psilim[1]  # Too low
-    #     ):
-    #         trapped.append(path)
-    # iterpaths = passing
-    # passing = []
-    # for path in iterpaths:
-    #     psimax = np.max(path[1])
-    #     if psimax < 0.95 * psilim[1]:  # if it touches the wall
-    #         passing.append(path)
-    #
-    # # for all passing paths, add (-2π,0) and (2π,0)
-    # iterpaths = passing
-    # passing = []
-    # for path in iterpaths:
-    #     passing.append(
-    #         np.append(path, [[-2 * np.pi, 2 * np.pi], [0, 0]], axis=1)
-    #     )
-    #
-    # plot found paths:
+    # Paths that get cut off by the bounding box are classified as trapped, so
+    # remove them.
+    _psilim = profile.Q(config.psilim, "psi_wall").to(config.flux_units).m
+    trapped = remove_cutoffs(trapped, _psilim)
+
+    passingE, trappedE = shoelace(passing, trapped)
+
+    ############
+    # Plotting #
+    ############
+
+    # Passing/Trapped contours
     for path in passing:
-        # ax_dict["passing"].scatter(path[0], path[1], s=1)
-        ax_dict["passing"].plot(path[0], path[1])
-        ax_dict["passing"].set_title("Passing")
-        ax_dict["passing"].set_xlim([-2 * np.pi, 2 * np.pi])
-        ax_dict["passing"].set_ylim(psilim)
+        ax_dict["passing"].set_xlim([-2*np.pi, 2*np.pi])
+        ax_dict["passing"].set_ylim(_psilim)
+        ax_dict["passing"].plot(path[0], path[-1])
+        if config.st_end_points:
+            ax_dict["passing"].scatter(
+                path[0, 0], path[1, 0], marker="+", s=20)
+            ax_dict["passing"].scatter(
+                path[0, -1], path[1, -1], marker="x", s=20)
 
     for path in trapped:
-        # ax_dict["trapped"].scatter(path[0], path[1], s=1)
-        ax_dict["trapped"].plot(path[0], path[1])
-        ax_dict["trapped"].set_title("Trapped")
+        ax_dict["trapped"].plot(path[0], path[-1])
+        if config.st_end_points:
+            ax_dict["trapped"].scatter(
+                path[0, 0], path[1, 0], marker="+", s=20)
+            ax_dict["trapped"].scatter(
+                path[0, -1], path[1, -1], marker="x", s=20)
 
-    # # Plot them all nicely together
-    # _ = _base_profile_contour(
-    #     profile=profile,
-    #     ax=ax_dict["all"],
-    #     thetalim=[-2 * np.pi, 2 * np.pi],
-    #     **args,
-    # )
-    # for path in trapped:
-    #     ax_dict["all"].scatter(path[0], path[1], s=1)
-    #
-    # for path in passing:
-    #     ax_dict["all"].scatter(path[0], path[1], s=1)
+    # Areas
+    for n, path in enumerate(passing):
+        psi = profile.Q(path[1, 0], config.flux_units)
+        theta = path[0, 0]
+        Energy = profile.findEnergy(psi, theta, config.E_units)
+        ax_dict["freq"].scatter(Energy, passingE[n], marker=".", s=20, c="red")
 
-    # # Calculate areas
-    # areas = []
-    # energies = []
-    # for path in trapped + passing:
-    #     x = path[0]
-    #     y = path[1]
-    #     area = 0.5 * np.array(
-    #         np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1))
-    #     )
-    #     psi = profile.Q(y[4], config.flux_units)
-    #     theta = x[4]
-    #     energy = profile.findEnergy(psi, theta, config.E_units)
-    #     area = abs(area)
-    #     areas.append(area)
-    #     energies.append(energy)
-    #
-    # Plot relation
-    # ax_dict["freq"].scatter(energies, areas, s=4)
-    # ax_dict["freq"].semilogx()
-    # ax_dict["freq"].margins(0.01)
-    # ax_dict["freq"].semilogx()
+    for n, path in enumerate(trapped):
+        psi = profile.Q(path[1, 0], config.flux_units)
+        theta = path[0, 0]
+        Energy = profile.findEnergy(psi, theta, config.E_units)
+        ax_dict["freq"].scatter(Energy, trappedE[n],
+                                marker=".", s=20, c="blue")
+    ax_dict["freq"].semilogx()
+    ax_dict["freq"].margins(0.02)
 
     # Plot low-level contour
     ax_dict["contour"].clear()
     args["levels"] = 30
-    C = _base_profile_contour(
+    Cnew = _base_profile_contour(
         profile=profile,
         ax=ax_dict["contour"],
         thetalim=[-np.pi, np.pi],
+        mode="filled",
         **args,
     )
 
+    cbar = fig.colorbar(Cnew, cax=None, ax=ax_dict["contour"])
+    _base_contour_colorbar(ax=cbar.ax, contour=Cnew, numticks=10)
+    cbar.ax.set_title(
+        label=f"Energy [{config.E_units}]", size=10
+    )
+
     plt.show()
-    return passing, trapped
+    return C
+
+
+def flatten_segments(segments):
+    paths = []
+    for group in segments:
+        for segment in group:
+            paths.append(np.array(segment).T)
+    return paths
 
 
 def split_composite_paths(paths):
@@ -185,32 +138,23 @@ def split_composite_paths(paths):
     # accordingly
     new_paths = []
     for path in paths:
+        # print(path)
         idx = np.argwhere(path.codes == 79).flatten()
+        # idx += 1
+        # print(idx)
         extracted = np.split(path.vertices, idx)
+        extracted = [x for x in extracted if x.shape != (1, 2)]
+        # print(extracted)
         # Trim the paths since the first and last points are random
         # Also removed the last extracted path since it is empty
         # Also transpose them, easier to work with
-        new_paths += [trimmed[1:-2].T for trimmed in extracted[:-1]]
+        new_paths += [trimmed[:].T for trimmed in extracted[:-1]]
 
     return new_paths
 
 
-def remove_edges(paths, psilim):
-
-    for n, path in enumerate(paths):
-        tol = abs(psilim[1] - psilim[0]) / 1000
-        cond = (
-            (path[0] > -2 * np.pi)
-            & (path[0] < 2 * np.pi)
-            & (abs(path[1] - psilim[0]) > tol)
-            & (abs(path[1] - psilim[1]) > tol)
-        )
-        thetas, psis = np.array(np.where(cond, path, np.nan))
-        path = np.array([thetas, psis])
-        path = path[:, ~np.isnan(path).any(axis=0)]
-        paths[n] = path
-
-    return paths
+def remove_empty(paths):
+    return [path for path in paths if path.shape[1] > 2]
 
 
 def sort_paths(paths):
@@ -224,8 +168,50 @@ def classify_paths(paths):
     passing = []
     trapped = []
     for path in paths:
-        if path[0, -1] - path[0, 0] > 12:
+        if np.max(path[0]) - np.min(path[0]) > 12:
             passing.append(path)
         else:
             trapped.append(path)
     return passing, trapped
+
+
+def remove_cutoffs(passing, psilim):
+
+    paths = []
+    for path in passing:
+        thetas = path[0]
+        psis = path[1]
+        if not (
+            isclose(thetas[0], 2*np.pi)
+            or isclose(thetas[0], - 2*np.pi)
+            or isclose(thetas[-1], 2*np.pi)
+            or isclose(thetas[-1], -2*np.pi)
+            or isclose(psis[0], psilim[0])
+            or isclose(psis[0], psilim[1])
+            or isclose(psis[-1], psilim[0])
+            or isclose(psis[-1], psilim[1])
+        ):
+            paths.append(path)
+    return paths
+
+
+def add_bottom_points(passing):
+    points = np.array([[-2*np.pi, 2*np.pi], [0, 0]])
+    for n, path in enumerate(passing):
+        passing[n] = np.append(path, points, axis=1)
+    return passing
+
+
+def shoelace(passing, trapped):
+    def area(path):
+        x = path[0]
+        y = path[1]
+        E = 0.5 * np.array(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
+        return abs(E)
+
+    # Add bottom points
+    passing_full = add_bottom_points(passing.copy())
+    passingE = [0.5*area(path) for path in passing_full]
+    trappedE = [area(path) for path in trapped]
+
+    return passingE, trappedE

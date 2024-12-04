@@ -20,6 +20,7 @@ class _ProfileContourConfig:
     potential: bool = True
     wall: bool = True
     # Contour
+    mode: str = "filled"  # "filled" or "lines"
     grid_density: int = 100
     cmap: str = "plasma"
     locator: str = "log"
