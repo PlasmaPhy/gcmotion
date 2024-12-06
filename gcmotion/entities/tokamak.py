@@ -132,11 +132,11 @@ class Tokamak:
     def __repr__(self):
         return (
             "Tokamak: "
-            + f"R = {self.R:.4g~}, "
-            + f"a = {self.a:.4g~}, "
-            + f"qfactor = [{self.qfactor}], "
-            + f"bfield = [{self.bfield}], "
-            + f"efield = [{self.efield}]\n"
+            + f"R={self.R:.4g~}, "
+            + f"a={self.a:.4g~}, "
+            + f"qfactor=[{self.qfactor}], "
+            + f"bfield=[{self.bfield}], "
+            + f"efield=[{self.efield}]\n"
         )
 
     def __str__(self):

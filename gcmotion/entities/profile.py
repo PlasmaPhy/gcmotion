@@ -105,6 +105,7 @@ class Profile(Tokamak, PhysicalParameters):
             species=params.species,
             mu=params.mu,
             Pzeta=params.Pzeta,
+            E=params.E,
         )
 
         # Store those for easier reference

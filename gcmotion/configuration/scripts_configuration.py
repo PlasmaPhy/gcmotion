@@ -14,6 +14,8 @@ class FrequencyConfig:
     figsize: tuple = (16, 9)
     dpi: int = 90
     layout: str = "constrained"
+    # Resulting mosaic
+    mosaic: str = "debug"
     # ψ limit and levels for countour lines search
     psilim: tuple = (0, 1.2)
     levels: int = 250

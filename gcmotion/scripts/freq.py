@@ -10,6 +10,48 @@ from gcmotion.configuration.scripts_configuration import FrequencyConfig
 
 
 def frequency(profile: Profile, **args):
+
+    config = FrequencyConfig()
+    for key, value in args.items():
+        setattr(config, key, value)
+
+    # Create a phony figure to extract the segments and delete it
+    phony_fig, phony_ax = plt.subplots()
+    C = _base_profile_contour(
+        profile=profile,
+        ax=phony_ax,
+        thetalim=[-2 * np.pi, 2 * np.pi],
+        mode="lines",
+        **args,
+    )
+    result = _analyze_segments(C.allsegs, **args)
+    del phony_fig, phony_ax
+
+    passing = result["passing"]
+    trapped = result["trapped"]
+
+    # Create figure and axes
+    fig_kw = {
+        "figsize": config.figsize,
+        "dpi": config.dpi,
+        "layout": config.layout,
+    }
+    fig = plt.figure(**fig_kw)
+
+    match config.mosaic:
+        case "simple":
+            mosaic = [["contour", "freq"]]
+        case "freq":
+            mosaic = [["freq"]]
+        case _:
+            mosaic = [
+                ["contour", "freq"],
+                ["passing", "trapped"],
+            ]
+    ax_dict = fig.subplot_mosaic(mosaic)
+
+
+def _analyze_segments(segments, **args):
     r"""Finds the :math:`\omega(E)` relation graphically"""
 
     # Unpack parameters
@@ -69,22 +111,26 @@ def frequency(profile: Profile, **args):
 
     # Passing/Trapped contours
     for path in passing:
-        ax_dict["passing"].set_xlim([-2*np.pi, 2*np.pi])
+        ax_dict["passing"].set_xlim([-2 * np.pi, 2 * np.pi])
         ax_dict["passing"].set_ylim(_psilim)
         ax_dict["passing"].plot(path[0], path[-1])
         if config.st_end_points:
             ax_dict["passing"].scatter(
-                path[0, 0], path[1, 0], marker="+", s=20)
+                path[0, 0], path[1, 0], marker="+", s=20
+            )
             ax_dict["passing"].scatter(
-                path[0, -1], path[1, -1], marker="x", s=20)
+                path[0, -1], path[1, -1], marker="x", s=20
+            )
 
     for path in trapped:
         ax_dict["trapped"].plot(path[0], path[-1])
         if config.st_end_points:
             ax_dict["trapped"].scatter(
-                path[0, 0], path[1, 0], marker="+", s=20)
+                path[0, 0], path[1, 0], marker="+", s=20
+            )
             ax_dict["trapped"].scatter(
-                path[0, -1], path[1, -1], marker="x", s=20)
+                path[0, -1], path[1, -1], marker="x", s=20
+            )
 
     # Areas
     for n, path in enumerate(passing):
@@ -97,11 +143,13 @@ def frequency(profile: Profile, **args):
         psi = profile.Q(path[1, 0], config.flux_units)
         theta = path[0, 0]
         Energy = profile.findEnergy(psi, theta, config.E_units)
-        ax_dict["freq"].scatter(Energy, trappedE[n],
-                                marker=".", s=20, c="blue")
+        ax_dict["freq"].scatter(
+            Energy, trappedE[n], marker=".", s=20, c="blue"
+        )
     ax_dict["freq"].semilogx()
     ax_dict["freq"].margins(0.02)
 
+    ax_dict["passing"].clear()
     # Plot low-level contour
     ax_dict["contour"].clear()
     args["levels"] = 30
@@ -115,9 +163,7 @@ def frequency(profile: Profile, **args):
 
     cbar = fig.colorbar(Cnew, cax=None, ax=ax_dict["contour"])
     _base_contour_colorbar(ax=cbar.ax, contour=Cnew, numticks=10)
-    cbar.ax.set_title(
-        label=f"Energy [{config.E_units}]", size=10
-    )
+    cbar.ax.set_title(label=f"Energy [{config.E_units}]", size=10)
 
     plt.show()
     return C
@@ -182,10 +228,10 @@ def remove_cutoffs(passing, psilim):
         thetas = path[0]
         psis = path[1]
         if not (
-            isclose(thetas[0], 2*np.pi)
-            or isclose(thetas[0], - 2*np.pi)
-            or isclose(thetas[-1], 2*np.pi)
-            or isclose(thetas[-1], -2*np.pi)
+            isclose(thetas[0], 2 * np.pi)
+            or isclose(thetas[0], -2 * np.pi)
+            or isclose(thetas[-1], 2 * np.pi)
+            or isclose(thetas[-1], -2 * np.pi)
             or isclose(psis[0], psilim[0])
             or isclose(psis[0], psilim[1])
             or isclose(psis[-1], psilim[0])
@@ -196,7 +242,7 @@ def remove_cutoffs(passing, psilim):
 
 
 def add_bottom_points(passing):
-    points = np.array([[-2*np.pi, 2*np.pi], [0, 0]])
+    points = np.array([[-2 * np.pi, 2 * np.pi], [0, 0]])
     for n, path in enumerate(passing):
         passing[n] = np.append(path, points, axis=1)
     return passing
@@ -211,7 +257,7 @@ def shoelace(passing, trapped):
 
     # Add bottom points
     passing_full = add_bottom_points(passing.copy())
-    passingE = [0.5*area(path) for path in passing_full]
+    passingE = [0.5 * area(path) for path in passing_full]
     trappedE = [area(path) for path in trapped]
 
     return passingE, trappedE
