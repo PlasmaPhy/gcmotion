@@ -255,7 +255,7 @@ class _InitialConditionsFull(InitialConditions, Profile):
             "NUMagnetic_flux",
         ).to("Magnetic_flux")
 
-        self.rho0 = ((self.Pzeta0 + self.psip0) / g_init).to(
+        self.rho0 = ((self.Pzeta + self.psip0) / g_init).to(
             "meters"
         )  # Note: [rho] = Magnetic_flux / Plasma_current = meters)
 

@@ -73,7 +73,7 @@ class Profile(Tokamak, PhysicalParameters):
     >>> params = gcm.PhysicalParameters(
     ...     species=species,
     ...     mu=Q(1e-5, "NUMagnetic_moment"),
-    ...     Pzeta0=Q(-0.0272, "NUMagnetic_flux"),
+    ...     Pzeta=Q(-0.0272, "NUMagnetic_flux"),
     ... )
     >>>
     >>> # Create a Profile
@@ -104,7 +104,7 @@ class Profile(Tokamak, PhysicalParameters):
             self,
             species=params.species,
             mu=params.mu,
-            Pzeta0=params.Pzeta0,
+            Pzeta=params.Pzeta,
         )
 
         # Store those for easier reference
@@ -163,7 +163,7 @@ class Profile(Tokamak, PhysicalParameters):
         _psipNU = self.qfactor.psipNU(_psiNU)
         psipNU = self.Q(_psipNU, "NUmagnetic_flux")
 
-        rhoNU = (self.Pzeta0NU + psipNU) / gNU
+        rhoNU = (self.PzetaNU + psipNU) / gNU
         PthetaNU = psiNU + rhoNU * iNU
 
         # Convert to input units and return
@@ -206,7 +206,7 @@ class Profile(Tokamak, PhysicalParameters):
         _psipNU = self.qfactor.psipNU(_psiNU)
         psipNU = self.Q(_psipNU, "NUmagnetic_flux")
 
-        rhoNU = (self.Pzeta0NU + psipNU) / gNU
+        rhoNU = (self.PzetaNU + psipNU) / gNU
 
         EnergyNU = (
             self.qiNU**2 / (2 * self.miNU)

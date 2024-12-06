@@ -18,7 +18,6 @@ from gcmotion.entities.particle import Particle
 
 # Scripts
 from gcmotion.scripts.freq import frequency
-from gcmotion.scripts.freq_polar import frequency_polar
 
 
 # main namespace
@@ -39,5 +38,4 @@ __all__ = [
     "Particle",
     # Scripts
     "frequency",
-    "frequency_polar",
 ]

@@ -80,7 +80,7 @@ class Particle(Profile, InitialConditions):
     >>> params = gcm.PhysicalParameters(
     ...     species=species,
     ...     mu=Q(1e-5, "NUMagnetic_moment"),
-    ...     Pzeta0=Q(-0.0272, "NUMagnetic_flux"),
+    ...     Pzeta=Q(-0.0272, "NUMagnetic_flux"),
     ... )
     >>>
     >>> # Setup Initial Conditions
@@ -306,7 +306,7 @@ class Particle(Profile, InitialConditions):
         logger.debug(f"\tParticle found to be {self.t_or_p}.")
 
         # # Find if lost or confined
-        # self.orbit_x = self.Pzeta0 / self.psip0
+        # self.orbit_x = self.Pzeta / self.psip0
         # self.orbit_y = self.mu / self.E
         # logger.debug("\tCallling Construct class...")
         # foo = Construct(self, get_abcs=True)

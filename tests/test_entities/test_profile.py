@@ -30,7 +30,7 @@ tokamak = gcm.Tokamak(
 params = gcm.PhysicalParameters(
     species=species,
     mu=Q(1e-5, "NUMagnetic_moment"),
-    Pzeta0=Q(-0.027, "NUmagnetic_flux"),
+    Pzeta=Q(-0.027, "NUmagnetic_flux"),
 )
 
 profile = gcm.Profile(tokamak, params)
@@ -82,7 +82,7 @@ class TestProfileFindPtheta:
         psiarray = Q(np.linspace(0, 5, 10), "NUMagnetic_flux")
         psigrid = Q(
             np.meshgrid(np.linspace(0, 5, 10), np.linspace(0, 5, 10)),
-            "Magnetic_flux"
+            "Magnetic_flux",
         )
 
         Ptheta = profile.findPtheta(psi)
@@ -129,7 +129,7 @@ class TestProfileFindEnergy:
         psiarray = Q(np.linspace(0, 5, 10), "NUMagnetic_flux")
         psigrid = Q(
             np.meshgrid(np.linspace(0, 5, 10), np.linspace(0, 5, 10)),
-            "Magnetic_flux"
+            "Magnetic_flux",
         )
 
         Energy = profile.findEnergy(psi, theta, "keV")

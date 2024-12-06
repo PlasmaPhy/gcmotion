@@ -15,7 +15,7 @@ def params():
     yield gcm.PhysicalParameters(
         species=species,
         mu=Q(1e-5, "NUMagnetic_moment"),
-        Pzeta0=Q(-0.025, "NUMagnetic_flux"),
+        Pzeta=Q(-0.025, "NUMagnetic_flux"),
     )
 
 
@@ -25,12 +25,12 @@ def test_units(params):
     # Input Parameters
     assert isinstance(params.species, str)
     assert params.mu.units == ureg.Magnetic_moment
-    assert params.Pzeta0.units == ureg.Magnetic_flux
+    assert params.Pzeta.units == ureg.Magnetic_flux
 
     # Quantities
     assert isinstance(params.species_name, str)
     assert params.muNU.units == ureg.NUMagnetic_moment
-    assert params.Pzeta0NU.units == ureg.NUMagnetic_flux
+    assert params.PzetaNU.units == ureg.NUMagnetic_flux
 
 
 def test_str_repr_functionality(params):

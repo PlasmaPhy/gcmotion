@@ -23,7 +23,7 @@ type Quantity = pint.Quantity
 
 
 class PhysicalParameters:
-    r"""Creates a set specifying the particles' species, mu and Pzeta0
+    r"""Creates a set specifying the particles' species, mu and Pzeta
     constants.
 
     Contains the constants of motion :math:`\mu` and :math:`P_\zeta0`, as well
@@ -43,7 +43,7 @@ class PhysicalParameters:
         The particle's species. This field is case-insensitive.
     mu : Quantity
         The magnetic moment COM in units of [current][length]^2.
-    Pzeta0 : Quantity
+    Pzeta : Quantity
         The :math:`P_\zeta` canonical momentum COM in units of magnetic
         flux.
 
@@ -54,7 +54,7 @@ class PhysicalParameters:
 
         #. mu, muNU : Quantities
             The magnetic moment in SI/NU.
-        #. Pzeta0, Pzeta0NU : Quantites
+        #. Pzeta, PzetaNU : Quantites
             The :math:`P_\zeta` canonical momentum COM in SI/NU.
         #. species, species_name : str
             The species abbreviated and full name.
@@ -75,74 +75,73 @@ class PhysicalParameters:
     >>> params = gcm.PhysicalParameters(
     ...     species=species,
     ...     mu=Q(1e-5, "NUMagnetic_moment"),
-    ...     Pzeta0=Q(-0.025, "NUMagnetic_flux"),
+    ...     Pzeta=Q(-0.025, "NUMagnetic_flux"),
     ... )
 
     """
 
     def __init__(
-        self, species: SupportedSpecies, mu: Quantity, Pzeta0: Quantity
+        self,
+        species: SupportedSpecies,
+        mu: Quantity = None,
+        Pzeta: Quantity = None,
+        E: Quantity = None,
     ):
 
         logger.info("==> Initializing PhysicalParameters...")
-        check(species, mu, Pzeta0)
 
-        # Construct Quantities
+        # Check if at only 2 are given
+        if [mu, Pzeta, E].count(None) != 1:
+            msg = "Exactly 2/3 Constants of motion must be specified"
+            raise ValueError(msg)
+
+        # Define species
         self.species = species.lower()
         self.species_name = getattr(
             PhysicalConstants, self.species + "_name", None
         )
-        self.mu = mu.to("Magnetic_moment")
-        self.Pzeta0 = Pzeta0.to("Magnetic_flux")
 
-        # Corresponding NU Quantities
-        self.muNU = self.mu.to("NUMagnetic_moment")
-        self.Pzeta0NU = self.Pzeta0.to("NUmagnetic_flux")
+        # Constants of motion
+        if mu is None:
+            self.mu = self.muNU = None
+        else:
+            self.mu = mu.to("Magnetic_moment")
+            self.muNU = self.mu.to("NUMagnetic_moment")
+
+        if Pzeta is None:
+            self.Pzeta = self.PzetaNU = None
+        else:
+            self.Pzeta = Pzeta.to("Magnetic_flux")
+            self.PzetaNU = self.Pzeta.to("NUmagnetic_flux")
+
+        if E is None:
+            self.E = self.ENU = None
+        else:
+            self.E = E.to("keV")
+            self.ENU = self.E.to("NUJoule")
 
     def __repr__(self):
         return (
             "PhysicalParameters: "
             + f"species = {colored(self.species, "light_blue")}, "
-            + f"mu = {self.mu:.4g~}, "
-            + f"Pzeta0= {self.Pzeta0:.4g~}\n"
+            + f"mu = {self.mu}, "
+            + f"Pzeta = {self.Pzeta}, "
+            + f"E = {self.E}\n"
         )
 
     def __str__(self):
+        mu = "None" if self.mu is None else f"{self.mu:.4g~}"
+        muNU = "None" if self.mu is None else f"{self.muNU:.4g~}"
+        Pzeta = "None" if self.Pzeta is None else f"{self.Pzeta:.4g~}"
+        PzetaNU = "None" if self.Pzeta is None else f"{self.PzetaNU:.4g~}"
+        E = "None" if self.E is None else f"{self.E:.4g~}"
+        ENU = "None" if self.ENU is None else f"{self.ENU:.4g~}"
+
         return (
             colored("\nPhysical Parameters:\n", "green")
             + f"{"Particle species":>23} : "
             + f"{colored(self.species_name, "light_blue"):<16}\n"
-            + f"{"mu":>23} : {f'{self.mu:.4g~}':<16}"
-            + f"({self.muNU:.4g~})\n"
-            + f"{"Pzeta0":>23} : {f'{self.Pzeta0:.4g~}':<16}"
-            + f"({self.Pzeta0NU:.4g~})\n"
+            + f"{"mu":>23} : {mu:<16}({muNU})\n"
+            + f"{"Pzeta":>23} : {f'{Pzeta}':<16}({PzetaNU})\n"
+            + f"{"E":>23} : {f'{E}':<16}({ENU})\n"
         )
-
-
-def check(species, mu, Pzeta0):
-    r"""Checks the validity of the arguements"""
-
-    assert species.lower() in [
-        "p",
-        "e",
-        "D",
-        "T",
-        "He3",
-        "He4",
-    ], "species can be on of 'p', 'e', 'D', 'T', 'He3', 'He4'"
-    assert isinstance(mu, pint.Quantity), "'mu' must be a Quantity!"
-    assert isinstance(Pzeta0, pint.Quantity), "'Pzeta0' must be a Quantity"
-    assert mu.dimensionality == {
-        "[current]": 1,
-        "[length]": 2,
-    }, "'mu' must have a dimensionality of [current][length]^2!"
-    assert Pzeta0.dimensionality == {
-        "[current]": -1,
-        "[length]": 2,
-        "[mass]": 1,
-        "[time]": -2,
-    }, (
-        "'Pzeta0' must have dimensionality of "
-        + "{[current]^-1[length]^2[mass][time]^-2 "
-        + "(Magnetic_flux)"
-    )
