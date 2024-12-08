@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from gcmotion.plot._base._base_profile_contour import _base_profile_contour
+from gcmotion.plot._base._base_profile_contour import _base_profile_contourE
 from gcmotion.plot._base._base_contour_colorbar import _base_contour_colorbar
 from gcmotion.configuration.plot_parameters import ProfileContourConfig
 
@@ -50,7 +50,7 @@ def profile_contour(profile, **args):
     contourax = fig.subplots()
 
     # Draw the contour and get the contour object
-    Contour = _base_profile_contour(profile=profile, ax=contourax, **args)
+    Contour = _base_profile_contourE(profile=profile, ax=contourax, **args)
 
     # Colorbar
     # 'cax=None' creates a new axes for the colorbar, by stealing space from

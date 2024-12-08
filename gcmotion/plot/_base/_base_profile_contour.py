@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from matplotlib import ticker
 from matplotlib.patches import Rectangle
 from matplotlib.axes import Axes
@@ -12,7 +11,7 @@ from gcmotion.plot._base._config import _ProfileContourConfig
 from gcmotion.entities.profile import Profile
 
 
-def _base_profile_contour(profile: Profile, ax: Axes, **args):
+def _base_profile_contourE(profile: Profile, ax: Axes, **args):
     r"""Base plotting function. Only draws upon a given axis without showing
     any figures.
 

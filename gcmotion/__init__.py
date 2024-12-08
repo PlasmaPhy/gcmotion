@@ -17,7 +17,7 @@ from gcmotion.entities.profile import Profile
 from gcmotion.entities.particle import Particle
 
 # Scripts
-from gcmotion.scripts.freq import frequency
+from gcmotion.scripts.freq import frequencies
 
 
 # main namespace
@@ -37,5 +37,5 @@ __all__ = [
     "Profile",
     "Particle",
     # Scripts
-    "frequency",
+    "frequencies",
 ]
