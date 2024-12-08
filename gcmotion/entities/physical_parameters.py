@@ -4,7 +4,8 @@ PhysicalParameters Entity
 =========================
 
 This module defines the "PhysicalParameters" entity, which represents a family
-of particles that are the same species, and have the same "mu" and "Pzeta"
+of particles that are the same species, and have the same "mu", "Pzeta" and
+"Energy".
 
 The Physical values are stored as Quantites, as well as their NU counterparts.
 """
@@ -23,19 +24,14 @@ type Quantity = pint.Quantity
 
 
 class PhysicalParameters:
-    r"""Creates a set specifying the particles' species, mu and Pzeta
-    constants.
+    r"""Creates a set specifying a configuration of the 3 Constants of Motion,
+    :math:`\mu, P_\zeta` and :math:`E`, as well as a particle species.
 
-    Contains the constants of motion :math:`\mu` and :math:`P_\zeta0`, as well
-    as the particle species.
-
-    .. important::
-
-        In the case of a non-perturbed system, :math:`P_\zeta0 = P_\zeta` is
-        indeed a constant of motion. This isn't true in the presence of
-        perturbation. In that case, Pzeta varies with time, and
-        :math:`\psi(P_\zeta)` is no longer 1-1.
-
+    Some plots or analysis require 2 fixed COMs and one varying. In that case,
+    the 3rd COM is simply ignored. For example, plotting the Energy contour of
+    the profile trough
+    :py:func:`~gcmotion.plot.profile_Energy_contour`, the object's *E*
+    attribute is ignored.
 
     Parameters
     ----------
@@ -91,8 +87,8 @@ class PhysicalParameters:
         logger.info("==> Initializing PhysicalParameters...")
 
         # Check if at only 2 are given
-        if [mu, Pzeta, E].count(None) != 1:
-            msg = "Exactly 2/3 Constants of motion must be specified"
+        if [mu, Pzeta, E].count(None) > 1:
+            msg = "At least 2/3 Constants of motion must be specified"
             raise ValueError(msg)
 
         # Define species

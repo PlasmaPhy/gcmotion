@@ -17,7 +17,7 @@ from gcmotion.entities.profile import Profile
 from gcmotion.entities.particle import Particle
 
 # Scripts
-from gcmotion.scripts.freq import frequencies
+# from gcmotion.scripts.freq import frequencies
 
 
 # main namespace

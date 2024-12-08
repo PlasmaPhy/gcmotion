@@ -47,15 +47,6 @@ Essential Entities
    Profile
    Particle
 
-Scripts
-=======
-
-.. autosummary::
-   :toctree: generated/
-   :caption: main_namespace
-
-   frequency
-
 Utilities
 =========
 

@@ -6,12 +6,12 @@ from scipy.interpolate import RectBivariateSpline
 
 from gcmotion.utils.logger_setup import logger
 
-from gcmotion.plot._base._config import _ProfileContourConfig
+from gcmotion.plot._base._config import _ProfilePzetaContourConfig
 
 from gcmotion.entities.profile import Profile
 
 
-def _base_profile_contourE(profile: Profile, ax: Axes, **args):
+def _base_profile_Pzeta_contour(profile: Profile, ax: Axes, **args):
     r"""Base plotting function. Only draws upon a given axis without showing
     any figures.
 
@@ -33,7 +33,7 @@ def _base_profile_contourE(profile: Profile, ax: Axes, **args):
     logger.info("==> Plotting Base Profile Contour...")
 
     # Unpack parameters
-    config = _ProfileContourConfig()
+    config = _ProfilePzetaContourConfig()
     for key, value in args.items():
         setattr(config, key, value)
 
@@ -49,10 +49,10 @@ def _base_profile_contourE(profile: Profile, ax: Axes, **args):
     )
 
     # Calculate Energy values
-    Energy = profile.findEnergy(
+    Pzeta = profile.findPzeta(
         psigrid,
         thetagrid.m,
-        config.E_units,
+        config.Pzeta_units,
         potential=config.potential,
     )
 
@@ -61,7 +61,7 @@ def _base_profile_contourE(profile: Profile, ax: Axes, **args):
     data = {
         "theta": thetagrid.m,
         "flux": psigrid.m,
-        "Energy": Energy.m,
+        "Pzeta": Pzeta.m,
     }
 
     # =============================
@@ -83,9 +83,9 @@ def _base_profile_contourE(profile: Profile, ax: Axes, **args):
 
     # Contour plot
     if config.mode == "lines":
-        C = ax.contour("theta", "flux", "Energy", data=data, **kw)
+        C = ax.contour("theta", "flux", "Pzeta", data=data, **kw)
     else:
-        C = ax.contourf("theta", "flux", "Energy", data=data, **kw)
+        C = ax.contourf("theta", "flux", "Pzeta", data=data, **kw)
 
     # Setup labels.
     # Also add a second axis for Ptheta
@@ -133,7 +133,7 @@ def _base_profile_contourE(profile: Profile, ax: Axes, **args):
     # is a bit costly but I haven't found a better way.
     cursorx = data["theta"][:, 0]
     cursory = data["flux"][0]
-    cursorz = data["Energy"]
+    cursorz = data["Pzeta"]
     values = RectBivariateSpline(cursorx, cursory, cursorz)
     flux_label = f"{psigrid.units:~P}"
 
@@ -150,7 +150,7 @@ def _base_profile_contourE(profile: Profile, ax: Axes, **args):
                 f"θ={x:.4g}π,  "
                 + f"ψ={y:.4g} {flux_label},  "
                 + f"Ρθ = {Ptheta:.4g} {flux_label},  "
-                + f"Energy = {z:.4g} {config.E_units}"
+                + f"Pzeta = {z:.4g} {config.flux_units}"
             )
 
         ax2.format_coord = cursor_format
@@ -162,7 +162,7 @@ def _base_profile_contourE(profile: Profile, ax: Axes, **args):
             return (
                 f"θ={x:.4g}π,  "
                 + f"ψ={y:.4g} {flux_label},  "
-                + f"Energy = {z:.4g} {config.E_units}"
+                + f"Pzeta= {z:.4g} {config.flux_units}"
             )
 
         ax.format_coord = cursor_format

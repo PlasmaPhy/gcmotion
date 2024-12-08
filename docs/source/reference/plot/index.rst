@@ -8,5 +8,6 @@ Availiable plotters:
 .. autosummary::
    :toctree:
    
-   profile_contour
+   profile_Energy_contour
+   profile_Pzeta_contour
    particle_evolution

@@ -17,7 +17,6 @@ every subclass should grab it from here instead of redifining it.
 import pint
 
 from gcmotion.utils.logger_setup import logger
-from gcmotion.utils.quantity_constructor import QuantityConstructor
 
 from gcmotion.entities.tokamak import Tokamak
 from gcmotion.entities.physical_parameters import PhysicalParameters
@@ -27,10 +26,16 @@ type Quantity = pint.Quantity
 
 
 class Profile(Tokamak, PhysicalParameters):
-    r"""
+    r"""A Profile entity describes an equilibrium with a given Tokamak
+    configuration and with at least 2/3 fixed Constants of Motion.
 
-    A Profile entity represents the subset of all Particles of certain species,
-    :math:`\mu` and :math:`P_\zeta` in a specific tokamak configuration.
+    By fixing 2 COMs and letting the other one be variable, we can perform many
+    useful analyses.
+
+    Note that even if specified, the 3rd COM will be ignored in an analysis
+    that by its nature lets it vary. For example, contouring over Energy
+    levels, will simply ignore the E parameter.
+
 
     Parameters
     ----------
@@ -112,14 +117,8 @@ class Profile(Tokamak, PhysicalParameters):
         self.tokamak = tokamak
         self.params = params
 
-        # This is a good place to initialize Q, since we have everything we
-        # need. Every child class should grab it from here.
-        self.Q = QuantityConstructor(
-            R=self.R.magnitude,
-            a=self.a.magnitude,
-            B0=self.B0.magnitude,
-            species=self.species,
-        )
+        # we will need Q here
+        self.Q = type(self.R)
 
         # Calculate mass and charge
         _miNU = getattr(PhysicalConstants, self.species + "_M", None)

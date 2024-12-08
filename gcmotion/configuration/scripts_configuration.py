@@ -16,7 +16,13 @@ class FrequencyConfig:
     layout: str = "constrained"
     # Resulting mosaic
     mosaic: str = "debug"
-    # ψ limit and levels for countour lines search
+
+    # Auto
+    auto_thetalim: tuple = (-np.pi, np.pi)
+    auto_psilim: tuple = (0, 1.2)
+    auto_levels: int = 100
+
+    # Energy contour (omega_theta)
     psilim: tuple = (0, 1.2)
     levels: int = 250
     grid_density: int = 200
@@ -29,3 +35,8 @@ class FrequencyConfig:
     # Filters
     theta_rtol: float = (4 * np.pi) / 100
     psi_rtol: float = 1 / 100
+
+
+@dataclass
+class QKineticConfig:
+    levels: int = 100
