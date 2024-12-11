@@ -6,7 +6,7 @@ Plotters
 Availiable plotters:
 
 .. autosummary::
-   :toctree:
+   :toctree: ../generated/
    
    profile_Energy_contour
    profile_Pzeta_contour

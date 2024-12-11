@@ -103,7 +103,6 @@ class Tokamak:
     ):
         r"""Sets up fields in the correct units."""
         logger.info("==> Initializing Tokamak...")
-        check(R, a, qfactor, bfield, efield)
 
         # Construct objects
         self.qfactor = qfactor
@@ -153,20 +152,3 @@ class Tokamak:
             + f"{'psip_wall':>23} : {f'{self.psip_wall:.4g~}':<16}"
             + f"({self.psip_wallNU:.4g~})\n"
         )
-
-
-def check(R, a, qfactor, bfield, efield):
-    r"""Checks the validity of the passed arguements."""
-    # Typechecking
-    assert isinstance(R, pint.Quantity), "'R' must be a Quantity!"
-    assert isinstance(a, pint.Quantity), "'a' must be a Quantity!"
-    assert isinstance(qfactor, QFactor), "qfactor not valid!"
-    assert isinstance(bfield, MagneticField), "bfield not valid!"
-    assert isinstance(efield, ElectricField), "efield not valid!"
-    # Dimensionality check
-    assert R.dimensionality == {
-        "[length]": 1
-    }, "'R' must have dimensionality of [length]!"
-    assert a.dimensionality == {
-        "[length]": 1
-    }, "'a' must have dimensionality of [length]!"
