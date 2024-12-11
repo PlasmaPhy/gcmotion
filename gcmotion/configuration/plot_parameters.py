@@ -70,3 +70,27 @@ class ParticleEvolutionConfig:
     marker: str = "o"
     labelsize: int = 10
     labelpad: float = 8
+
+
+@dataclass
+class QfactorProfileConfig:
+    # Figure keywords
+    figsize: tuple = (16, 5)
+    dpi: int = dpi
+    layout: str = "constrained"
+    facecolor: str = "lightskyblue"
+    titlesize: float = 20
+    titlecolor: str = "blue"
+    # Default parameter values
+    span: tuple = (0, 1.1)
+    norm: bool = True
+    show: bool = True
+    # Plot options
+    points: int = 200
+    wall_color: str = "red"
+    qwall_color: str = "black"
+    qwall_style: str = "--"
+    psip_wall_color: str = "black"
+    psip_wall_style: str = "--"
+    labelsize: float = 10
+    ax_title_size: float = 20
