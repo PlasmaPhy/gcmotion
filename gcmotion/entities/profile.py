@@ -15,19 +15,21 @@ every subclass should grab it from here instead of redifining it.
 """
 
 import pint
+from termcolor import colored
+from typing import Literal
 
 from gcmotion.utils.logger_setup import logger
 
 from gcmotion.entities.tokamak import Tokamak
-from gcmotion.entities.physical_parameters import PhysicalParameters
 from gcmotion.configuration.physical_constants import PhysicalConstants
 
 type Quantity = pint.Quantity
+type SupportedSpecies = Literal["p", "e", "D", "T", "He3", "He4"]
 
 
-class Profile(Tokamak, PhysicalParameters):
-    r"""A Profile entity describes an equilibrium with a given Tokamak
-    configuration and with at least 2/3 fixed Constants of Motion.
+class Profile:
+    r"""A Profile entity describes an unperturbed equilibrium with a given
+    Tokamak configuration and with at least 2/3 fixed Constants of Motion.
 
     By fixing 2 COMs and letting the other one be variable, we can perform many
     useful analyses.
@@ -41,8 +43,14 @@ class Profile(Tokamak, PhysicalParameters):
     ----------
     tokamak : Tokamak
         The Tokamak entity.
-    params : PhysicalParameters
-        The PhysicalParameters entity.
+    species : str
+        The particles' species.
+    mu : Quantity
+        The Magnetic Moment COM :math:`\mu`.
+    Pzeta : Quantity
+        The Canonical Momentum COM :math:`P_\zeta`.
+    E : Quantity
+        The E COM :math:`E`.
 
     Example
     -------
@@ -50,7 +58,7 @@ class Profile(Tokamak, PhysicalParameters):
 
     >>> import gcmotion as gcm
     >>>
-    >>> #Quantity Constructor
+    >>> # Quantity Constructor
     >>> Rnum = 1.65
     >>> anum = 0.5
     >>> B0num = 1
@@ -65,6 +73,9 @@ class Profile(Tokamak, PhysicalParameters):
     >>> g = Q(1, "NUPlasma_current")
     >>> Ea = Q(73500, "Volts/meter")
     >>>
+    >>> mu = Q(1e-5, "NUMagnetic_moment")
+    >>> Pzeta = Q(-0.015, "NUMagnetic_flux")
+    >>>
     >>> # Construct a Tokamak
     >>> tokamak = gcm.Tokamak(
     ...     R=R,
@@ -74,65 +85,80 @@ class Profile(Tokamak, PhysicalParameters):
     ...     efield=gcm.efield.Radial(a, Ea, B0, peak=0.98, rw=1 / 50),
     ... )
     >>>
-    >>> # Construct a PhysicalParameters set
-    >>> params = gcm.PhysicalParameters(
-    ...     species=species,
-    ...     mu=Q(1e-5, "NUMagnetic_moment"),
-    ...     Pzeta=Q(-0.0272, "NUMagnetic_flux"),
-    ... )
-    >>>
     >>> # Create a Profile
-    >>> profile = gcm.Profile(tokamak, params)
-
-    .. admonition:: For Developers
-
-        The Profile now has all the information to initialize the Quantity
-        Constructor (again) to be used internally. All child classes should
-        grab it from here.
+    >>> profile = gcm.Profile(
+    ...     tokamak=tokamak,
+    ...     species=species,
+    ...     mu=mu,
+    ...     Pzeta=Pzeta,
+    ... )
 
     """
 
-    def __init__(self, tokamak: Tokamak, params: PhysicalParameters):
+    def __init__(
+        self,
+        tokamak: Tokamak,
+        species: SupportedSpecies,
+        mu: Quantity = None,
+        Pzeta: Quantity = None,
+        E: Quantity = None,
+    ):
+
         logger.info("==> Initializing Profile...")
 
-        # Grab attributes from parents
-        Tokamak.__init__(
-            self,
-            R=tokamak.R,
-            a=tokamak.a,
-            qfactor=tokamak.qfactor,
-            bfield=tokamak.bfield,
-            efield=tokamak.efield,
-        )
+        # Check if at least 2 are given
+        if [mu, Pzeta, E].count(None) > 1:
+            msg = "At least 2/3 Constants of motion must be specified"
+            raise ValueError(msg)
 
-        PhysicalParameters.__init__(
-            self,
-            species=params.species,
-            mu=params.mu,
-            Pzeta=params.Pzeta,
-            E=params.E,
-        )
-
-        # Store those for easier reference
+        # Grab attributes from tokamak object
         self.tokamak = tokamak
-        self.params = params
+        self.__dict__.update(self.tokamak.__dict__)
 
-        # we will need Q here
-        self.Q = type(self.R)
+        # Define species
+        self.Q = type(tokamak.R)
+        self.species = species.lower()
+        self.species_name = getattr(
+            PhysicalConstants, self.species + "_name", None
+        )
 
-        # Calculate mass and charge
-        _miNU = getattr(PhysicalConstants, self.species + "_M", None)
-        _qiNU = getattr(PhysicalConstants, self.species + "_Z", None)
-        self.miNU = self.Q(_miNU, "Proton_mass")
-        self.qiNU = self.Q(_qiNU, "Proton_charge")
+        # Grab particle's mass and charge
+        M = getattr(PhysicalConstants, self.species + "_M")
+        Z = getattr(PhysicalConstants, self.species + "_Z")
+
+        self.miNU = self.Q(M, "Proton_mass")
+        self.qiNU = self.Q(Z, "Proton_charge")
+
         self.mi = self.miNU.to("kilogram")
         self.qi = self.qiNU.to("Coulomb")
+
+        # Constants of motion
+        if mu is None:
+            self.mu = self.muNU = None
+        else:
+            self.mu = mu.to("Magnetic_moment")
+            self.muNU = self.mu.to("NUMagnetic_moment")
+
+        if Pzeta is None:
+            self.Pzeta = self.PzetaNU = None
+        else:
+            self.Pzeta = Pzeta.to("Magnetic_flux")
+            self.PzetaNU = self.Pzeta.to("NUmagnetic_flux")
+
+        if E is None:
+            self.E = self.ENU = None
+        else:
+            self.E = E.to("keV")
+            self.ENU = self.E.to("NUJoule")
+
+        self.Q = type(self.tokamak.R)
 
         logger.info("\tProfile setup complete.")
 
     def findPtheta(self, psi: Quantity):
-        r"""Calculates Ptheta from psi. Output units are the same as input
-        units.
+        r"""Calculates Ptheta from psi. ``Pzeta`` must be defined.
+
+        Output units are the same as input units.
 
         Only applicable in the absence of perturbations.
 
@@ -173,7 +199,7 @@ class Profile(Tokamak, PhysicalParameters):
         self, psi: Quantity, theta: float, units: str, potential: bool = True
     ):
         r"""Calculates the Energy of a particle characterized by a (psi, theta)
-        pair.
+        pair. Both `Pzeta` and `mu` must be defined.
 
         Parameters
         ----------
@@ -183,14 +209,14 @@ class Profile(Tokamak, PhysicalParameters):
             The particle's :math:`\theta` angle.
         units : str
             The returned Energy units.
-        potential : bool
+        potential : bool, optional
             Whether or not to add the electric potential term in the energy.
             Defaults to True.
 
         Returns
         -------
         Quantity
-            The calculated Energy Quantity.
+            The calculated Energy Quantity in the specified units.
         """
         # All Quantities and operations are in NU, and the conversion to input
         # units takes place at the end.
@@ -223,6 +249,27 @@ class Profile(Tokamak, PhysicalParameters):
     def findPzeta(
         self, psi: Quantity, theta: float, units: str, potential: bool = True
     ):
+        r"""Calculates the :math:`P_\zeta` COM. Both "mu" and "E" must be
+        defined.
+
+        Parameters
+        ----------
+        psi : Quantity
+            The particle's psi Quantity.
+        theta : float
+            The particle's :math:`\theta` angle.
+        units : str
+            The returned Pzeta units.
+        potential : bool, optional
+            Whether or not to add the electric potential term in the
+            calculation. Defaults to True.
+
+        Returns
+        -------
+        Quantity
+            The calculated Pzeta Quantity in the specified units.
+
+        """
 
         # All Quantities and operations are in NU, and the conversion to input
         # units takes place at the end.
@@ -257,6 +304,26 @@ class Profile(Tokamak, PhysicalParameters):
     def findmu(
         self, psi: Quantity, theta: float, units: str, potential: bool = True
     ):
+        r"""Calculates the :math:`\mu` COM. Both "Pzeta" and "E" must be
+        defined.
+
+        Parameters
+        ----------
+        psi : Quantity
+            The particle's psi Quantity.
+        theta : float
+            The particle's :math:`\theta` angle.
+        units : str
+            The returned mu units.
+        potential : bool, optional
+            Whether or not to add the electric potential term in the
+            calculation. Defaults to True.
+
+        Returns
+        -------
+        Quantity
+            The calculated mu Quantity in the specified units.
+        """
 
         # All Quantities and operations are in NU, and the conversion to input
         # units takes place at the end.
@@ -287,7 +354,31 @@ class Profile(Tokamak, PhysicalParameters):
         return muNU.to(units)
 
     def __repr__(self):
-        return Tokamak.__repr__(self) + PhysicalParameters.__repr__(self)
+        string = Tokamak.__repr__(self)
+        string += (
+            "PhysicalParameters: "
+            + f"species = {self.species}, "
+            + f"mu = {self.mu}, "
+            + f"Pzeta = {self.Pzeta}, "
+            + f"E = {self.E}\n"
+        )
+        return string
 
     def __str__(self):
-        return Tokamak.__str__(self) + PhysicalParameters.__str__(self)
+        mu = "None" if self.mu is None else f"{self.mu:.4g~}"
+        muNU = "None" if self.mu is None else f"{self.muNU:.4g~}"
+        Pzeta = "None" if self.Pzeta is None else f"{self.Pzeta:.4g~}"
+        PzetaNU = "None" if self.Pzeta is None else f"{self.PzetaNU:.4g~}"
+        E = "None" if self.E is None else f"{self.E:.4g~}"
+        ENU = "None" if self.ENU is None else f"{self.ENU:.4g~}"
+
+        string = Tokamak.__str__(self)
+        string += (
+            colored("\nConstans of Motion\n", "green")
+            + f"{"Particle species":>23} : "
+            + f"{colored(self.species_name, "light_blue"):<16}\n"
+            + f"{"mu":>23} : {mu:<16}({muNU})\n"
+            + f"{"Pzeta":>23} : {f'{Pzeta}':<16}({PzetaNU})\n"
+            + f"{"E":>23} : {f'{E}':<16}({ENU})\n"
+        )
+        return string

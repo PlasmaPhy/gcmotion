@@ -21,7 +21,7 @@ def qfactor_profile(entity: Tokamak | Profile | Particle, **args):
 
     Parameters
     ----------
-    entity : :py:class:`~gcmotion.Tokamak`, :py:class:`~gcmotion.Profile`, :py:class:`~gcmotion.Particle`
+    entity : :py:class:`~gcmotion.Tokamak,~gcmotion.Profile,~gcmotion.Particle`
         The object to plot the qfactor of.
 
     Other Parameters

@@ -11,7 +11,6 @@ from gcmotion.tokamak import efield
 
 # Entities
 from gcmotion.entities.tokamak import Tokamak
-from gcmotion.entities.physical_parameters import PhysicalParameters
 from gcmotion.entities.initial_conditions import InitialConditions
 from gcmotion.entities.profile import Profile
 from gcmotion.entities.particle import Particle
@@ -25,11 +24,9 @@ __all__ = [
     "qfactor",
     "bfield",
     "efield",
-    # Base entities
-    "Tokamak",
-    "PhysicalParameters",
-    "InitialConditions",
     # Entities
+    "Tokamak",
+    "InitialConditions",
     "Profile",
     "Particle",
 ]

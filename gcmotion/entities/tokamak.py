@@ -4,7 +4,8 @@ Tokamak Entity
 ==============
 
 This module defines the "Tokamak" entity, which holds information about the
-devices dimensions, qfactor and electromagnetic field.
+devices dimensions, as well as the objects defining the configuration's qfactor
+and electromagnetic field.
 
 The Physical values are stored as Quantites, as well as their NU counterparts.
 The device's psi_wall is also calculated and stored inside the Tokamak entity.
@@ -24,8 +25,9 @@ type Quantity = pint.Quantity
 class Tokamak:
     r"""Creates a tokamak device.
 
-    A Tokamak entity holds all information about a device's dimensions, as well
-    as the q-factor, and the magnetic and electric field inside it.
+    A Tokamak entity holds information about the devices dimensions, as well as
+    the objects defining the configuration's qfactor and electromagnetic
+    field.
 
     Parameters
     ----------

@@ -42,7 +42,6 @@ Essential Entities
    :caption: main_namespace
 
    Tokamak
-   PhysicalParameters
    InitialConditions
    Profile
    Particle

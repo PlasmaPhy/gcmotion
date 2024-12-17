@@ -4,7 +4,6 @@
 
 .. autoclass:: {{ objname }}
    :member-order: bysource
-   :show-inheritance:
 
    {% block methods %}
    {% if methods %}

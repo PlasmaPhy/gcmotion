@@ -1,5 +1,7 @@
 r"""
-.. automethod:: run
+===============
+Particle Entity
+===============
 """
 
 import numpy as np
@@ -15,17 +17,15 @@ from gcmotion.utils.get_size import get_size
 
 from gcmotion.scripts.orbit import orbit
 
+from gcmotion.entities.tokamak import Tokamak
 from gcmotion.entities.profile import Profile
-from gcmotion.entities.initial_conditions import (
-    InitialConditions,
-    _InitialConditionsFull,
-)
+from gcmotion.entities.initial_conditions import InitialConditions
 
 # Quantity alias for type annotations
 type Quantity = pint.UnitRegistry.Quantity
 
 
-class Particle(Profile, InitialConditions):
+class Particle:
     r"""Creates a specific Particle in a specific Profile and with specific
     InitialConditions.
 
@@ -49,7 +49,6 @@ class Particle(Profile, InitialConditions):
 
 
     >>> import gcmotion as gcm
-    >>> import gcmotion.plot as gplt
     >>> import numpy as np
     >>>
     >>> # Quantity Constructor
@@ -76,56 +75,49 @@ class Particle(Profile, InitialConditions):
     ...     efield=gcm.efield.Radial(a, Ea, B0, peak=0.98, rw=1 / 50),
     ... )
     >>>
-    >>> # Setup Physical Parameters
-    >>> params = gcm.PhysicalParameters(
-    ...     species=species,
-    ...     mu=Q(1e-5, "NUMagnetic_moment"),
-    ...     Pzeta=Q(-0.0272, "NUMagnetic_flux"),
-    ... )
-    >>>
     >>> # Setup Initial Conditions
-    ... init = gcm.InitialConditions(
+    >>> init = gcm.InitialConditions(
+    ...     species="p",
     ...     muB=Q(0.5, "keV"),
+    ...     Pzeta0=Q(-0.015, "NUMagnetic_flux"),
     ...     theta0=0,
     ...     zeta0=0,
-    ...     psi0=Q(1.0, "psi_wall"),
-    ...     t_eval=Q(np.linspace(0, 3 * 1e-3, 10000), "seconds"),
+    ...     psi0=Q(0.6, "psi_wall"),
+    ...     t_eval=Q(np.linspace(0, 1e-3, 1000), "seconds"),
     ... )
     >>>
-    >>> # Create the profile
-    >>> profile = gcm.Profile(tokamak, params)
-    >>>
     >>> # Create the particle and calculate its obrit
-    >>> particle = gcm.Particle(profile, init)
+    >>> particle = gcm.Particle(tokamak=tokamak, init=init)
     >>> particle.run()
     """
 
     def __init__(
         self,
-        profile: Profile,
+        tokamak: Tokamak,
         init: InitialConditions,
     ):
         r"""Initializes particle Quantities and Tokamak configuration."""
-        logger.info(f"==> Initializing {profile.species_name}...")
+        logger.info(f"==> Initializing {init.species_name}...")
 
-        # Grabb attributes from parents
-        Profile.__init__(
-            self,
-            tokamak=profile.tokamak,
-            params=profile.params,
-        )
-
-        _InitialConditionsFull.__init__(
-            self,
-            init=init,
-            profile=profile,
-        )
+        # Extend initial conditions set
+        init._calculate_full_set(tokamak)
 
         # Store those for easier reference
-        self.tokamak = profile.tokamak
-        self.params = profile.params
-        self.profile = profile
+        self.tokamak = tokamak
         self.init = init
+
+        # Grab attributes form arguements
+        self.__dict__.update(self.tokamak.__dict__)
+        self.__dict__.update(self.init.__dict__)
+
+        # Create the particle's specific profile
+        self.profile = Profile(
+            tokamak=self.tokamak,
+            species=self.species,
+            mu=self.mu,
+            Pzeta=self.Pzeta0,
+            E=self.E,
+        )
 
         self.input_vars = vars(self).copy()  # Store __init__() vars
         logger.info("--------Particle Initialization Completed--------")
@@ -370,13 +362,13 @@ class Particle(Profile, InitialConditions):
         return orbit(parameters, profile, events=events)
 
     def __str__(self):
-        string = self.profile.__str__()
+        string = self.tokamak.__str__()
         string += self.init.__str__()
-        string += self.solver_output
+        string += getattr(self, "solver_output", "")
         return string
 
     def __repr__(self):
-        string = self.profile.__repr__()
+        string = self.tokamak.__repr__()
         string += self.init.__repr__()
         return string
 
