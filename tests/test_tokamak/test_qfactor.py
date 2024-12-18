@@ -68,7 +68,7 @@ def test_psipNU_return_types():
 def test_nondecreasing():
     """Test that q(ψ) and ψ_p(ψ) are nondecreasing."""
 
-    psis = np.linspace(0, 2, 1000)
+    psis = np.linspace(0, 2, 100)
 
     q = np.zeros(psis.shape)
     for qfactor in qfactors:

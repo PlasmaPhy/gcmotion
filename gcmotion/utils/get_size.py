@@ -1,4 +1,5 @@
 import sys
+from pint import UnitRegistry
 
 
 def get_size(obj, seen=None):
@@ -40,5 +41,32 @@ def get_size(obj, seen=None):
     elif hasattr(obj, "__iter__") and not isinstance(
         obj, (str, bytes, bytearray)
     ):
-        size += sum([get_size(i, seen) for i in obj])
+        try:
+            size += sum([get_size(i, seen) for i in obj])
+        except TypeError:
+            pass
     return size
+
+
+def get_iter_size(obj):
+
+    sizes = {}
+    for key, value in vars(obj).items():
+        size = get_size(value)
+        sizes[key] = size
+
+    # Sort by size
+    sizes = dict(sorted(sizes.items(), key=lambda item: item[1], reverse=True))
+
+    # Quantify
+    ureg = UnitRegistry()
+    for key, value in sizes.items():
+        sizes[key] = value * ureg.bytes
+
+    # Print total size of obj
+    total_size = get_size(obj) * ureg.bytes
+    print(f"obj size = {total_size:.4g~P#}\n")
+
+    # Print results
+    for key, value in sizes.items():
+        print(f"{key} size = {value:.4g~P#}")

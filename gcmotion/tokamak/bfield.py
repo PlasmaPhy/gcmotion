@@ -1,52 +1,14 @@
 r"""
-Magnetic Field configurations
-=============================
-
-Here is a list of the availiable bfield configurations.
-
-==================     ===============
-Large Aspect Ratio     :py:class:`LAR`
-==================     ===============
-
-Their parameters are documented below.
-
-Example
--------
-
->>> import gcmotion as gcm
->>>
->>> # Quantity Constructor
->>> Rnum = 1.6
->>> anum = 0.5
->>> B0num = 1
->>> species = "p"
->>> Q = gcm.QuantityConstructor(R=Rnum, a=anum, B0=B0num, species=species)
->>>
->>> # Intermediate values
->>> B0 = Q(B0num, "Tesla")
->>> i = Q(0, "NUPlasma_current")
->>> g = Q(1, "NUPlasma_current")
->>>
->>> # A Magnetic field
->>> bfield1 = gcm.bfield.LAR(B0=B0, i=i, g=g)
-
-The functions `bigNU` and `solverbNU` work identically in every class, so I
-list their methods here as to not repeat myself:
-
-.. autofunction:: gcmotion.bfield.MagneticField.bigNU
-
-.. autofunction:: gcmotion.bfield.MagneticField.solverbNU
-
-.. rubric:: LAR
-
-.. autoclass:: LAR
-    :show-inheritance:
-
+Defines the MagneticFieldBase class and all available bfield
+configurations.
 """
 
+import os
 import pint
 import numpy as np
+import xarray as xr
 from termcolor import colored
+from scipy.interpolate import UnivariateSpline, RectBivariateSpline
 
 from math import cos, sin, sqrt
 from abc import ABC, abstractmethod
@@ -203,3 +165,93 @@ class LAR(MagneticField):
             colored("LAR", "light_blue")
             + f": B0={self.B0:.4g~}, I={self.i:.4g~}, g={self.g:.4g~}."
         )
+
+
+class Smart(MagneticField):
+
+    def __init__(self):
+        r""" """
+        # Open the dataset
+        parent = os.path.dirname(__file__)
+        path = os.path.join(parent, "reconstructed/smart.nc")
+        try:
+            dataset = xr.open_dataset(path)
+            self.dataset = dataset
+        except FileNotFoundError:
+            raise FileNotFoundError(f"No file found at '{path}'")
+
+        # Extract the arrays
+        psi_values = dataset.psi.data
+        theta_values = dataset.boozer_theta.data
+        b_values = dataset.b_field_norm.data.T
+        db_dpsi_values = dataset.db_dpsi_norm.data.T
+        db_dtheta_values = dataset.db_dtheta_norm.data.T
+        i_values = dataset.I_norm.data
+        g_values = dataset.g_norm.data
+
+        # Create splines
+        self.b_spline = RectBivariateSpline(
+            x=theta_values,
+            y=psi_values,
+            z=b_values,
+        )
+        self.db_dpsi_spline = RectBivariateSpline(
+            x=theta_values,
+            y=psi_values,
+            z=db_dpsi_values,
+        )
+        self.db_dtheta_spline = RectBivariateSpline(
+            x=theta_values,
+            y=psi_values,
+            z=db_dtheta_values,
+        )
+
+        self.i_spline = UnivariateSpline(
+            x=psi_values,
+            y=i_values,
+        )
+        self.g_spline = UnivariateSpline(
+            x=psi_values,
+            y=g_values,
+        )
+
+        self.ider_spline = self.i_spline.derivative(n=1)
+        self.gder_spline = self.g_spline.derivative(n=1)
+
+        # Useful attributes
+        _B0 = float(dataset.Baxis.data)  # Tesla
+        self.B0 = pint.UnitRegistry.Quantity(_B0, "Tesla")
+        self.is_numerical = True
+
+    def bigNU(self, psi: float | np.ndarray, theta: float | np.ndarray):
+
+        theta = theta % (2 * np.pi)
+        b = self.b_spline(x=theta, y=psi, grid=False)
+        i = self.i_spline(x=psi)
+        g = self.g_spline(x=psi)
+
+        return (b, i, g)
+
+    def solverbNU(self, psi: float, theta: float):
+
+        theta = theta % (2 * np.pi)
+        # Field and currents
+        b, i, g = self.bigNU(psi, theta)
+
+        # Field derivatives
+        db_dpsi = self.db_dpsi_spline(x=theta, y=psi, grid=False)
+        db_dtheta = self.db_dtheta_spline(x=theta, y=psi, grid=False)
+
+        # Current derivatives
+        i_der = self.ider_spline(psi)
+        g_der = self.gder_spline(psi)
+
+        # Pack them up
+        currents = (i, g)
+        b_der = (db_dpsi, db_dtheta)
+        currents_der = (i_der, g_der)
+
+        return b, b_der, currents, currents_der
+
+    def __repr__(self):
+        return colored("Smart", "light_blue") + f": B0={self.B0:.4g~}."

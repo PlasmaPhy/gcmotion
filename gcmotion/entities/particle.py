@@ -378,15 +378,3 @@ class Particle:
             print(f"{item:.6g~}")
         else:
             return item
-
-    def __sizeof__(self):
-        r"""Recursively calculates the size of the instanciated particle.
-
-        Might take a couple of seconds.
-
-        :meta public:
-
-        """
-
-        size = self.Q(get_size(vars(self)), "bytes")
-        return f"{size:.4g~#P}"

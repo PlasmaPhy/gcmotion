@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from numpy import pi
 
 figsize = 16, 9  # Global window size
-dpi = 90  # Global dpi
+dpi = 100  # Global dpi
 
 
 @dataclass()
@@ -83,7 +83,6 @@ class QfactorProfileConfig:
     titlecolor: str = "blue"
     # Default parameter values
     span: tuple = (0, 1.1)
-    norm: bool = True
     show: bool = True
     # Plot options
     points: int = 200
@@ -93,4 +92,35 @@ class QfactorProfileConfig:
     psip_wall_color: str = "black"
     psip_wall_style: str = "--"
     labelsize: float = 10
+    ax_title_size: float = 20
+
+
+@dataclass
+class MagneticProfileConfig:
+    # Figure keywords
+    figsize: tuple = (16, 10)
+    dpi: int = dpi
+    layout: str = "constrained"
+    facecolor: str = "lightskyblue"
+    titlesize: float = 20
+    titlecolor: str = "blue"
+    # Default parameter values
+    span: tuple = (0, 1.1)
+    units: str = "NU"
+    plot_derivatives: bool = True
+    show: bool = True
+    # Contour options
+    grid_density: int = 100
+    levels: int = 20
+    bcmap: str = "inferno"
+    icmap: str = "viridis"
+    gcmap: str = "viridis"
+    locator: str = ""
+    log_base: float = 1.00001
+    # 2d plot options
+    current_color: str = "b"
+    derivative_color: str = "r"
+    linewidth: float = 2
+    # Label options
+    labelsize: float = 15
     ax_title_size: float = 20

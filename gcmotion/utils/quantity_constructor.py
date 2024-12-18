@@ -9,7 +9,13 @@ ureg = UnitRegistry(case_sensitive=False, on_redefinition="ignore")
 set_application_registry(ureg)  # Used only in testing
 
 
-def QuantityConstructor(R: float, a: float, B0: float, species: str):
+def QuantityConstructor(
+    R: float,
+    B0: float,
+    species: str,
+    a: float = None,
+    _psi_wallNU: float = None,
+):
     r"""Extends pint's default Quantity Constructor to include NU units and
     some extra SI unit aliases.
 
@@ -74,9 +80,15 @@ def QuantityConstructor(R: float, a: float, B0: float, species: str):
 
     # Also define psi_wall as a unit of Magnetic_flux, to assing psi
     # initial values with respect to it
-    ureg.define(f"psi_wall = {B0 * a**2 / 2} Magnetic_flux")
-    ureg.define(
-        f"NUpsi_wall = {(a / R)**2 / 2} NUMagnetic_flux"
-    )  # not really need but sure
+    if a is not None:
+        ureg.define(f"psi_wall = {B0 * a**2 / 2} Magnetic_flux")
+        ureg.define(
+            f"NUpsi_wall = {(a / R)**2 / 2} NUMagnetic_flux"
+        )  # not really need but sure
+    else:
+        psi_wallNU = ureg.Quantity(_psi_wallNU, "NUMagnetic_flux")
+        psi_wall = psi_wallNU.to("Magnetic_flux")
+        ureg.define(f"psi_wall = {psi_wall.m} Magnetic_flux")
+        ureg.define(f"NUpsi_wall = {psi_wallNU.m} NUMagnetic_flux")
 
     return ureg.Quantity

@@ -2,13 +2,17 @@ r"""
 Defines the QFactor Base class and all available q-factor configurations.
 """
 
+import os
 import pint
 import numpy as np
+import xarray as xr
 
+
+from abc import ABC, abstractmethod
 from termcolor import colored
 from math import sqrt, atan
 from scipy.special import hyp2f1
-from abc import ABC, abstractmethod
+from scipy.interpolate import UnivariateSpline
 
 # Quantity alias for type annotations
 type Quantity = pint.Quantity
@@ -244,4 +248,65 @@ class Hypergeometric(QFactor):
         return (
             colored("Hypergeometric", "light_blue")
             + f": q0={self.q0:.4g}, q_wall={self.q_wall:.4g}, n={self.n:.4g}."
+        )
+
+
+class Smart(QFactor):
+    r"""Initializes an object q from the "smart" numerical equilibrium.
+
+    The data file must be stored as "gcmotion/tokamak/reconstructed/smart.nc".
+
+    """
+
+    def __init__(self):
+        r"""Imports the data and creates the q and psip splines, and stores
+        useful attributes like q0 and qwall.
+
+        Both 'q' and 'psi' dataarrays are extrapolate to include psi=0.
+        """
+        # Open the dataset
+        parent = os.path.dirname(__file__)
+        path = os.path.join(parent, "reconstructed/smart.nc")
+        try:
+            dataset = xr.open_dataset(path)
+            self.dataset = dataset
+        except FileNotFoundError:
+            raise FileNotFoundError(f"No file found at '{path}'")
+
+        # Extract the arrays
+        psi_values = dataset.psi.data
+        q_values = dataset.q.data
+
+        # Extrapolate psi to containn psi=0
+        psi_values = np.insert(psi_values, 0, 0)
+
+        # Extrapolate q to contain the value q(psi=0), which is the same as
+        # q[1], to avoid errors when integrating.
+        q_values = np.insert(q_values, 0, q_values[0])
+
+        # Create q spline
+        self.qspline = UnivariateSpline(x=psi_values, y=q_values)
+
+        # Create psip spline
+        iota_values = 1 / q_values
+        iota_spline = UnivariateSpline(x=psi_values, y=iota_values)
+        self.psip_spline = iota_spline.antiderivative(n=1)
+
+        # Calculate useful attributes
+        self.q0 = q_values[0]
+        self.q_wall = q_values[-1]
+
+    def solverqNU(self, psi: float) -> float:
+        return self.qspline(psi)
+
+    def psipNU(self, psi: float | np.ndarray) -> float | np.ndarray:
+        if isinstance(psi, float):
+            return float(self.psip_spline(psi))
+        elif isinstance(psi, np.ndarray):
+            return self.psip_spline(psi)
+
+    def __repr__(self):
+        return (
+            colored("Smart", "light_blue")
+            + f": q0={self.q0:.4g}, q_wall={self.q_wall:.4g}."
         )

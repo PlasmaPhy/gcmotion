@@ -12,6 +12,7 @@ Here is a list of the availiable q-factor configurations:
 Unity q-factor               :py:class:`Unity`
 Parabolic q-factor           :py:class:`Parabolic`
 Hypergeometric q-factor      :py:class:`Hypergeometric`
+(Numerical) Smart            :py:class:`Smart`
 =======================      ==========================
 
 Their parameters are documented below.
@@ -73,3 +74,7 @@ Available q-factors
 .. autoclass:: Hypergeometric
    :class-doc-from: class
 
+.. rubric:: Smart
+
+.. autoclass:: Smart
+   :class-doc-from: class

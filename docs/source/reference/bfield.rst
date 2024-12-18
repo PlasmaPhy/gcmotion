@@ -56,4 +56,3 @@ Available magnetic fields
 
 .. autoclass:: LAR
    :class-doc-from: class
-   :no-index:

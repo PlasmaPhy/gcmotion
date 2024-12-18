@@ -33,8 +33,12 @@ class Tokamak:
     ----------
     R : Quantity
         The tokamak's major radius dimensions of [length].
-    a : Quantity
-        The tokamak's minor radius dimensions of [length].
+    a : Quantity, optional
+        The tokamak's minor radius dimensions of [length]. This parameter must
+        be passed in analytical equilibria, otherwise the unit [psi_wall]
+        cannot be defined. In the case of numerical equilibria, :math:`\alpha`
+        itself cannot be defined, and the unit [psi_wall] is defined
+        automatically from the data.
     qfactor : :py:class:`~gcmotion.qfactor.QFactor`
         Qfactor object that supports query methods for getting
         values of :math:`q(\psi)` and :math:`\psi_p(\psi)`.
@@ -46,7 +50,6 @@ class Tokamak:
         Electric Field Object that supports query methods for
         getting values of the field itself and the derivatives of
         its potential.
-
     Notes
     -----
     A tokamak object contains the following attributes, which include the input
@@ -120,8 +123,10 @@ class Tokamak:
         self.B0NU = self.B0.to("NUTesla")
 
         # Calculate last closed surfaces
-        self.psi_wall = (self.B0 * self.a**2 / 2).to("Magnetic_flux")
+        Q = type(R)
+        self.psi_wall = Q(1, "psi_wall").to("Magnetic_flux")
         self.psi_wallNU = self.psi_wall.to("NUMagnetic_flux")
+
         self.psip_wallNU = (
             self.qfactor.psipNU(self.psi_wallNU.magnitude)
             * self.psi_wallNU.units
