@@ -50,24 +50,27 @@ def fp_ic_scan(
     system_values = np.empty_like(theta_grid)
     for i in range(grid_shape[0]):
         for j in range(grid_shape[1]):
-            system_values[i, j] = system(theta_grid[i, j], psi_grid[i, j], parameters, profile)
+            theta_dot, psi_dot = system(theta_grid[i, j], psi_grid[i, j], parameters, profile)
+            system_values[i, j] = theta_dot**2 + psi_dot**2
 
     # Find fixed_point_candidates (minima/maxima/saddle points) using a combination
     # of neighbor checks
     fixed_point_candidates = deque([])
     for i in range(1, grid_shape[0] - 1):  # Exclude first and last row
         for j in range(1, grid_shape[1] - 1):  # Exclude first and last column
-            center = system_values[i, j]
 
-            # Check if center value is below tolerance
-            if center >= tol:
+            derivatives_at_center = system_values[i, j]
+
+            # Check if the derivatives at the center are below tolerance
+            if derivatives_at_center >= tol:
                 continue
 
             # Check neighbors
             neighbors = evaluate_neighbors(system_values, i, j)
 
-            # If center is smaller than all neighbors, add to fixed_point_candidates
-            if all(center < n for n in neighbors):
+            # If theta_dot**2 + psi_dot**2 at the center is smaller than
+            #  all neighbors, add to fixed_point_candidates
+            if all(derivatives_at_center < n for n in neighbors):
                 fixed_point_candidates.append((theta_grid[i, j], psi_grid[i, j]))
 
     # Convert fixed_point_candidates to list of initial conditions
