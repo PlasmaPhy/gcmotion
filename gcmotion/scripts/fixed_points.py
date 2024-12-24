@@ -101,6 +101,7 @@ def fixed_points(
     parameters: namedtuple,
     profile: namedtuple,
     Q: Quantity,
+    method: str = "differential evolution",
     theta_lim: list = [-1.01 * np.pi, 1.01 * np.pi],
     psi_lim: list = [0.01, 1.3],
     dist_tol: float = 1e-3,
@@ -138,6 +139,7 @@ def fixed_points(
         initial_conditions = ic_scanner(
             parameters=parameters,
             profile=profile,
+            method=method,
             theta_grid_density=ic_theta_grid_density,
             psi_grid_density=ic_psi_grid_density,
             psi_lim=psi_lim,
@@ -155,6 +157,7 @@ def fixed_points(
     for initial_condition in initial_conditions:
 
         theta_fix, psi_fix = fixed_point(
+            method=method,
             initial_condition=initial_condition,
             bounds=bounds,
             parameters=parameters,
@@ -181,4 +184,4 @@ def fixed_points(
         print(f"\nDistinct Fixed Points: {distinct_fixed_points}\n")
         print(f"Number of Distinct Fixed Points: {distinct_fixed_points.shape[0]}\n")
 
-    return num_of_dfp, distinct_fixed_points
+    return num_of_dfp, distinct_fixed_points, initial_conditions

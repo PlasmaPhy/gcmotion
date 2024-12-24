@@ -31,11 +31,13 @@ This is how :py:func:`fixed_points_plot` can be called inside the function :py:f
 
 from gcmotion.scripts.fixed_points import fixed_points as fp
 from gcmotion.utils.XO_points_classification import XO_points_classification as xoc
+from gcmotion.utils.fp_ic_scan import fp_ic_scan
+from gcmotion.utils.energy_Ptheta import energy_Ptheta
 import matplotlib.pyplot as plt
 import numpy as np
 
 from time import time
-from collections import namedtuple
+from collections import namedtuple, deque
 from gcmotion.utils.logger_setup import logger
 
 
@@ -43,6 +45,7 @@ def fixed_points_plot(
     cwp,
     theta_lim: list,
     psi_lim: list,
+    method: str = "differential evolution",
     dist_tol: float = 1e-3,
     fp_ic_scan_tol: float = 5 * 1e-8,
     ic_theta_grid_density: int = 1000,
@@ -50,6 +53,7 @@ def fixed_points_plot(
     random_init_cond: bool = False,
     info: bool = False,
     ic_info: bool = False,
+    plot_init_cond: bool = False,
     **params,
 ):
     r"""Draws fixed points plot.
@@ -112,15 +116,19 @@ def fixed_points_plot(
 
     Parameters = namedtuple("Orbit_Parameters", ["Pzeta0", "mu"])
 
+    Pzeta = cwp.Pzeta0NU.magnitude
+    mu = cwp.muNU.magnitude
+
     # Get Particle Parameters
     parameters = Parameters(
-        Pzeta0=cwp.Pzeta0NU.magnitude,
-        mu=cwp.muNU.magnitude,
+        Pzeta0=Pzeta,
+        mu=mu,
     )
 
     start = time()
     # Calculate fixed points
-    _, fixed_points = fp(
+    _, fixed_points, initial_conditions = fp(
+        method=method,
         parameters=parameters,
         profile=profile,
         Q=cwp.Q,
@@ -165,3 +173,28 @@ def fixed_points_plot(
     ax.set_xlim([-np.pi, np.pi])
     ax.scatter(X_thetas, X_P_thetas, marker="x", color="#80FF80", s=100)
     ax.scatter(O_thetas, O_P_thetas, marker="o", edgecolor="yellow", facecolors="none", s=100)
+
+    if plot_init_cond:
+
+        thetas_init = []
+        P_thetas_init = []
+
+        for initial_condition in initial_conditions:
+
+            theta_init = initial_condition[0]
+            psi_init = initial_condition[1]
+
+            _, P_theta_init = energy_Ptheta(
+                psi=psi_init,
+                theta=theta_init,
+                mu=mu,
+                Pzeta=Pzeta,
+                profile=profile,
+                contour_Phi=True,
+            )
+
+            thetas_init.append(theta_init)
+            P_thetas_init.append(P_theta_init)
+
+        P_thetas_init_denormalized = cwp.Q(P_thetas_init, "NUmagnetic_flux").to("Magnetic_flux")
+        ax.scatter(thetas_init, P_thetas_init_denormalized, marker=">", color="red", s=100)

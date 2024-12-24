@@ -28,6 +28,7 @@ def evaluate_neighbors(system_values, i, j):
 def fp_ic_scan(
     parameters: namedtuple,
     profile: namedtuple,
+    method: str,
     theta_grid_density: int = 800,
     psi_grid_density: int = 800,
     theta_lim: list = [-1.01 * np.pi, 1.01 * np.pi],
@@ -50,8 +51,16 @@ def fp_ic_scan(
     system_values = np.empty_like(theta_grid)
     for i in range(grid_shape[0]):
         for j in range(grid_shape[1]):
-            theta_dot, psi_dot = system(theta_grid[i, j], psi_grid[i, j], parameters, profile)
-            system_values[i, j] = theta_dot**2 + psi_dot**2
+
+            if method == "differential evolution":
+                system_values[i, j] = system(
+                    theta_grid[i, j], psi_grid[i, j], parameters, profile, method=method
+                )
+            elif method == "fsolve":
+                theta_dot, psi_dot = system(
+                    theta_grid[i, j], psi_grid[i, j], parameters, profile, method=method
+                )
+                system_values[i, j] = theta_dot**2 + psi_dot**2
 
     # Find fixed_point_candidates (minima/maxima/saddle points) using a combination
     # of neighbor checks

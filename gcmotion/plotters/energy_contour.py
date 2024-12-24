@@ -50,6 +50,7 @@ def energy_contour(
     psi_lim: str | list = "auto",
     plot_drift: bool = True,
     plot_fixed_points: bool = False,
+    fp_method: str = "differential evolution",
     dist_tol: float = 1e-3,
     fp_ic_scan_tol: float = 5 * 1e-8,
     ic_fp_theta_grid_density: int = 800,
@@ -57,6 +58,7 @@ def energy_contour(
     fp_random_init_cond: bool = False,
     fixed_points_info: bool = False,
     fixed_points_ic_info: bool = False,
+    plot_fp_init_cond: bool = False,
     contour_Phi: bool = True,
     units: str = "SI",
     levels: int = None,
@@ -235,6 +237,7 @@ def energy_contour(
 
         fixed_points_plot(
             cwp,
+            method=fp_method,
             theta_lim=[1.01 * theta_lim[0], 1.01 * theta_lim[1]],
             psi_lim=psi_lim_fixed_points,
             dist_tol=dist_tol,
@@ -245,6 +248,7 @@ def energy_contour(
             _internal_call=True,
             info=fixed_points_info,
             ic_info=fixed_points_ic_info,
+            plot_init_cond=plot_fp_init_cond,
             canvas=canvas,
         )
         logger.debug("\tPlotting particle's fixed points in contour.")

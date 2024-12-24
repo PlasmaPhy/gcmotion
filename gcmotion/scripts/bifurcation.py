@@ -72,6 +72,7 @@ def bifurcation(
     collection: Collection,
     theta_lim: list = [-np.pi, np.pi],
     psi_lim: list = [0.01, 1.3],
+    method: str = "differential evolution",
     dist_tol: float = 1e-3,
     fp_ic_scan_tol: float = 5 * 1e-8,
     ic_theta_grid_density: int = 1000,
@@ -127,10 +128,11 @@ def bifurcation(
             mu=p1.muNU.magnitude,
         )
 
-        current_num_of_fp, current_fp = fixed_points(
+        current_num_of_fp, current_fp, _ = fixed_points(
             parameters=parameters,
             profile=profile,
             Q=p.Q,
+            method=method,
             theta_lim=theta_lim,
             psi_lim=psi_lim,
             dist_tol=dist_tol,
