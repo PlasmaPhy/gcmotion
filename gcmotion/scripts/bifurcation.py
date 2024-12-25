@@ -179,7 +179,6 @@ def bifurcation(
                 profile=profile,
                 contour_Phi=True,
             )
-            current_O_energies = current_O_energies[0]
 
             current_X_energies, _ = energy_Ptheta(
                 psi=current_X_psis,
@@ -189,8 +188,6 @@ def bifurcation(
                 profile=profile,
                 contour_Phi=True,
             )
-
-            current_X_energies = current_X_energies[0]
 
             O_energies.append(current_O_energies)
             X_energies.append(current_X_energies)

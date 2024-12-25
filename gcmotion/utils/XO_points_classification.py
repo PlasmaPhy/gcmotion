@@ -22,7 +22,7 @@ def XO_points_classification(
     def WNU(theta, psi):
         # Calculate the Hamiltonian at (theta, psi)
         W, _ = energy_Ptheta(
-            psi=psi, theta=theta, Pzeta=Pzeta0, mu=mu, profile=profile, contour_Phi=True
+            psi=abs(psi), theta=theta, Pzeta=Pzeta0, mu=mu, profile=profile, contour_Phi=True
         )
 
         return W
