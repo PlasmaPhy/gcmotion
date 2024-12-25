@@ -65,6 +65,8 @@ from collections import deque, namedtuple
 
 from gcmotion.utils.XO_points_classification import XO_points_classification as xoc
 from gcmotion.scripts.fixed_points import fixed_points
+from gcmotion.utils.points_psi_to_P_theta import points_psi_to_P_theta
+from gcmotion.utils.energy_Ptheta import energy_Ptheta
 from gcmotion.classes.collection import Collection
 
 
@@ -81,6 +83,7 @@ def bifurcation(
     fp_info: bool = False,
     bif_info: bool = False,
     fp_ic_info: bool = False,
+    calc_energies: bool = False,
 ):
 
     num_of_XP = deque([])
@@ -94,6 +97,9 @@ def bifurcation(
 
     O_thetas = deque([])
     O_P_thetas = deque([])
+
+    O_energies = deque([])
+    X_energies = deque([])
 
     p1 = collection[0]
     p_last = collection[-1]
@@ -144,12 +150,59 @@ def bifurcation(
             ic_info=fp_ic_info,
         )
 
-        # CAUTION: The xoc function takes in psis_fixed but returns P_thetas_fixed
+        # CAUTION: The xoc function takes in psis_fixed but returns also psis_fixed
         current_X_points, current_O_points = xoc(
             unclassified_fixed_points=current_fp,
             parameters=parameters,
             profile=profile,
+            to_P_thetas=not calc_energies,
         )
+
+        if calc_energies:
+
+            # Convert deque to numpy arrays for easy manipulation
+            current_X_thetas, current_X_psis = (
+                zip(*current_X_points) if current_X_points else ([], [])
+            )
+            current_O_thetas, current_O_psis = (
+                zip(*current_O_points) if current_O_points else ([], [])
+            )
+
+            current_O_psis = np.array(current_O_psis)
+            current_X_psis = np.array(current_X_psis)
+
+            current_O_energies, _ = energy_Ptheta(
+                psi=current_O_psis,
+                theta=current_O_thetas,
+                mu=parameters.mu,
+                Pzeta=current_P_zeta,
+                profile=profile,
+                contour_Phi=True,
+            )
+            current_O_energies = current_O_energies[0]
+
+            current_X_energies, _ = energy_Ptheta(
+                psi=current_X_psis,
+                theta=current_X_thetas,
+                mu=parameters.mu,
+                Pzeta=current_P_zeta,
+                profile=profile,
+                contour_Phi=True,
+            )
+
+            current_X_energies = current_X_energies[0]
+
+            O_energies.append(current_O_energies)
+            X_energies.append(current_X_energies)
+
+            # Turn psis to P_thetas after having calculated the energy
+            current_X_points = points_psi_to_P_theta(
+                current_X_points, Pzeta=current_P_zeta, mu=parameters.mu, profile=profile
+            )
+
+            current_O_points = points_psi_to_P_theta(
+                current_O_points, Pzeta=current_P_zeta, mu=parameters.mu, profile=profile
+            )
 
         # Convert deque to numpy arrays for easy manipulation
         current_X_thetas, current_X_P_thetas = (
@@ -190,4 +243,6 @@ def bifurcation(
         O_P_thetas,
         num_of_XP,
         num_of_OP,
+        X_energies,
+        O_energies,
     )

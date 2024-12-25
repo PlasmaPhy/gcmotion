@@ -2,7 +2,7 @@ import numpy as np
 from collections import namedtuple, deque
 from gcmotion.utils.energy_Ptheta import energy_Ptheta
 from gcmotion.utils.second_derivative import higher_order_second_derivative
-from gcmotion.utils.points_psi_to_P_theta import points_to_P_theta
+from gcmotion.utils.points_psi_to_P_theta import points_psi_to_P_theta
 
 
 def XO_points_classification(
@@ -54,7 +54,7 @@ def XO_points_classification(
     if to_P_thetas:
         # We have XO points, each, of the form [thetaXO, psiXO] and we will transform them
         # to [thetaXO, P_theta_XO], if asked
-        X_points = points_to_P_theta(X_points, Pzeta=Pzeta0, mu=mu, profile=profile)
-        O_points = points_to_P_theta(O_points, Pzeta=Pzeta0, mu=mu, profile=profile)
+        X_points = points_psi_to_P_theta(X_points, Pzeta=Pzeta0, mu=mu, profile=profile)
+        O_points = points_psi_to_P_theta(O_points, Pzeta=Pzeta0, mu=mu, profile=profile)
 
     return X_points, O_points

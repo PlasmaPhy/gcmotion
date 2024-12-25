@@ -4,7 +4,7 @@ from gcmotion.utils.energy_Ptheta import energy_Ptheta
 
 
 # Takes in points list/array/deque of the form [theta, psi] returns [theta, P_theat]
-def points_to_P_theta(points, Pzeta: float, mu: float, profile: namedtuple):
+def points_psi_to_P_theta(points, Pzeta: float, mu: float, profile: namedtuple):
 
     if isinstance(points, np.ndarray):
         points = deque(points)

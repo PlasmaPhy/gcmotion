@@ -41,6 +41,7 @@ def bifurcation_plot(
     fp_info: bool = False,
     bif_info: bool = False,
     fp_ic_info: bool = False,
+    plot_energy_bif: bool = False,
 ):
     r"""Draws the bifurcation diagrams for the :math:`theta`'s  fixed,
     the :math:`P_{theta}`'s fixed and the number of fixed points found for
@@ -81,19 +82,22 @@ def bifurcation_plot(
 
     start = time()
     # CAUTION: The bifurcation function takes in psis_fixed but returns P_thetas_fixed
-    X_thetas, X_P_thetas, O_thetas, O_P_thetas, num_of_XP, num_of_OP = bifurcation(
-        collection=collection,
-        theta_lim=theta_lim,
-        psi_lim=psi_lim,
-        method=fp_method,
-        dist_tol=dist_tol,
-        fp_ic_scan_tol=fp_ic_scan_tol,
-        ic_theta_grid_density=ic_theta_grid_density,
-        ic_psi_grid_density=ic_psi_grid_density,
-        random_fp_init_cond=random_fp_init_cond,
-        fp_info=fp_info,
-        bif_info=bif_info,
-        fp_ic_info=fp_ic_info,
+    X_thetas, X_P_thetas, O_thetas, O_P_thetas, num_of_XP, num_of_OP, X_energies, O_energies = (
+        bifurcation(
+            collection=collection,
+            theta_lim=theta_lim,
+            psi_lim=psi_lim,
+            method=fp_method,
+            dist_tol=dist_tol,
+            fp_ic_scan_tol=fp_ic_scan_tol,
+            ic_theta_grid_density=ic_theta_grid_density,
+            ic_psi_grid_density=ic_psi_grid_density,
+            random_fp_init_cond=random_fp_init_cond,
+            fp_info=fp_info,
+            bif_info=bif_info,
+            fp_ic_info=fp_ic_info,
+            calc_energies=plot_energy_bif,
+        )
     )
 
     print(f"BIFURCATION RUN IN {(time() - start)/60:.1f} mins")
@@ -183,6 +187,50 @@ def bifurcation_plot(
     ax_ndfp.scatter(P_zetas, num_of_XP, s=2, color="#E65100", label="X points")
     ax_ndfp.scatter(P_zetas, num_of_OP, s=2, label="O points")
     ax_ndfp.legend()
+
+    if plot_energy_bif:
+        fig, ax = plt.subplots(1, 1, figsize=(9, 7), sharex=True)
+        plt.xlabel(r"$P_{\zeta}$ [NUmf]")
+        ax.set_ylabel("Energies")
+
+        X_energies_plot = []
+        O_energies_plot = []
+
+        P_zeta_plot1 = []
+
+        # P_theta Fixed Bifurcation
+        for i, p in enumerate(particles):
+            P_zeta = p.Pzeta0NU
+            y_list = X_energies[i]
+
+            # Ensure y_list is iterable
+            if np.isscalar(y_list):
+                y_list = [y_list]
+
+            P_zeta_plot1.extend([P_zeta] * len(list(y_list)))
+            X_energies_plot.extend(y_list)
+
+        P_zeta_plot2 = []
+
+        # P_theta Fixed Bifurcation
+        for i, p in enumerate(particles):
+            P_zeta = p.Pzeta0NU
+            y_list = O_energies[i]
+
+            # Ensure y_list is iterable
+            if np.isscalar(y_list):
+                y_list = [y_list]
+
+            P_zeta_plot2.extend([P_zeta] * len(list(y_list)))
+            O_energies_plot.extend(y_list)
+
+        ax.scatter(P_zeta_plot1, X_energies_plot, s=2, color="#E65100", label="X points")
+        ax.scatter(P_zeta_plot2, O_energies_plot, s=2, label="O points")
+
+        print(f"X energies {X_energies}\n\n")
+        print(f"O energies {O_energies}\n\n")
+
+        ax.legend()
 
     plt.ion()
     plt.show(block=True)
