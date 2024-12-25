@@ -2,7 +2,7 @@ import numpy as np
 from collections import namedtuple, deque
 from gcmotion.utils.energy_Ptheta import energy_Ptheta
 from gcmotion.utils.second_derivative import higher_order_second_derivative
-from gcmotion.utils.second_derivative import higher_order_second_derivative
+from gcmotion.utils.points_psi_to_P_theta import points_to_P_theta
 
 
 def XO_points_classification(
@@ -10,6 +10,7 @@ def XO_points_classification(
     parameters: namedtuple,
     profile: namedtuple,
     delta: float = 1e-5,
+    to_P_thetas: bool = True,
 ):
     # Parameters
     mu = parameters.mu
@@ -50,30 +51,10 @@ def XO_points_classification(
         elif det_Hessian > 0:
             O_points.append(fixed_point)
 
-    # We have XO points, each, of the form [thetaXO, psiXO] and we will transform them
-    # to [thetaXO, P_theta_XO]
-    for i in range(len(X_points)):
-
-        X_point = X_points[i]
-
-        theta_X, psi_X = X_point
-
-        _, P_theta_X = energy_Ptheta(
-            psi=psi_X, theta=theta_X, mu=mu, Pzeta=Pzeta0, profile=profile, contour_Phi=True
-        )
-
-        X_points[i] = [theta_X, P_theta_X]
-
-    for i in range(len(O_points)):
-
-        O_point = O_points[i]
-
-        theta_O, psi_O = O_point
-
-        _, P_theta_O = energy_Ptheta(
-            psi=psi_O, theta=theta_O, mu=mu, Pzeta=Pzeta0, profile=profile, contour_Phi=True
-        )
-
-        O_points[i] = [theta_O, P_theta_O]
+    if to_P_thetas:
+        # We have XO points, each, of the form [thetaXO, psiXO] and we will transform them
+        # to [thetaXO, P_theta_XO], if asked
+        X_points = points_to_P_theta(X_points, Pzeta=Pzeta0, mu=mu, profile=profile)
+        O_points = points_to_P_theta(O_points, Pzeta=Pzeta0, mu=mu, profile=profile)
 
     return X_points, O_points
