@@ -1,25 +1,35 @@
 from scipy.optimize import differential_evolution, fsolve
-from collections import namedtuple
+from collections import namedtuple, deque
 
 from gcmotion.utils.fp_system import system
 
 
 # Function to locate a single fixed point
 def fixed_point(
-    method: str, initial_condition, bounds: list, parameters: namedtuple, profile: namedtuple
+    method: str,
+    initial_condition: list | tuple | deque,
+    bounds: list,
+    parameters: namedtuple,
+    profile: namedtuple,
+    known_thetas: bool = False,
+    known_theta_value: float = 0,
 ):
 
     # System of equations to be solved
     def fixed_point_system(vars):
 
-        theta, psi = vars
+        if known_thetas:
+            psi = vars[0]
+            theta = known_theta_value
+        else:
+            theta, psi = vars
 
-        # We calculate the quantity theta_dot**2+psi_dot**2
-        theta_dot_sq_psi_dot_sq_sum = system(
+        # We calculate the quantity theta_dot**2+psi_dot**2 or [theta_dot, psi_dot]
+        # depending on the method
+        system_result = system(
             theta=theta, psi=psi, parameters=parameters, profile=profile, method=method
         )
-
-        return theta_dot_sq_psi_dot_sq_sum
+        return system_result
 
     if method == "differential evolution":
 
@@ -36,7 +46,8 @@ def fixed_point(
             strategy="best1bin",  # "best2bin",
         )
 
-        theta_solution, psi_solution = result.x
+        psi_solution = result.x[0] if known_thetas else result.x[1]
+        theta_solution = known_theta_value if known_thetas else result.x[0]
 
     elif method == "fsolve":
 
@@ -44,6 +55,11 @@ def fixed_point(
             fixed_point_system, x0=initial_condition, xtol=1e-10, maxfev=5_000, factor=0.1
         )
 
-        theta_solution, psi_solution = result
+        psi_solution = result[0] if known_thetas else result[1]
+        theta_solution = known_theta_value if known_thetas else result[0]
+
+    else:
+        print('method can be either "fsolve" or "differential evolution"')
+        return
 
     return theta_solution, psi_solution

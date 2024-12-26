@@ -14,7 +14,7 @@ def points_psi_to_P_theta(points, Pzeta: float, mu: float, profile: namedtuple):
         theta, psi = points[i]
 
         _, P_theta = energy_Ptheta(
-            theta=theta, psi=psi, mu=mu, Pzeta=Pzeta, profile=profile, contour_Phi=True
+            theta=theta, psi=abs(psi), mu=mu, Pzeta=Pzeta, profile=profile, contour_Phi=True
         )
 
         points[i] = [theta, P_theta]

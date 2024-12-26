@@ -1,4 +1,3 @@
-import numpy as np
 from collections import namedtuple
 
 
@@ -49,8 +48,8 @@ def system(theta: float, psi: float, parameters: namedtuple, profile: namedtuple
     psi_dot = -q * g / D * bracket2
 
     if method == "differential evolution":
-
         return theta_dot**2 + psi_dot**2
 
     elif method == "fsolve":
+        print(f"SYSTEM RESULT: {[theta_dot, psi_dot]}")
         return [theta_dot, psi_dot]

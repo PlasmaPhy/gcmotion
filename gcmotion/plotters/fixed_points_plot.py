@@ -54,6 +54,7 @@ def fixed_points_plot(
     info: bool = False,
     ic_info: bool = False,
     plot_init_cond: bool = False,
+    LAR_thetas: bool = False,
     **params,
 ):
     r"""Draws fixed points plot.
@@ -141,6 +142,7 @@ def fixed_points_plot(
         random_init_cond=random_init_cond,
         info=info,
         ic_info=ic_info,
+        LAR_thetas=LAR_thetas,
     )
     print(f"\n FIXED POINTS RUN IN {(time() - start):.1f}s\n")
 

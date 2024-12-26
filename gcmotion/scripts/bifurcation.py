@@ -84,6 +84,7 @@ def bifurcation(
     bif_info: bool = False,
     fp_ic_info: bool = False,
     calc_energies: bool = False,
+    LAR_thetas: bool = False,
 ):
 
     num_of_XP = deque([])
@@ -148,6 +149,7 @@ def bifurcation(
             random_init_cond=random_fp_init_cond,
             info=fp_info,
             ic_info=fp_ic_info,
+            LAR_thetas=LAR_thetas,
         )
 
         # CAUTION: The xoc function takes in psis_fixed but returns also psis_fixed

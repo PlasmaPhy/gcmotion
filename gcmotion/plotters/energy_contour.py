@@ -59,6 +59,7 @@ def energy_contour(
     fixed_points_info: bool = False,
     fixed_points_ic_info: bool = False,
     plot_fp_init_cond: bool = False,
+    fp_LAR_thetas: bool = False,
     contour_Phi: bool = True,
     units: str = "SI",
     levels: int = None,
@@ -249,6 +250,7 @@ def energy_contour(
             info=fixed_points_info,
             ic_info=fixed_points_ic_info,
             plot_init_cond=plot_fp_init_cond,
+            LAR_thetas=fp_LAR_thetas,
             canvas=canvas,
         )
         logger.debug("\tPlotting particle's fixed points in contour.")

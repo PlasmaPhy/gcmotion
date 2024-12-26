@@ -10,7 +10,7 @@ type Quantity = pint.UnitRegistry.Quantity
 
 
 @njit
-def evaluate_neighbors(system_values, i, j):
+def _evaluate_neighbors(system_values, i, j):
     """Helper function to evaluate neighbors of a grid point."""
     neighbors = [
         system_values[i - 1, j - 1],
@@ -75,7 +75,7 @@ def fp_ic_scan(
                 continue
 
             # Check neighbors
-            neighbors = evaluate_neighbors(system_values, i, j)
+            neighbors = _evaluate_neighbors(system_values, i, j)
 
             # If theta_dot**2 + psi_dot**2 at the center is smaller than
             #  all neighbors, add to fixed_point_candidates

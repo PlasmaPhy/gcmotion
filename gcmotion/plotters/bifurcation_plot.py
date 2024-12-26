@@ -42,6 +42,7 @@ def bifurcation_plot(
     bif_info: bool = False,
     fp_ic_info: bool = False,
     plot_energy_bif: bool = False,
+    fp_LAR_thetas: bool = False,
 ):
     r"""Draws the bifurcation diagrams for the :math:`theta`'s  fixed,
     the :math:`P_{theta}`'s fixed and the number of fixed points found for
@@ -97,6 +98,7 @@ def bifurcation_plot(
             bif_info=bif_info,
             fp_ic_info=fp_ic_info,
             calc_energies=plot_energy_bif,
+            LAR_thetas=fp_LAR_thetas,
         )
     )
 
