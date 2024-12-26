@@ -29,6 +29,10 @@ def fixed_point(
         system_result = system(
             theta=theta, psi=psi, parameters=parameters, profile=profile, method=method
         )
+
+        if known_thetas and method == "fsolve":
+            return system_result[0] ** 2 + system_result[1] ** 2
+
         return system_result
 
     if method == "differential evolution":

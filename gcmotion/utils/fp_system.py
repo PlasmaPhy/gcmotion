@@ -51,5 +51,4 @@ def system(theta: float, psi: float, parameters: namedtuple, profile: namedtuple
         return theta_dot**2 + psi_dot**2
 
     elif method == "fsolve":
-        print(f"SYSTEM RESULT: {[theta_dot, psi_dot]}")
         return [theta_dot, psi_dot]
