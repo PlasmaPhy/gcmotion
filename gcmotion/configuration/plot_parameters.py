@@ -13,14 +13,26 @@ class ProfileEnergyContourConfig:
     layout: str = "constrained"
     facecolor: str = "lightskyblue"
     # Default parameter values
-    thetalim: tuple = (-pi, pi)
-    psilim: tuple = (0, 1.2)  # times psi_wall
+    thetalim: tuple | list = (-pi, pi)
+    psilim: tuple | list = (0, 1.2)  # times psi_wall
     levels: int = 30
     E_units: str = "keV"
     flux_units: str = "Tesla * meter^2"
     potential: bool = True
     wall: bool = True
     cursor: bool = True  # Mild performance hit
+    # Fixed points parameters
+    plot_fixed_points: bool = False
+    fp_method: str = "differential evolution"
+    dist_tol: float = 1e-3
+    fp_ic_scan_tol: float = 5 * 1e-8
+    ic_fp_theta_grid_density: int = 800
+    ic_fp_psi_grid_density: int = 800
+    fp_random_init_cond: bool = False
+    fixed_points_info: bool = False
+    fixed_points_ic_info: bool = False
+    plot_fp_init_cond: bool = False
+    fp_LAR_thetas: bool = False
     # Colorbar
     numticks: int = 10
     cbarlabelsize: int = 12

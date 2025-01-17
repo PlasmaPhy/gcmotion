@@ -16,8 +16,8 @@ def system(theta: float, psi: float, profile: Profile, method: str):
     solverPhiderNU = efield.solverPhiderNU
 
     # Parameters ()
-    mu = profile.mu
-    Pzeta0 = profile.Pzeta
+    mu = profile.muNU.m
+    Pzeta0 = profile.PzetaNU.m
     Pzeta = Pzeta0
 
     psi = max(psi, 1e-3)

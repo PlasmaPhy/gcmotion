@@ -11,18 +11,21 @@ def XO_points_classification(
     delta: float = 1e-5,
     to_P_thetas: bool = True,
 ):
-    # Parameters
-    mu = profile.muNU.m
-    Pzeta = profile.Pzeta.m
+
+    # Define a Quantity object. Will be used later.
+    Q = profile.Q
 
     O_points = deque([])  # Deque for stable O-points
     X_points = deque([])  # Deque for unstable X-points and saddle X-points
 
     def WNU(theta, psi):
         # Calculate the Hamiltonian at (theta, psi)
-        W = profile.findEnergy(psi=abs(psi), theta=theta, units="NUJoule", potential=True)
+        psi = max(1e-3, psi)
+        W = profile.findEnergy(
+            psi=Q(psi, "NUMagnetic_flux"), theta=theta, units="NUJoule", potential=True
+        )
 
-        return W
+        return W.m
 
     for fixed_point in unclassified_fixed_points:
 

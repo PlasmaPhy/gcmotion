@@ -1,12 +1,15 @@
 from gcmotion.scripts.fixed_points import fixed_points as fp
 from gcmotion.entities.profile import Profile
+
 from gcmotion.utils.XO_points_classification import XO_points_classification as xoc
 from gcmotion.utils.points_psi_to_P_theta import points_psi_to_P_theta
+
 import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
 import numpy as np
 
 from time import time
-from collections import namedtuple, deque
+
 from gcmotion.utils.logger_setup import logger
 
 
@@ -24,7 +27,8 @@ def fixed_points_plot(
     ic_info: bool = False,
     plot_init_cond: bool = False,
     LAR_thetas: bool = False,
-    **params,
+    ax: Axes = None,
+    **args,
 ):
     r"""Draws fixed points plot.
 
@@ -62,8 +66,7 @@ def fixed_points_plot(
     """
 
     # Unpack params
-    _internal_call = params.pop("_internal_call", False)  # POP!
-    canvas = params.pop("canvas", None)  # POP!
+    _internal_call = args.pop("_internal_call", False)  # POP!
 
     if _internal_call:
         logger.disable("gcmotion")
@@ -71,10 +74,6 @@ def fixed_points_plot(
         logger.enable("gcmotion")
 
     logger.info(f"Plotting fixed points")
-
-    # Get parameters
-    mu = profile.muNU.m
-    Pzeta = profile.Pzeta.m
 
     start = time()
     # Calculate fixed points
@@ -101,35 +100,35 @@ def fixed_points_plot(
         profile=profile,
     )
 
-    # Check canvas
-    if canvas is None:
+    # Check axes
+    if ax is None:
         fig = plt.figure(figsize=(12, 8))
         ax = fig.add_subplot(111)
-        canvas = (fig, ax)
         logger.debug("\tCreating a new canvas.")
-    else:
-        fig, ax = canvas
-        logger.debug("\tUsing existing canvas.")
 
     # Convert deque to numpy arrays for easy manipulation
-    X_thetas, X_P_thetas = zip(*X_points) if X_points else ([], [])
-    O_thetas, O_P_thetas = zip(*O_points) if O_points else ([], [])
+    X_thetas, X_P_thetasNU = zip(*X_points) if X_points else ([], [])
+    O_thetas, O_P_thetasNU = zip(*O_points) if O_points else ([], [])
 
-    X_P_thetas = profile.Q(X_P_thetas, "NUmagnetic_flux").to("Magnetic_flux")
-    O_P_thetas = profile.Q(O_P_thetas, "NUmagnetic_flux").to("Magnetic_flux")
+    X_P_thetas = profile.Q(X_P_thetasNU, "NUmagnetic_flux").to("Magnetic_flux")
+    O_P_thetas = profile.Q(O_P_thetasNU, "NUmagnetic_flux").to("Magnetic_flux")
 
     ax.set_xticks([-np.pi, 0, np.pi])
     ax.set_xticklabels([r"$-\pi$", "0", r"$\pi$"])
     ax.set_xlim([-np.pi, np.pi])
-    ax.scatter(X_thetas, X_P_thetas, marker="x", color="#80FF80", s=100)
-    ax.scatter(O_thetas, O_P_thetas, marker="o", edgecolor="yellow", facecolors="none", s=100)
+
+    if len(X_thetas) > 0 and len(X_P_thetas) > 0:
+        ax.scatter(X_thetas, X_P_thetas, marker="x", color="#80FF80", s=100)
+
+    if len(O_thetas) > 0 and len(O_P_thetas) > 0:
+        ax.scatter(O_thetas, O_P_thetas, marker="o", edgecolor="yellow", facecolors="none", s=100)
 
     if plot_init_cond:
 
         # Turn points (theta, psi) --> (theta, P_theta)
-        initial_conditions = points_psi_to_P_theta(initial_conditions)
+        initial_conditions = points_psi_to_P_theta(initial_conditions, profile=profile)
 
-        thetas_init, P_thetas_init = zip(*initial_conditions) if initial_conditions else ([], [])
+        thetas_init, P_thetas_initNU = zip(*initial_conditions) if initial_conditions else ([], [])
 
-        P_thetas_init_denormalized = profile.Q(P_thetas_init, "NUmagnetic_flux").to("Magnetic_flux")
-        ax.scatter(thetas_init, P_thetas_init_denormalized, marker=">", color="red", s=100)
+        P_thetas_init = profile.Q(P_thetas_initNU, "NUmagnetic_flux").to("Magnetic_flux")
+        ax.scatter(thetas_init, P_thetas_init.m, marker=">", color="red", s=100)
