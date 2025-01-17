@@ -27,9 +27,7 @@ class MagneticField(ABC):
         """
 
     @abstractmethod
-    def bigNU(
-        self, phi: float | np.ndarray, theta: float | np.ndarray
-    ) -> float | np.ndarray:
+    def bigNU(self, phi: float | np.ndarray, theta: float | np.ndarray) -> float | np.ndarray:
         r"""Calculates :math:`B(\psi, \theta), I(\psi, \theta), g(\psi,\
         \theta)`. Input and output must be both floats or np.ndarrays, in
         [NU].
@@ -52,9 +50,7 @@ class MagneticField(ABC):
         """
 
     @abstractmethod
-    def solverbNU(
-        self, psi: float, theta: float
-    ) -> tuple[float, float, float]:
+    def solverbNU(self, psi: float, theta: float) -> tuple[float, float, float]:
         r"""Calculates all the values needed by the solver:
         :math:`B,I,g` (by calling ``self.bigNU()``) and the derivatives
         :math:`\dfrac{\partial B}{\partial \psi}, \dfrac{\partial B}{\partial\
@@ -162,8 +158,7 @@ class LAR(MagneticField):
 
     def __repr__(self):
         return (
-            colored("LAR", "light_blue")
-            + f": B0={self.B0:.4g~}, I={self.i:.4g~}, g={self.g:.4g~}."
+            colored("LAR", "light_blue") + f": B0={self.B0:.4g~}, I={self.i:.4g~}, g={self.g:.4g~}."
         )
 
 
@@ -172,8 +167,10 @@ class Smart(MagneticField):
     def __init__(self):
         r""" """
         # Open the dataset
-        parent = os.path.dirname(__file__)
-        path = os.path.join(parent, "reconstructed/smart.nc")
+        # parent = os.path.dirname(__file__)
+        # path = os.path.join(parent, "reconstructed/smart.nc")
+        path = r"C:\Users\georg\OneDrive\Desktop\My Files\Plasma & Fusion\smart_equil_for_internal_use\normalized_Equil-PT-S2-000021-B-updated-COCOS2.nc"
+
         try:
             dataset = xr.open_dataset(path)
             self.dataset = dataset
