@@ -25,11 +25,11 @@ import numpy as np
 from time import time
 
 from gcmotion.scripts.bifurcation import bifurcation
-from gcmotion.classes.collection import Collection
+from collections import deque
 
 
 def bifurcation_plot(
-    collection: Collection,
+    profiles: list | deque,
     theta_lim: list = [-np.pi, np.pi],
     psi_lim: list = [0.01, 1.3],
     fp_method: str = "differential evolution",
@@ -43,6 +43,7 @@ def bifurcation_plot(
     fp_ic_info: bool = False,
     plot_energy_bif: bool = False,
     fp_LAR_thetas: bool = False,
+    fp_only_confined: bool = False,
 ):
     r"""Draws the bifurcation diagrams for the :math:`theta`'s  fixed,
     the :math:`P_{theta}`'s fixed and the number of fixed points found for
@@ -85,7 +86,7 @@ def bifurcation_plot(
     # CAUTION: The bifurcation function takes in psis_fixed but returns P_thetas_fixed
     X_thetas, X_P_thetas, O_thetas, O_P_thetas, num_of_XP, num_of_OP, X_energies, O_energies = (
         bifurcation(
-            collection=collection,
+            profiles=profiles,
             theta_lim=theta_lim,
             psi_lim=psi_lim,
             method=fp_method,
@@ -97,6 +98,7 @@ def bifurcation_plot(
             fp_info=fp_info,
             bif_info=bif_info,
             fp_ic_info=fp_ic_info,
+            fp_only_confined=fp_only_confined,
             calc_energies=plot_energy_bif,
             LAR_thetas=fp_LAR_thetas,
         )
@@ -104,9 +106,8 @@ def bifurcation_plot(
 
     print(f"BIFURCATION RUN IN {(time() - start)/60:.1f} mins")
 
-    particles = collection.particles
-    p1 = particles[0]
-    psi_wallNU = p1.psi_wallNU.magnitude
+    profile1 = profiles[0]
+    psi_wallNU = profile1.psi_wall.to("NUMagnetic_flux").m
 
     fig, ax = plt.subplots(3, 1, figsize=(9, 7), sharex=True)
     plt.xlabel(r"$P_{\zeta}$ [NUmf]")
@@ -124,11 +125,9 @@ def bifurcation_plot(
     O_theta_plot = []
     O_P_theta_plot = []
 
-    particles = collection.particles
-
     # Theta Fixed Bifurcation
-    for i, p in enumerate(particles):
-        P_zeta = p.Pzeta0NU
+    for i, profile in enumerate(profiles):
+        P_zeta = profile.PzetaNU
         y_list = X_thetas[i]
         P_zeta_plot.extend([P_zeta] * len(list(y_list)))
         X_theta_plot.extend(y_list)
@@ -141,8 +140,8 @@ def bifurcation_plot(
 
     P_zeta_plot = []
 
-    for i, p in enumerate(particles):
-        P_zeta = p.Pzeta0NU
+    for i, profile in enumerate(profiles):
+        P_zeta = profile.PzetaNU
         y_list = O_thetas[i]
         P_zeta_plot.extend([P_zeta] * len(list(y_list)))
         O_theta_plot.extend(y_list)
@@ -152,8 +151,8 @@ def bifurcation_plot(
     P_zeta_plot1 = []
 
     # P_theta Fixed Bifurcation
-    for i, p in enumerate(particles):
-        P_zeta = p.Pzeta0NU
+    for i, profile in enumerate(profiles):
+        P_zeta = profile.PzetaNU
         y_list = X_P_thetas[i]
         P_zeta_plot1.extend([P_zeta] * len(list(y_list)))
         X_P_theta_plot.extend(y_list)
@@ -161,8 +160,8 @@ def bifurcation_plot(
     P_zeta_plot2 = []
 
     # P_theta Fixed Bifurcation
-    for i, p in enumerate(particles):
-        P_zeta = p.Pzeta0NU
+    for i, profile in enumerate(profiles):
+        P_zeta = profile.PzetaNU
         y_list = O_P_thetas[i]
         P_zeta_plot2.extend([P_zeta] * len(list(y_list)))
         O_P_theta_plot.extend(y_list)
@@ -184,7 +183,7 @@ def bifurcation_plot(
     ax_P_theta.legend(loc="upper right")
 
     # Number of distinct fixed points Diagram
-    P_zetas = [p.Pzeta0NU for p in particles]
+    P_zetas = [profile.PzetaNU for profile in profiles]
     ax_ndfp.set_ylabel("Number of Fixed Points")
     ax_ndfp.scatter(P_zetas, num_of_XP, s=2, color="#E65100", label="X points")
     ax_ndfp.scatter(P_zetas, num_of_OP, s=2, label="O points")
@@ -201,8 +200,8 @@ def bifurcation_plot(
         P_zeta_plot1 = []
 
         # P_theta Fixed Bifurcation
-        for i, p in enumerate(particles):
-            P_zeta = p.Pzeta0NU
+        for i, profile in enumerate(profiles):
+            P_zeta = profile.PzetaNU
             y_list = X_energies[i]
 
             # Ensure y_list is iterable
@@ -215,8 +214,8 @@ def bifurcation_plot(
         P_zeta_plot2 = []
 
         # P_theta Fixed Bifurcation
-        for i, p in enumerate(particles):
-            P_zeta = p.Pzeta0NU
+        for i, profile in enumerate(profiles):
+            P_zeta = profile.PzetaNU
             y_list = O_energies[i]
 
             # Ensure y_list is iterable

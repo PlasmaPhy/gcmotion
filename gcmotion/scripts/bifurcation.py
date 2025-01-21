@@ -61,18 +61,15 @@ This is how :py:func:`bifurcation` can be called inside the function :py:func:`b
 """
 
 import numpy as np
-from collections import deque, namedtuple
+from collections import deque
 
 from gcmotion.utils.XO_points_classification import XO_points_classification as xoc
 from gcmotion.scripts.fixed_points import fixed_points
 from gcmotion.utils.points_psi_to_P_theta import points_psi_to_P_theta
-from gcmotion.utils.energy_Ptheta import energy_Ptheta
-from gcmotion.entities.profile import Profile
-from gcmotion.classes.collection import Collection
 
 
 def bifurcation(
-    collection: Collection,
+    profiles: list | deque,
     theta_lim: list = [-np.pi, np.pi],
     psi_lim: list = [0.01, 1.3],
     method: str = "differential evolution",
@@ -84,9 +81,18 @@ def bifurcation(
     fp_info: bool = False,
     bif_info: bool = False,
     fp_ic_info: bool = False,
+    fp_only_confined: bool = False,
     calc_energies: bool = False,
     LAR_thetas: bool = False,
 ):
+
+    first_profile = profiles[0]
+    last_profile = profiles[-1]
+
+    # Check if the partcles have different Pzeta0's
+    if first_profile.PzetaNU == last_profile.PzetaNU:
+        print(r"Each profile in the collection must have different $P_{\zeta0}$")
+        return
 
     num_of_XP = deque([])
     num_of_OP = deque([])
@@ -103,43 +109,15 @@ def bifurcation(
     O_energies = deque([])
     X_energies = deque([])
 
-    p1 = collection[0]
-    p_last = collection[-1]
+    N = len(profiles)
 
-    N = len(collection.particles)
+    for idx, profile in enumerate(profiles):
 
-    # Check if the partcles have different Pzeta0's
-    if p1.Pzeta0 == p_last.Pzeta0:
-        print(r"Each particle in the collection must have different $P_{\zeta0}$")
-        return
-
-    # Get Tokamak profile
-    qfactor = p1.qfactor
-    bfield = p1.bfield
-    efield = p1.efield
-
-    Profile = namedtuple("Tokamak_Profile", ["qfactor", "bfield", "efield"])
-    profile = Profile(
-        qfactor=qfactor,
-        bfield=bfield,
-        efield=efield,
-    )
-
-    Parameters = namedtuple("Orbit_Parameters", ["Pzeta0", "mu"])
-
-    for idx, p in enumerate(collection):
-
-        current_P_zeta = p.Pzeta0NU.magnitude
-        # Get Particle Parameters
-        parameters = Parameters(
-            Pzeta0=current_P_zeta,
-            mu=p1.muNU.magnitude,
-        )
+        current_P_zeta = profile.PzetaNU
 
         current_num_of_fp, current_fp, _ = fixed_points(
-            parameters=parameters,
             profile=profile,
-            Q=p.Q,
+            Q=profile.Q,
             method=method,
             theta_lim=theta_lim,
             psi_lim=psi_lim,
@@ -151,12 +129,12 @@ def bifurcation(
             info=fp_info,
             ic_info=fp_ic_info,
             LAR_thetas=LAR_thetas,
+            only_confined=fp_only_confined,
         )
 
         # CAUTION: The xoc function takes in psis_fixed but returns also psis_fixed
         current_X_points, current_O_points = xoc(
             unclassified_fixed_points=current_fp,
-            parameters=parameters,
             profile=profile,
             to_P_thetas=not calc_energies,
         )
@@ -174,35 +152,31 @@ def bifurcation(
             current_O_psis = np.array(current_O_psis)
             current_X_psis = np.array(current_X_psis)
 
-            current_O_energies, _ = energy_Ptheta(
-                psi=current_O_psis,
+            current_O_energies = profile.findEnergy(
+                psi=profile.Q(
+                    current_O_psis,
+                ),
                 theta=current_O_thetas,
-                mu=parameters.mu,
-                Pzeta=current_P_zeta,
-                profile=profile,
-                contour_Phi=True,
+                units="NUJoule",
+                potential=True,
             )
 
-            current_X_energies, _ = energy_Ptheta(
-                psi=current_X_psis,
+            current_X_energies = profile.findEnergy(
+                psi=profile.Q(
+                    current_X_psis,
+                ),
                 theta=current_X_thetas,
-                mu=parameters.mu,
-                Pzeta=current_P_zeta,
-                profile=profile,
-                contour_Phi=True,
+                units="NUJoule",
+                potential=True,
             )
 
             O_energies.append(current_O_energies)
             X_energies.append(current_X_energies)
 
             # Turn psis to P_thetas after having calculated the energy
-            current_X_points = points_psi_to_P_theta(
-                current_X_points, Pzeta=current_P_zeta, mu=parameters.mu, profile=profile
-            )
+            current_X_points = points_psi_to_P_theta(current_X_points, profile=profile)
 
-            current_O_points = points_psi_to_P_theta(
-                current_O_points, Pzeta=current_P_zeta, mu=parameters.mu, profile=profile
-            )
+            current_O_points = points_psi_to_P_theta(current_O_points, profile=profile)
 
         # Convert deque to numpy arrays for easy manipulation
         current_X_thetas, current_X_P_thetas = (

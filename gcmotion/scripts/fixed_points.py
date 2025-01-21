@@ -96,7 +96,7 @@ def _set_up_fixed_points(
 def fixed_points(
     profile: Profile,
     Q: Quantity,
-    method: str = "differential evolution",
+    method: str = "fsolve",
     theta_lim: list = [-1.01 * np.pi, 1.01 * np.pi],
     psi_lim: list = [0.01, 1.3],
     dist_tol: float = 1e-3,
