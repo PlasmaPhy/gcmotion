@@ -98,14 +98,13 @@ def _base_profile_Energy_contour(profile: Profile, ax: Axes, **args):
         size=config.ticksize,
     )
     ax.set_xlim(thetalim.m)
+    ax.set_ylim(psilim.m)
     ax.yaxis.set_major_locator(ticker.MaxNLocator(config.ticknum))
 
     # Add secondary axes with Ptheta
     if config.Pthetaax:
         ax2 = ax.twinx()
-        ax2.set_ylabel(
-            rf"$P_\theta$ [{psigrid.units:.4g~P}]", size=config.labelsize
-        )
+        ax2.set_ylabel(rf"$P_\theta$ [{psigrid.units:.4g~P}]", size=config.labelsize)
         psiticks = profile.Q(ax.get_yticks(), config.flux_units)
         Pthetamin = profile.findPtheta(psiticks.min())
         Pthetamax = profile.findPtheta(psiticks.max())
