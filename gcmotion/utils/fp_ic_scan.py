@@ -38,8 +38,14 @@ def fp_ic_scan(
     psi_lim: list = [0.01, 1.8],
     tol: float = 1e-7,
 ):
-    theta_min, theta_max = theta_lim[0], 1.05 * theta_lim[1]
-    psi_min, psi_max = psi_lim[0], 1.01 * psi_lim[1]
+
+    # Shift the theta scanning region to the left (padding the end) in order to scan
+    # the entire area of interest without finding duplicate (essentially
+    # the same) candidates at -π and π
+    theta_shift = abs(np.diff(theta_lim) / theta_grid_density)
+
+    theta_min, theta_max = theta_lim[0] + theta_shift, theta_lim[1] + theta_shift
+    psi_min, psi_max = psi_lim[0], psi_lim[1]
 
     theta_grid, psi_grid = np.meshgrid(
         np.linspace(theta_min, theta_max, theta_grid_density),

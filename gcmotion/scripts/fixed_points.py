@@ -107,10 +107,14 @@ def fixed_points(
     info: bool = False,
     ic_info: bool = False,
     LAR_thetas: bool = False,
+    only_confined: bool = False,
 ):
 
     psi_lim = np.array(psi_lim) * Q("NUpsi_wall")
     psi_lim = psi_lim.to("NUmagnetic_flux").m
+
+    if only_confined:
+        psi_lim[1] = profile.psi_wall.to("NUMagnetic_flux").m
 
     bounds, initial_conditions, fixed_points, known_theta_values = _set_up_fixed_points(
         profile=profile,

@@ -76,6 +76,7 @@ def profile_Energy_contour(profile: Profile, **args):
             ic_info=config.fixed_points_ic_info,
             plot_init_cond=config.plot_fp_init_cond,
             LAR_thetas=config.fp_LAR_thetas,
+            only_confined=config.fp_only_confined,
             ax=contourax,
         )
 

@@ -27,6 +27,7 @@ def fixed_points_plot(
     ic_info: bool = False,
     plot_init_cond: bool = False,
     LAR_thetas: bool = False,
+    only_confined: bool = False,
     ax: Axes = None,
     **args,
 ):
@@ -91,6 +92,7 @@ def fixed_points_plot(
         info=info,
         ic_info=ic_info,
         LAR_thetas=LAR_thetas,
+        only_confined=only_confined,
     )
     print(f"\n FIXED POINTS RUN IN {(time() - start):.1f}s\n")
 

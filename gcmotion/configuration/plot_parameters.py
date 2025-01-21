@@ -33,6 +33,7 @@ class ProfileEnergyContourConfig:
     fixed_points_ic_info: bool = False
     plot_fp_init_cond: bool = False
     fp_LAR_thetas: bool = False
+    fp_only_confined: bool = False
     # Colorbar
     numticks: int = 10
     cbarlabelsize: int = 12
