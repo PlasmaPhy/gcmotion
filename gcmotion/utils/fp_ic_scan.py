@@ -4,6 +4,31 @@ from gcmotion.entities.profile import Profile
 from gcmotion.utils.fp_system import system  # Assuming this is available
 
 
+def _find_local_minima(arr: np.ndarray):
+    """
+    Find local minima in a 2D array
+    """
+
+    nx, ny = arr.shape
+    indices = []
+    for i in range(1, nx - 1):
+        for j in range(1, ny - 1):
+            if (
+                (arr[i, j] < arr[i + 1, j + 1])
+                and (arr[i, j] < arr[i + 1, j])
+                and (arr[i, j] < arr[i + 1, j - 1])
+                and (arr[i, j] < arr[i - 1, j + 1])
+                and (arr[i, j] < arr[i - 1, j])
+                and (arr[i, j] < arr[i - 1, j - 1])
+                and (arr[i, j] < arr[i, j + 1])
+                and (arr[i, j] < arr[i, j - 1])
+            ):
+
+                indices.append((i, j))
+
+    return indices
+
+
 def fp_ic_scan(
     profile: Profile,
     method: str,
@@ -13,8 +38,8 @@ def fp_ic_scan(
     psi_lim: list = [0.01, 1.8],
     tol: float = 1e-7,
 ):
-    theta_min, theta_max = theta_lim
-    psi_min, psi_max = 0.99 * psi_lim[0], 1.01 * psi_lim[1]
+    theta_min, theta_max = theta_lim[0], 1.05 * theta_lim[1]
+    psi_min, psi_max = psi_lim[0], 1.01 * psi_lim[1]
 
     theta_grid, psi_grid = np.meshgrid(
         np.linspace(theta_min, theta_max, theta_grid_density),
@@ -35,28 +60,14 @@ def fp_ic_scan(
                 theta_dot, psi_dot = system(
                     theta_grid[i, j], psi_grid[i, j], profile, method=method
                 )
-                system_values[i, j] = theta_dot**2 + psi_dot**2
+                system_values[i, j] = theta_dot**2 + (70 * psi_dot) ** 2
 
     # Find local minima
-    padded_values = np.pad(system_values, pad_width=1, mode="edge")
-    neighbors = np.stack(
-        [
-            padded_values[1:-1, :-2],
-            padded_values[1:-1, 2:],  # Left, right
-            padded_values[:-2, 1:-1],
-            padded_values[2:, 1:-1],  # Up, down
-            padded_values[:-2, :-2],
-            padded_values[:-2, 2:],  # Diagonals
-            padded_values[2:, :-2],
-            padded_values[2:, 2:],
-        ],
-        axis=0,
-    )
+    indices = _find_local_minima(system_values)
 
-    is_minima = (system_values < np.min(neighbors, axis=0)) & (system_values < tol)
+    filtered_minima = [(i, j) for (i, j) in indices if system_values[i, j] < tol]
 
     # Extract minima positions
-    minima_indices = np.argwhere(is_minima)
-    fixed_point_candidates = [(theta_grid[i, j], psi_grid[i, j]) for i, j in minima_indices]
+    fixed_point_candidates = [(theta_grid[i, j], psi_grid[i, j]) for i, j in filtered_minima]
 
     return fixed_point_candidates
