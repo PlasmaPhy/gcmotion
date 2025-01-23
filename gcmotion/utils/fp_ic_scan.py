@@ -1,3 +1,8 @@
+r"""
+Script that finds fixed points candidates to be passed into the :py:func:`single_fixed_point`
+function's numerical solver as initial conditions (fp_is_scan --> fixed points initial conditions scan)
+"""
+
 import numpy as np
 
 from gcmotion.entities.profile import Profile
@@ -5,8 +10,18 @@ from gcmotion.utils.fp_system import system  # Assuming this is available
 
 
 def _find_local_minima(arr: np.ndarray):
-    """
-    Find local minima in a 2D array
+    r"""
+    Finds local minima in a 2D array.
+
+        Parameters
+        ----------
+        arr : np.ndarray
+            Array whose local minima are to be located.
+
+        Returns
+        -------
+        indices : list
+
     """
 
     nx, ny = arr.shape
@@ -31,13 +46,51 @@ def _find_local_minima(arr: np.ndarray):
 
 def fp_ic_scan(
     profile: Profile,
-    method: str,
+    method: str = "fsolve",
     theta_grid_density: int = 400,
     psi_grid_density: int = 400,
-    theta_lim: list = [-1.01 * np.pi, 1.01 * np.pi],
+    theta_lim: list = [np.pi, np.pi],
     psi_lim: list = [0.01, 1.8],
     tol: float = 1e-7,
 ):
+    r"""
+    Function that finds fixed points candidates to used as initial conditions for the
+    numerical solver in :py:func:`single_fixed_point`, by scanning a :math:`\theta`, :math:`\psi`
+    2D grid and storing the values (:math:`\theta`,:math:`\psi`) for which the time derivatives of
+    :math:`\theta` and :math:`\psi` are local minima and (practically) zero.
+
+        Parameters
+        ----------
+        profile : Profile
+            Profile object that contains Tokamak and Particle information.
+        method : str, optional
+            String that indicates which method will be used to find the systems fixed
+            points in :py:func:`single_fixed_point`. Can either be "fsolve" (deterministic)
+            or "differential evolution" (stochastic). Defaults to "fsolve".
+        theta_grid_density : int, optional
+            Density of the :math:`\theta`, :math:`\psi` 2D grid with respect to the :math:`\theta`
+            variable. Defaults to 400.
+        psi_grid_density : int, optional
+            Density of the :math:`\theta`, :math:`\psi` 2D grid with respect to the :math:`\psi`
+            variable. Defaults to 400.
+        theta_lim : list, optional
+            Limits of the of the :math:`\theta`, :math:`\psi` 2D grid with respect to the :math:`\theta`
+            variable. Defaults to [-:math:`\pi`, :math:`\pi`].
+        psi_lim : list, optional
+            Limits of the of the :math:`\theta`, :math:`\psi` 2D grid with respect to the :math:`\psi`
+            variable. Defaults to [0.01 , 1.8]. CUTION: The limits are given normalized to :math:`\psi_{wall}`.
+        tol : float, optional
+            Tolerance that determines weather the time derivatives of the :math:`\theta` and :math:`\psi`
+            variables can be considered zero. Defaults to 1e-7.
+
+
+        Returns
+        -------
+        fixed_point_candidates : list
+        List of all the fixed points candidates fould after the 2D grid scan. They are to be
+        passed in the numerical solver as initial conditions to find all the true fixed points.
+
+    """
 
     # Shift the theta scanning region to the left (padding the end) in order to scan
     # the entire area of interest without finding duplicate (essentially

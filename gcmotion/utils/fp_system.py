@@ -1,8 +1,41 @@
+r"""
+Function that calculates the time derivatives of the :math:`\theta` and :math:`\psi`
+variables, :math:`\dot{\theta}` and :math:`\dot{\psi}` respectively, according to White's equations.
+"""
+
 from gcmotion.entities.profile import Profile
 
 
 # System of equations to be solved
 def system(theta: float, psi: float, profile: Profile, method: str):
+    r"""
+    Function that calculates the time derivatives of the :math:`\theta` and :math:`\psi`
+    variables, based on White's equations. It will be used in the :py:func:`single_fixed_point`
+    and :py:func:`fp_ic_scan` methods, to evaluate for which :math:`\theta` and :math:`\psi`
+    values the derivatives become zero.
+
+        Parameters
+        ----------
+        theta : float
+            Value of the :math:`\theta` for which the time derivatives will be calculated.
+        psi : float
+            Value of the :math:`\psi` for which the time derivatives will be calculated.
+        profile : Profile
+            Profile object that contains Tokamak and Particle information.
+        method : str
+            String that indicates which method will be used to find the systems fixed
+            points in :py:func:`single_fixed_point`. Can either be "fsolve" (deterministic)
+            or "differential evolution" (stochastic).
+
+
+
+        Returns
+        -------
+        The time derivatives of the :math:`\theta` and :math:`\psi`
+        variables or the sum of the time derivatives' squares (depends on the
+        selected method)
+
+    """
 
     # Tokamak profile
     qfactor = profile.qfactor

@@ -1,21 +1,5 @@
-"""
-Simple function that determines which elements [,] of a list of lists of len 2 [[,],[,],[,]...]
-can be considered distinct from one another. In this project's context, it is used to 
-determine which points [x,y] can be considered distinct.
-
-    Parameters
-    ----------
-    points : np.ndarray | list | deque
-        Iterable (np.ndarray, list, deque) that contains sublists that are to be examined for uniquness.
-    tol : list
-        If two sublists have both elements that are less than tol (tolerance) apart, they
-        are considered idenical.
-
-    Returns
-    -------
-    List that contains only the distinct sublists/points.
-
-
+r"""
+Function that checks if two points in a list are practically the same
 """
 
 import numpy as np
@@ -23,6 +7,25 @@ from collections import deque
 
 
 def distinctify(points: np.ndarray | list | deque, tol: float):
+    r"""
+    Simple function that determines which elements [,] of a list of lists of len 2 [[,],[,],[,]...]
+    can be considered distinct from one another. In this project's context, it is used to
+    determine which points [x,y] can be considered distinct.
+
+        Parameters
+        ----------
+        points : np.ndarray | list | deque
+            Iterable (np.ndarray, list, deque) that contains sublists that are to be examined for uniquness.
+        tol : list
+            If two sublists have both elements that are less than tol (tolerance) apart, they
+            are considered idenical.
+
+        Returns
+        -------
+        List that contains only the distinct sublists/points.
+
+
+    """
 
     if isinstance(points, deque):
         points = np.array(points)

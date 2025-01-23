@@ -1,5 +1,45 @@
+r"""
+Function that calculates the second derivatives (including mixed) of a two
+variable function, using finite differences method "central differences".
+"""
+
+from typing import Callable
+
+
 # Higher-order central difference for second derivatives
-def higher_order_second_derivative(f, x: float, y: float, dx: float, dy: float, respect_to: str):
+def higher_order_second_derivative(
+    f: Callable, x: float, y: float, dx: float, dy: float, respect_to: str
+):
+    r"""
+    Function that numerically calculates the second derivatives (including mixed) of a two
+    variable function.
+
+        Parameters
+        ----------
+        f : Callable
+            Two variable function, whose second order derivatives are to be calculated.
+        x : float
+            x value for which second order derivatives are to be calculated.
+        y : float
+            y value for which second order derivatives are to be calculated.
+        dx : float
+            Finite difference parameter (very small number) used for the calculation of the
+            derivatives with respect to the x variable.
+        dxy : float
+            Finite difference parameter (very small number) used for the calculation of the
+            derivatives with respect to the y variable.
+        respect_to : str
+            String that can be either "x" or "y" and indicates with respect to which
+            variable (x or y) will the derivatives be calculated.
+
+
+
+        Returns
+        -------
+        Second order regular or mixed derivative of function f at the selected point (x , y).
+
+
+    """
     if respect_to == "x":
         return (
             -f(x + 2 * dx, y)
