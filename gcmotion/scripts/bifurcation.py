@@ -37,8 +37,8 @@ def bifurcation(
 
         Parameters
         ----------
-        profile : Profile
-            Profile object that contains Tokamak and Particle information.
+        profiles : list, deque
+            List of profile objects that contain Tokamak and Particle information.
         theta_lim : list, optional
             Limits of the of the :math:`\theta`, :math:`\psi` search area with respect
             to the :math:`\theta` variable. Defaults to [-:math:`\pi`, :math:`\pi`].
@@ -50,11 +50,11 @@ def bifurcation(
             String that indicates which method will be used to find the systems fixed
             points in :py:func:`single_fixed_point`. Can either be "fsolve" (deterministic)
             or "differential evolution" (stochastic). Defaults to "fsolve".
-        dist_tol : float
+        dist_tol : float, optional
             Tolerance below which two fixed points are not considered distinct. The differences between
             both :math:`\theta` and :math:`\psi` of the fixed points must be below this tolerance for
             the fixed points to be considered the same. Defaults to 1e-3.
-        fp_ic_scan_tol : float
+        fp_ic_scan_tol : float, optional
             Tolerance below which the sum of the squares of the time derivatives of the
             :math:`\theta` and :math:`\psi` variavles is considered zero. It is passed into
             :py:func:`fp_ic_scan`. Defaults to 5 * 1e-8.

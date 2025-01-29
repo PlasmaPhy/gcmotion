@@ -38,8 +38,8 @@ def bifurcation_plot(
 
         Parameters
         ----------
-        profile : Profile
-            Profile object that contains Tokamak and Particle information.
+        profiles : list, deque
+            List of profile objects that contain Tokamak and Particle information.
         theta_lim : list, optional
             Limits of the of the :math:`\theta`, :math:`\psi` search area with respect
             to the :math:`\theta` variable. Defaults to [-:math:`\pi`, :math:`\pi`].
@@ -51,11 +51,11 @@ def bifurcation_plot(
             String that indicates which method will be used to find the systems fixed
             points in :py:func:`single_fixed_point`. Can either be "fsolve" (deterministic)
             or "differential evolution" (stochastic). Defaults to "fsolve".
-        dist_tol : float
+        dist_tol : float, optional
             Tolerance below which two fixed points are not considered distinct. The differences between
             both :math:`\theta` and :math:`\psi` of the fixed points must be below this tolerance for
             the fixed points to be considered the same. Defaults to 1e-3.
-        fp_ic_scan_tol : float
+        fp_ic_scan_tol : float, optional
             Tolerance below which the sum of the squares of the time derivatives of the
             :math:`\theta` and :math:`\psi` variavles is considered zero. It is passed into
             :py:func:`fp_ic_scan`. Defaults to 5 * 1e-8.
@@ -82,7 +82,7 @@ def bifurcation_plot(
             Boolean determining weather the energy of each fixed point of each profile (each :math:`\P_{\zeta}`)
             is to be plotted. Defaults to ``False``.
         energy_units : str, optional
-            String specifying the unit of the calculated fixed points' energies. Defaults to "NUJoule".
+            String specifying the unit of the calculated fixed points' energies. Defaults to ``"NUJoule"``.
         energies_info : bool, optional
             Boolean determining weather information on the fixed points' energies is to be printed.
             Defaults to ``False``.
@@ -124,7 +124,7 @@ def bifurcation_plot(
     P_theta_wallNU = profile1.findPtheta(psi=psi_wallNU).m
 
     fig, ax = plt.subplots(3, 1, figsize=(9, 7), sharex=True)
-    plt.xlabel(r"$P_{\zeta}$ [NUmf]")
+    plt.xlabel(r"$P_{\zeta}$" + f"[{profiles[1].Pzeta.units}]")
     fig.suptitle("Fixed Points Bifurcation Diagram")
 
     ax_theta = ax[0]
@@ -194,7 +194,7 @@ def bifurcation_plot(
     ax_P_theta.scatter(P_zeta_plot1, X_P_theta_plot, s=2, color="#E65100", label="X points")
     ax_P_theta.scatter(P_zeta_plot2, O_P_theta_plot, s=2, label="O points")
     ax_P_theta.axhline(y=P_theta_wallNU, color="black", linestyle="--", linewidth=1, alpha=0.5)
-    ax_P_theta.legend(loc="upper right")
+    ax_P_theta.legend(loc="lower left")
 
     # Number of distinct fixed points Diagram
     P_zetas = [profile.PzetaNU for profile in profiles]
@@ -205,7 +205,7 @@ def bifurcation_plot(
 
     if plot_energy_bif:
         fig, ax = plt.subplots(1, 1, figsize=(9, 7), sharex=True)
-        plt.xlabel(r"$P_{\zeta}$ [NUmf]")
+        plt.xlabel(r"$P_{\zeta}$" + f"[{profiles[1].Pzeta.units}]")
         ax.set_ylabel(f"Energies [{energy_units}]")
 
         X_energies_plot = []

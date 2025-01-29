@@ -6,7 +6,7 @@ function's numerical solver as initial conditions (fp_is_scan --> fixed points i
 import numpy as np
 
 from gcmotion.entities.profile import Profile
-from gcmotion.utils.fp_system import system  # Assuming this is available
+from gcmotion.utils.fp_system import system
 
 
 def _find_local_minima(arr: np.ndarray):
@@ -47,11 +47,11 @@ def _find_local_minima(arr: np.ndarray):
 def fp_ic_scan(
     profile: Profile,
     method: str = "fsolve",
-    theta_grid_density: int = 400,
-    psi_grid_density: int = 400,
+    theta_grid_density: int = 500,
+    psi_grid_density: int = 101,
     theta_lim: list = [np.pi, np.pi],
     psi_lim: list = [0.01, 1.8],
-    tol: float = 1e-7,
+    tol: float = 1e-8,
 ):
     r"""
     Function that finds fixed points candidates to used as initial conditions for the
@@ -69,10 +69,10 @@ def fp_ic_scan(
             or "differential evolution" (stochastic). Defaults to "fsolve".
         theta_grid_density : int, optional
             Density of the :math:`\theta`, :math:`\psi` 2D grid with respect to the :math:`\theta`
-            variable. Defaults to 400.
+            variable. Defaults to 500.
         psi_grid_density : int, optional
             Density of the :math:`\theta`, :math:`\psi` 2D grid with respect to the :math:`\psi`
-            variable. Defaults to 400.
+            variable. Defaults to 101.
         theta_lim : list, optional
             Limits of the of the :math:`\theta`, :math:`\psi` 2D grid with respect to the :math:`\theta`
             variable. Defaults to [-:math:`\pi`, :math:`\pi`].
@@ -81,7 +81,7 @@ def fp_ic_scan(
             variable. Defaults to [0.01 , 1.8]. CUTION: The limits are given normalized to :math:`\psi_{wall}`.
         tol : float, optional
             Tolerance that determines weather the time derivatives of the :math:`\theta` and :math:`\psi`
-            variables can be considered zero. Defaults to 1e-7.
+            variables can be considered zero. Defaults to 1e-8.
 
 
         Returns
@@ -119,7 +119,9 @@ def fp_ic_scan(
                 theta_dot, psi_dot = system(
                     theta_grid[i, j], psi_grid[i, j], profile, method=method
                 )
-                system_values[i, j] = theta_dot**2 + (70 * psi_dot) ** 2
+                system_values[i, j] = (
+                    theta_dot**2 + (80 * psi_dot) ** 2
+                )  # 70 worked (between 60 - 120 in general)
 
     # Find local minima
     indices = _find_local_minima(system_values)

@@ -249,16 +249,20 @@ class Smart(QFactor):
 
     """
 
-    def __init__(self):
+    def __init__(self, triangularity: str = "positive"):
         r"""Imports the data and creates the q and psip splines, and stores
         useful attributes like q0 and qwall.
 
         Both 'q' and 'psi' dataarrays are extrapolate to include psi=0.
         """
-        # Open the dataset
-        # parent = os.path.dirname(__file__)
-        # path = os.path.join(parent, "reconstructed/smart.nc")
-        path = r"C:\Users\georg\OneDrive\Desktop\My Files\Plasma & Fusion\smart_equil_for_internal_use\normalized_Equil-PT-S2-000021-B-updated-COCOS2.nc"
+
+        if triangularity == "positive":
+            path = r"C:\Users\georg\OneDrive\Desktop\My Files\Plasma & Fusion\smart_equil_for_internal_use\normalized_Equil-PT-S2-000021-B-updated-COCOS2.nc"
+        elif triangularity == "negative":
+            path = r"C:\Users\georg\OneDrive\Desktop\My Files\Plasma & Fusion\smart_equil_for_internal_use\normalized_SMART_NT_Jesus_delta_scans_d_11.nc"
+        else:
+            print('Triangularity must be either "positive" or "negative"')
+            return
 
         try:
             dataset = xr.open_dataset(path)
