@@ -14,11 +14,16 @@ from gcmotion.configuration.plot_parameters import (
 )
 
 
-def profile_Energy_contour(profile: Profile, **args):
+def profile_Energy_contour(profile: Profile, **kwargs):
     r"""Plots the Profile's energy contour plot.
 
     Parameters
     ----------
+    profile: Profile
+        The Profile entity.
+
+    Other Parameters
+    ----------------
     thetalim : list, optional
         The :math:`\theta` span in radians. Defaults to [-π,π].
     psilim : list, optional
@@ -44,7 +49,7 @@ def profile_Energy_contour(profile: Profile, **args):
 
     # Unpack parameters
     config = ProfileEnergyContourConfig()
-    for key, value in args.items():
+    for key, value in kwargs.items():
         setattr(config, key, value)
 
     # Create figure
@@ -55,14 +60,16 @@ def profile_Energy_contour(profile: Profile, **args):
         "facecolor": config.facecolor,
     }
     fig = plt.figure(**fig_kw)
-    contourax = fig.subplots()
+    contourax = fig.add_subplot(projection=config.projection)
 
     # Draw the contour and get the contour object
     Contour = _base_profile_Energy_contour(
-        profile=profile, ax=contourax, **args
+        profile=profile, ax=contourax, **kwargs
     )
 
+    # ========
     # Colorbar
+    # ========
     # 'cax=None' creates a new axes for the colorbar, by stealing space from
     # the `ax=contour`
     cbar = fig.colorbar(Contour, cax=None, ax=contourax)
@@ -75,12 +82,12 @@ def profile_Energy_contour(profile: Profile, **args):
         label=f"Energy [{config.E_units}]", size=config.cbarlabelsize
     )
 
-    show = args.get("show", True)
+    show = kwargs.get("show", True)
     if show:
         plt.show()
 
 
-def profile_Pzeta_contour(profile, **args):
+def profile_Pzeta_contour(profile, **kwargs):
     r"""Plots the Profile's :math:`P_\zeta` contour plot.
 
     Parameters
@@ -110,7 +117,7 @@ def profile_Pzeta_contour(profile, **args):
 
     # Unpack parameters
     config = ProfilePzetaContourConfig()
-    for key, value in args.items():
+    for key, value in kwargs.items():
         setattr(config, key, value)
 
     # Create figure
@@ -125,7 +132,7 @@ def profile_Pzeta_contour(profile, **args):
 
     # Draw the contour and get the contour object
     Contour = _base_profile_Pzeta_contour(
-        profile=profile, ax=contourax, **args
+        profile=profile, ax=contourax, **kwargs
     )
 
     # Colorbar
@@ -141,6 +148,6 @@ def profile_Pzeta_contour(profile, **args):
         label=f"Pzeta [{config.flux_units}]", size=config.cbarlabelsize
     )
 
-    show = args.get("show", True)
+    show = kwargs.get("show", True)
     if show:
         plt.show()

@@ -31,7 +31,7 @@ are calculated afterwards.
 from scipy.integrate import solve_ivp
 from collections import namedtuple
 
-from gcmotion.utils.logger_setup import logger
+from gcmotion.entities.profile import Profile
 
 from gcmotion.configuration.scripts_configuration import (
     SolverConfig as config,
@@ -40,7 +40,7 @@ from gcmotion.configuration.scripts_configuration import (
 
 def orbit(
     parameters: namedtuple,
-    profile: namedtuple,
+    profile: Profile,
     events: list = [],
 ) -> namedtuple:
     r"""Wrapper function around SciPy's solve_ivp().
@@ -161,6 +161,7 @@ def orbit(
     Ptheta = psi + rho * i
     Pzeta = rho * g - psip
 
+    # Pack results and return them
     Solution = namedtuple(
         "Orbit_solutionNU",
         [

@@ -78,7 +78,7 @@ def QuantityConstructor(
     ureg.define("NUVolts = NUJoule / Proton_charge = NUV")
     ureg.define("NUVolts_per_NUmeter = NUVolts / NUmeter = NUV / NUm")
 
-    # Also define psi_wall as a unit of Magnetic_flux, to assing psi
+    # Also define psi_wall as a unit of Magnetic_flux, to assign psi
     # initial values with respect to it
     if a is not None:
         ureg.define(f"psi_wall = {B0 * a**2 / 2} Magnetic_flux")

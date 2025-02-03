@@ -93,7 +93,7 @@ class InitialConditions:
         t_eval: QuantityArray,
     ):
         r"""Initializes parameters and corresponding NU Quantities"""
-        logger.info("==> Initializing InitialConditions...")
+        logger.info("==> Initializing 1st step InitialConditions...")
 
         self.Q = type(Pzeta0)
         self.species = species
@@ -109,12 +109,13 @@ class InitialConditions:
         self.qi = self.qiNU.to("Coulomb")
 
         # parse muB depending on its dimensionality
+        logger.debug(f"\tGiven muB units: {muB.units:~}")
         if muB.dimensionality == self.Q("Magnetic_moment").dimensionality:
             self.mu = muB.to("keV/Tesla")
         elif muB.dimensionality == self.Q("keV").dimensionality:
             self.muB = muB.to("keV")
 
-        # Keep the angles' type
+        # Keep the angles' value only
         self.theta0 = float(theta0)
         self.zeta0 = float(zeta0)
 
@@ -130,14 +131,16 @@ class InitialConditions:
         # Flag indiciating if full set has been calculated
         self._full_set_calculated = False
 
-        logger.info("\t InitialConditions Initialization Complete")
+        logger.info("--> InitialConditions 1st step Initialization Complete")
 
     def _calculate_full_set(self, tokamak: Tokamak):
         r"""Calculates the rest of the initial conditions, which require a
         tokamak to be defined.
 
-        These Quantities include muB/mu, rho0, psip0, Ptheta0 and the Energy.
+        These Quantities include muB/mu, rho0, psip0, Ptheta0 and the Energy,
+        as well as their NU counterparts.
         """
+        logger.info("==> Initializing 2nd step InitialConditions...")
 
         # Initial (B,i,g) and Phi values
         # Note: bigNU() and PhiNU() input and output are in [NU]
@@ -187,6 +190,7 @@ class InitialConditions:
         self.ENU = self.E.to("NUJoule")
 
         self._full_set_calculated = True
+        logger.info("--> InitialConditions 2nd step Initialization Complete")
 
     def __repr__(self):
         t0 = self.t_eval[0].m

@@ -29,14 +29,17 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.mathjax",
-    "sphinx.ext.napoleon",
     "sphinx.ext.todo",
+    "numpydoc",
 ]
 
 autosummary_generate = True
-autosummary_imported_members = True
-autosummary_ignore_module_all = True
+autosummary_ignore_module_all = False
+autosummary_imported_members = False
+autosummary_ignore_module_all = False
 todo_include_todos = True
+numpydoc_attributes_as_param_listbool = True
+numpydoc_class_members_toctree = False
 
 autodoc_type_aliases = {
     "SupportedSpecies": "{'p', 'e', 'D', 'T', 'He3', 'He4'}"

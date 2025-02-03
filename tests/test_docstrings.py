@@ -6,7 +6,7 @@ from gcmotion.entities import (
     particle,
 )
 
-V = False  # Verbosity
+V = True  # Verbosity
 
 
 def test_tokamak_docstring():

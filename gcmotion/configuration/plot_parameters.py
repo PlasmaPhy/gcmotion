@@ -12,6 +12,7 @@ class ProfileEnergyContourConfig:
     dpi: int = dpi
     layout: str = "constrained"
     facecolor: str = "lightskyblue"
+    projection: str | None = None  # None = default
     # Default parameter values
     thetalim: tuple = (-pi, pi)
     psilim: tuple = (0, 1.2)  # times psi_wall
@@ -45,31 +46,6 @@ class ProfilePzetaContourConfig:
     # Colorbar
     numticks: int = 10
     cbarlabelsize: int = 12
-
-
-@dataclass()
-class ParticleEvolutionConfig:
-    # Default parameter values
-    which: str = "all"
-    units: str = "SI"
-    percentage: int = 100
-    # Figure keywords
-    figsize: tuple = figsize
-    dpi: int = dpi
-    layout: str = "constrained"
-    facecolor: str = "lightskyblue"
-    titlesize: float = 20
-    titlecolor: str = "blue"
-    # Default parameter values
-    which: str = "all"
-    units: str = "SI"
-    percentage: int = 100
-    # Scatter kw
-    s: float = 0.2
-    color: str = "blue"
-    marker: str = "o"
-    labelsize: int = 10
-    labelpad: float = 8
 
 
 @dataclass
@@ -124,3 +100,50 @@ class MagneticProfileConfig:
     # Label options
     labelsize: float = 15
     ax_title_size: float = 20
+
+
+@dataclass()
+class ParticleEvolutionConfig:
+    # Default parameter values
+    which: str = "all"
+    units: str = "SI"
+    percentage: int = 100
+    # Figure keywords
+    figsize: tuple = figsize
+    dpi: int = dpi
+    layout: str = "constrained"
+    facecolor: str = "lightskyblue"
+    titlesize: float = 20
+    titlecolor: str = "blue"
+    # Default parameter values
+    which: str = "all"
+    units: str = "SI"
+    percentage: int = 100
+    # Scatter kw
+    s: float = 0.2
+    color: str = "blue"
+    marker: str = "o"
+    labelsize: int = 10
+    labelpad: float = 8
+
+
+@dataclass()
+class ParticlePoloidalDrift:
+    # Figure keywords
+    figsize: tuple = figsize
+    dpi: int = dpi
+    layout: str = "constrained"
+    facecolor: str = "lightskyblue"
+    projection: str | None = None  # None = default
+    # Default parameter values
+    thetalim: tuple = (-pi, pi)
+    psilim: tuple = (0, 1.2)  # times psi_wall
+    levels: int = 30
+    E_units: str = "keV"
+    flux_units: str = "Tesla * meter^2"
+    potential: bool = True
+    wall: bool = True
+    cursor: bool = True  # Mild performance hit
+    # Colorbar
+    numticks: int = 10
+    cbarlabelsize: int = 12

@@ -56,3 +56,13 @@ Available magnetic fields
 
 .. autoclass:: LAR
    :class-doc-from: class
+
+.. rubric:: SmartPositive
+
+.. autoclass:: SmartPositive
+   :class-doc-from: class
+
+.. rubric:: SmartNegative
+
+.. autoclass:: SmartNegative
+   :class-doc-from: class

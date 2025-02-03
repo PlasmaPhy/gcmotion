@@ -7,7 +7,7 @@ from matplotlib.contour import QuadContourSet
 from gcmotion.plot._base._config import _ColorbarConfig
 
 
-def _base_contour_colorbar(ax: Axes, contour: QuadContourSet, **args):
+def _base_contour_colorbar(ax: Axes, contour: QuadContourSet, **kwargs):
     r"""Customizes an *existing* colorbar.
 
     The colorbar must have been already created on a figure, and its reference
@@ -22,7 +22,7 @@ def _base_contour_colorbar(ax: Axes, contour: QuadContourSet, **args):
 
     # Unpack parameters
     config = _ColorbarConfig()
-    for key, value in args.items():
+    for key, value in kwargs.items():
         setattr(config, key, value)
 
     # Get contour span

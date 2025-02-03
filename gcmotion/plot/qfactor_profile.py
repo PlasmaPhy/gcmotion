@@ -17,25 +17,26 @@ from gcmotion.configuration.plot_parameters import QfactorProfileConfig
 
 
 # TODO: write other parameters
-def qfactor_profile(entity: Tokamak | Profile | Particle, **args):
+def qfactor_profile(entity: Tokamak | Profile | Particle, **kwargs):
     r"""Plots :math:`q(\psi)` and :math:`\psi_p(\psi)`.
 
-     Parameters
-     ----------
-     entity : :py:class:`~gcmotion.Tokamak,~gcmotion.Profile,~gcmotion.Particle`
-         The object to plot the qfactor of.
+    Parameters
+    ----------
+    entity : Tokamak, Profile, Particle
+       The object to plot the qfactor of.
 
-     Other Parameters
-     ----------------
-    zoom: list
-         The x-axis zoom limits.
+    Other Parameters
+    ----------------
+    zoom: list, optional
+         The x-axis zoom limits, relative to :math:`\psi_{wall}`. Defaults to
+         [0, 1.1].
 
     """
     logger.info("Plotting qfactor profile...")
 
     # Unpack parameters
     config = QfactorProfileConfig()
-    for key, value in args.items():
+    for key, value in kwargs.items():
         setattr(config, key, value)
 
     # Grab qfactor object and needed attributes

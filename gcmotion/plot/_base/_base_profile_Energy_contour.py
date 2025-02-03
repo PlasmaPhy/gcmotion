@@ -11,7 +11,7 @@ from gcmotion.plot._base._config import _ProfileEnergyContourConfig
 from gcmotion.entities.profile import Profile
 
 
-def _base_profile_Energy_contour(profile: Profile, ax: Axes, **args):
+def _base_profile_Energy_contour(profile: Profile, ax: Axes, **kwargs):
     r"""Base plotting function. Only draws upon a given axis without showing
     any figures.
 
@@ -21,7 +21,7 @@ def _base_profile_Energy_contour(profile: Profile, ax: Axes, **args):
         The profile entity.
     ax : Axes
         The ax upon which to draw.
-    args : dict
+    kwargs : dict
         The optional arguement dictionary.
 
     Notes
@@ -34,9 +34,12 @@ def _base_profile_Energy_contour(profile: Profile, ax: Axes, **args):
 
     # Unpack parameters
     config = _ProfileEnergyContourConfig()
-    for key, value in args.items():
+    for key, value in kwargs.items():
         setattr(config, key, value)
 
+    # Restrict thetalim for polar projection
+    if config.projection == "polar":
+        config.thetalim = [-np.pi, np.pi]
     # Setup meshgrid
     # The Energy calculation and y axis limits are always set with respect to
     # psilim. Pthetalim only acts as a way to move the axis window at the end,
@@ -101,7 +104,8 @@ def _base_profile_Energy_contour(profile: Profile, ax: Axes, **args):
     ax.yaxis.set_major_locator(ticker.MaxNLocator(config.ticknum))
 
     # Add secondary axes with Ptheta
-    if config.Pthetaax:
+    twin_ax_condition = bool(config.Pthetaax and config.projection is None)
+    if twin_ax_condition:
         ax2 = ax.twinx()
         ax2.set_ylabel(
             rf"$P_\theta$ [{psigrid.units:.4g~P}]", size=config.labelsize
@@ -114,7 +118,7 @@ def _base_profile_Energy_contour(profile: Profile, ax: Axes, **args):
         ax2.tick_params(labelsize=config.ticksize)
 
     # Add a shade above psi_wall
-    if config.wall:
+    if config.wall and config.projection is None:
         rect = Rectangle(
             (
                 thetalim.min().m,
@@ -127,6 +131,26 @@ def _base_profile_Energy_contour(profile: Profile, ax: Axes, **args):
         )
         ax.add_patch(rect)
 
+    # Cosmetic polar projection tweaks
+    if config.projection == "polar":
+        ax.grid(False)
+        ax.set_xticks(
+            np.linspace(-np.pi, np.pi, 5),
+            [" ", "3π/2", "0", "π/2", " "],
+            size=config.ticksize,
+        )
+
+    if config.wall and config.projection == "polar":
+        wall_pos = profile.Q(1, "psi_wall").to(config.flux_units).m
+        ax_lim = ax.get_ylim()[1]
+        x = np.linspace(0, 2 * np.pi, 100)
+        y_lower = np.linspace(wall_pos, wall_pos, 100)
+        y_upper = np.linspace(ax_lim, ax_lim, 100)
+
+        ax.fill_between(
+            x=x, y1=y_lower, y2=y_upper, color="k", alpha=0.15, zorder=2
+        )
+
     # Format cursor
     # The format must be applied to the second ax for some reason. This means
     # we have to transform data from one ax to the other. This little manouver
@@ -137,7 +161,9 @@ def _base_profile_Energy_contour(profile: Profile, ax: Axes, **args):
     values = RectBivariateSpline(cursorx, cursory, cursorz)
     flux_label = f"{psigrid.units:~P}"
 
-    if config.Pthetaax and config.cursor:
+    # Always add the main axes cursor, but the twin ax cursor is added only if
+    # the projection is rectilinear (the default).
+    if twin_ax_condition and config.cursor:
 
         def cursor_format(x, y):
             # I have no idea why this works but it does :')
@@ -154,7 +180,7 @@ def _base_profile_Energy_contour(profile: Profile, ax: Axes, **args):
             )
 
         ax2.format_coord = cursor_format
-    elif not config.Pthetaax and config.cursor:
+    elif not twin_ax_condition and config.cursor:
 
         def cursor_format(x, y):
             z = np.take(values(x, y), 0)

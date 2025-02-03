@@ -87,93 +87,13 @@ class MagneticField(ABC):
         """
 
 
-# =======================================================
+class NumericalMagneticField(MagneticField):
+    # TODO: Write documentation
+    def __init__(self, filename: str):
 
-
-class LAR(MagneticField):
-    r"""Initializes the standard Large Aspect Ratio magnetic field.
-
-    Parameters
-    -----------
-    B0 : Quantity
-        The strength of the magnetic field *on the magnetic axis*
-        in [T].
-    i : Quantity
-        The toroidal current in units of [Plasma Current].
-    g : Quantity
-        The poloidal current in units of [Plasma Current].
-
-    """
-
-    def __init__(self, B0: Quantity, i: Quantity, g: Quantity):
-        r"""Parameters initialization."""
-
-        # SI Quantities
-        self.B0 = B0.to("Tesla")
-        self.i = i.to("Plasma_Current")
-        self.g = g.to("Plasma_Current")
-
-        # [NU] Conversions
-        self.B0NU = B0.to("NUTesla")
-        self.iNU = i.to("NUPlasma_Current")
-        self.gNU = g.to("NUPlasma_Current")
-
-        # Unitless quantities, makes it a bit faster if defined here
-        for key, value in self.__dict__.copy().items():
-            self.__setattr__("_" + key, value.magnitude)
-
-        # Flags
-        self.has_i = bool(i.m)
-
-    def bigNU(self, psi: float | np.ndarray, theta: float | np.ndarray):
-
-        if isinstance(psi, (int, float)):
-            b = 1 - sqrt(2 * psi) * cos(theta)
-            g = self._gNU
-            i = self._iNU
-        elif isinstance(psi, np.ndarray):
-            b = 1 - np.sqrt(2 * psi) * np.cos(theta)
-            g = np.tile(self._gNU, psi.shape)
-            i = np.tile(self._iNU, psi.shape)
-
-        return (b, i, g)
-
-    def solverbNU(self, psi: float, theta: float):
-
-        # Field and currents
-        b, i, g = self.bigNU(psi, theta)
-
-        # Field derivatives
-        root = sqrt(2 * psi)
-        cos_theta = cos(theta)
-        b_der_psi = cos_theta / root
-        b_der_theta = root * sin(theta)
-
-        # Current derivatives
-        i_der = 0
-        g_der = 0
-
-        # Pack them up
-        currents = (i, g)
-        b_der = (b_der_psi, b_der_theta)
-        currents_der = (i_der, g_der)
-
-        return b, b_der, currents, currents_der
-
-    def __repr__(self):
-        return (
-            colored("LAR", "light_blue")
-            + f": B0={self.B0:.4g~}, I={self.i:.4g~}, g={self.g:.4g~}."
-        )
-
-
-class Smart(MagneticField):
-
-    def __init__(self):
-        r""" """
         # Open the dataset
-        parent = os.path.dirname(__file__)
-        path = os.path.join(parent, "reconstructed/smart.nc")
+        parent = os.path.dirname(__file__)  # Relative to this directory
+        path = os.path.join(parent, "reconstructed", filename)
         try:
             dataset = xr.open_dataset(path)
             self.dataset = dataset
@@ -253,5 +173,124 @@ class Smart(MagneticField):
 
         return b, b_der, currents, currents_der
 
+
+# =======================================================
+
+
+class LAR(MagneticField):
+    r"""Initializes the standard Large Aspect Ratio magnetic field.
+
+    Parameters
+    ----------
+    B0 : Quantity
+        The strength of the magnetic field *on the magnetic axis*
+        in [T].
+    i : Quantity
+        The toroidal current in units of [Plasma Current].
+    g : Quantity
+        The poloidal current in units of [Plasma Current].
+
+    """
+
+    def __init__(self, B0: Quantity, i: Quantity, g: Quantity):
+
+        # SI Quantities
+        self.B0 = B0.to("Tesla")
+        self.i = i.to("Plasma_Current")
+        self.g = g.to("Plasma_Current")
+
+        # [NU] Conversions
+        self.B0NU = B0.to("NUTesla")
+        self.iNU = i.to("NUPlasma_Current")
+        self.gNU = g.to("NUPlasma_Current")
+
+        # Unitless quantities, makes it a bit faster if defined here
+        for key, value in self.__dict__.copy().items():
+            self.__setattr__("_" + key, value.magnitude)
+
+        # Flags
+        self.has_i = bool(i.m)
+        self.plain_name = "LAR"
+
+    def bigNU(self, psi: float | np.ndarray, theta: float | np.ndarray):
+
+        if isinstance(psi, (int, float)):
+            b = 1 - sqrt(2 * psi) * cos(theta)
+            g = self._gNU
+            i = self._iNU
+        elif isinstance(psi, np.ndarray):
+            b = 1 - np.sqrt(2 * psi) * np.cos(theta)
+            g = np.tile(self._gNU, psi.shape)
+            i = np.tile(self._iNU, psi.shape)
+
+        return (b, i, g)
+
+    def solverbNU(self, psi: float, theta: float):
+
+        # Field and currents
+        b, i, g = self.bigNU(psi, theta)
+
+        # Field derivatives
+        root = sqrt(2 * psi)
+        cos_theta = cos(theta)
+        b_der_psi = cos_theta / root
+        b_der_theta = root * sin(theta)
+
+        # Current derivatives
+        i_der = 0
+        g_der = 0
+
+        # Pack them up
+        currents = (i, g)
+        b_der = (b_der_psi, b_der_theta)
+        currents_der = (i_der, g_der)
+
+        return b, b_der, currents, currents_der
+
     def __repr__(self):
-        return colored("Smart", "light_blue") + f": B0={self.B0:.4g~}."
+        return (
+            colored("LAR", "light_blue")
+            + f": B0={self.B0:.4g~}, I={self.i:.4g~}, g={self.g:.4g~}."
+        )
+
+
+class SmartPositive(NumericalMagneticField):
+    r"""Initializes a bfield object with numerical data from the Smart Tokamak
+    with **Positive** Triangularity.
+
+    The dataset must be stored in
+    *./gcmotion/tokamak/reconstructed/smart_positive.nc*.
+
+    """
+
+    def __init__(self):
+        filename = "smart_positive.nc"
+        super().__init__(filename=filename)
+
+        self.plain_name = "Smart - Positive"
+
+    def __repr__(self):
+        return (
+            colored("Smart - Positive", "light_blue") + f": B0={self.B0:.4g~}."
+        )
+
+
+class SmartNegative(NumericalMagneticField):
+    r"""Initializes a bfield object with numerical data from the Smart Tokamak
+    with **Negative** Triangularity.
+
+    The dataset must be stored in
+    *./gcmotion/tokamak/reconstructed/smart_negative.nc*.
+
+    """
+
+    def __init__(self):
+        filename = "smart_negative.nc"
+        super().__init__(filename=filename)
+
+        self.plain_name = "Smart - Negative"
+
+    def __repr__(self):
+        return (
+            colored("Smart - Negative", "light_blue") + f": B0={self.B0:.4g~}."
+        )

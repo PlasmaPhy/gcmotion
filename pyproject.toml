@@ -32,6 +32,8 @@ dependencies = [
   "loguru~=0.7",
   "pint~=0.24",
   "termcolor~=2.5",
+  "xarray~=2025.1.2",
+  "netcdf4~=1.7",
 ]
 
 

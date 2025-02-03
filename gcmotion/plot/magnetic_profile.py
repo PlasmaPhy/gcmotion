@@ -22,7 +22,7 @@ from gcmotion.configuration.plot_parameters import MagneticProfileConfig
 type Quantity = pint.UnitRegistry.Quantity
 
 
-def magnetic_profile(entity: Tokamak | Profile | Particle, **args):
+def magnetic_profile(entity: Tokamak | Profile | Particle, **kwargs):
     r"""Plots a poloidal cut of the magnetic field strength and plasma
     current intensities.
 
@@ -31,13 +31,24 @@ def magnetic_profile(entity: Tokamak | Profile | Particle, **args):
     entity : :py:class:`~gcmotion.Tokamak,~gcmotion.Profile,~gcmotion.Particle`
         The object to plot the qfactor of.
 
+    Other Parameters
+    ----------------
+    span : list, optional
+        The x-axis span, relative to :math:`\psi_{wall}`. Defaults to [0, 1.1].
+    units: {"NU", "SI"}, optional
+        The Quantities' units. Defaults to "NU".
+    grid_density: int, optional
+        The contour plots' grid density. Defaults to 100.
+    levels: int, optional
+        The contour plots' levels. Defaults to 20.
+
     """
 
-    logger.info("Plotting Magnetic field profile...")
+    logger.info("==> Plotting Magnetic field profile...")
 
     # Unpack parameters
     config = MagneticProfileConfig()
-    for key, value in args.items():
+    for key, value in kwargs.items():
         setattr(config, key, value)
 
     # Grab needed objects and needed attributes
@@ -64,7 +75,7 @@ def magnetic_profile(entity: Tokamak | Profile | Particle, **args):
             "g_polar": {"projection": "polar"},
         },
     )
-    fig.suptitle("Magnetic Field Profile")
+    fig.suptitle(f"Magnetic Field Profile ({bfield.plain_name})")
     axb, axi, axg = ax_dict["b"], ax_dict["i_polar"], ax_dict["g_polar"]
     axid, axgd = ax_dict["i_der2d"], ax_dict["g_der2d"]
 

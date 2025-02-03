@@ -39,11 +39,10 @@ Essential Entities
 
 .. autosummary::
    :toctree: generated/
-   :caption: main_namespace
 
    Tokamak
-   InitialConditions
    Profile
+   InitialConditions
    Particle
 
 Utilities

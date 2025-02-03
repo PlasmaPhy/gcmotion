@@ -9,9 +9,6 @@ This module defines the "Profile" entity, which is a child class of the
 A lot of analysis can be done upon this class, since it essentially specifies a
 family of particles with the same 3 Constants of Motion, E, mu and Pzeta, in a
 specific tokamak device, which fully define their Hamiltonian.
-
-This class also constructs the QuantityConstructor to be used internally, so
-every subclass should grab it from here instead of redifining it.
 """
 
 import pint
@@ -43,8 +40,8 @@ class Profile:
     ----------
     tokamak : Tokamak
         The Tokamak entity.
-    species : str
-        The particles' species.
+    species : {'p', 'e', 'D', 'T', 'He3', 'He4'}
+        The particle's species. This field is case-insensitive.
     mu : Quantity
         The Magnetic Moment COM :math:`\mu`.
     Pzeta : Quantity
@@ -52,8 +49,23 @@ class Profile:
     E : Quantity
         The E COM :math:`E`.
 
-    Example
-    -------
+    Attributes
+    ----------
+    species: str
+        The profile's particle species
+    mi, qi, miNU, qiNU : Quantities
+        The profile's particle mass and charge in SI/NU.
+    mu, muNU: Quantities
+        The magnetic moment :math:`\mu` in SI/NU. Must have dimensionality of
+        *[current]x[area]*.
+    Pzeta, PzetaNU: Quantities
+        The :math:`P_\zeta` canonical momentum in SI/NU. Must have
+        dimensionality of *magnetic flux*.
+    E, ENU: Quantities
+        The Energy constant of motion in SI/NU.
+
+    Examples
+    --------
     How to create a `Profile` object.
 
     >>> import gcmotion as gcm
@@ -109,11 +121,14 @@ class Profile:
         # Check if at least 2 are given
         if [mu, Pzeta, E].count(None) > 1:
             msg = "At least 2/3 Constants of motion must be specified"
+            logger.error("\t" + msg)
             raise ValueError(msg)
+        logger.debug(f"\tParameters: {mu=}, {Pzeta=}, {E=}")
 
         # Grab attributes from tokamak object
         self.tokamak = tokamak
         self.__dict__.update(self.tokamak.__dict__)
+        logger.debug("\tCopied tokamak's attributes to self.")
 
         # Define species
         self.Q = type(tokamak.R)
@@ -122,7 +137,7 @@ class Profile:
             PhysicalConstants, self.species + "_name", None
         )
 
-        # Grab particle's mass and charge
+        # Grab particle's mass and charge in NU
         M = getattr(PhysicalConstants, self.species + "_M")
         Z = getattr(PhysicalConstants, self.species + "_Z")
 
@@ -138,22 +153,24 @@ class Profile:
         else:
             self.mu = mu.to("Magnetic_moment")
             self.muNU = self.mu.to("NUMagnetic_moment")
+            logger.debug(f"\tSet {self.mu=:.4g~} and {self.muNU=:.4g~}")
 
         if Pzeta is None:
             self.Pzeta = self.PzetaNU = None
         else:
             self.Pzeta = Pzeta.to("Magnetic_flux")
             self.PzetaNU = self.Pzeta.to("NUmagnetic_flux")
+            logger.debug(f"\tSet {self.Pzeta=:.4g~} and {self.PzetaNU=:.4g~}")
 
         if E is None:
             self.E = self.ENU = None
+            logger.debug(f"\tSet {self.E=} and {self.ENU=}")
         else:
             self.E = E.to("keV")
             self.ENU = self.E.to("NUJoule")
+            logger.debug(f"\tSet {self.E=:.4g~} and {self.ENU=:.4g~}")
 
-        self.Q = type(self.tokamak.R)
-
-        logger.info("\tProfile setup complete.")
+        logger.info("--> Profile Initialization Complete.")
 
     def findPtheta(self, psi: Quantity):
         r"""Calculates Ptheta from psi. ``Pzeta`` must be defined.
@@ -234,7 +251,7 @@ class Profile:
 
         rhoNU = (self.PzetaNU + psipNU) / gNU
 
-        EnergyNU = (  # WARN: Unsure if q and m must appear here
+        EnergyNU = (
             self.qiNU**2 / (2 * self.miNU)
         ) * rhoNU**2 * bNU**2 + self.muNU * bNU  # Without potential
 

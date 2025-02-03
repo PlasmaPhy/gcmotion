@@ -50,25 +50,23 @@ class Tokamak:
         Electric Field Object that supports query methods for
         getting values of the field itself and the derivatives of
         its potential.
-    Notes
-    -----
-    A tokamak object contains the following attributes, which include the input
-    arguements:
 
-        #. R, RNU : Quantities
+    Attributes
+    ----------
+        R, RNU : Quantities
             The tokamak's major radius in [meters]/[NUmeters].
-        #. a, aNU : Quantities
+        a, aNU : Quantities
             The tokamak's minor radius in [meters]/[NUmeters].
-        #. B0, B0NU : Quantities
+        B0, B0NU : Quantities
             The strength of the magnetic field on the magnetic field in
             [Tesla]/[NUTesla].
-        #. psi_wall, psi_wallNU : Quantities
+        psi_wall, psi_wallNU : Quantities
             The :math:`\psi` value in the tokamak's wall.
-        #. psip_wall, psip_wallNU : Quantities
+        psip_wall, psip_wallNU : Quantities
             The :math:`\psi_p` value in the tokamak's wall.
 
-    Example
-    -------
+    Examples
+    --------
     How to initialize a PhysicalParameters object:
 
     >>> import gcmotion as gcm
@@ -124,6 +122,7 @@ class Tokamak:
 
         # Calculate last closed surfaces
         Q = type(R)
+        logger.info("\tGrabbed Quantity Constructor.")
         self.psi_wall = Q(1, "psi_wall").to("Magnetic_flux")
         self.psi_wallNU = self.psi_wall.to("NUMagnetic_flux")
 
@@ -133,7 +132,7 @@ class Tokamak:
         )
         self.psip_wall = self.psip_wallNU.to("Magnetic_flux")
 
-        logger.info("\tTokamak Initialization Complete.")
+        logger.info("--> Tokamak Initialization Complete.")
 
     def __repr__(self):
         return (

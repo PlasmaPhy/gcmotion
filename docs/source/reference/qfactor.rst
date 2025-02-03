@@ -8,12 +8,13 @@ gcmotion.qfactor
 
 Here is a list of the availiable q-factor configurations:
 
-=======================      ==========================
-Unity q-factor               :py:class:`Unity`
-Parabolic q-factor           :py:class:`Parabolic`
-Hypergeometric q-factor      :py:class:`Hypergeometric`
-(Numerical) Smart            :py:class:`Smart`
-=======================      ==========================
+=========================      ==========================
+Unity q-factor                 :py:class:`Unity`
+Parabolic q-factor             :py:class:`Parabolic`
+Hypergeometric q-factor        :py:class:`Hypergeometric`
+(Numerical) SmartPositive      :py:class:`SmartPositive`
+(Numerical) SmartNegative      :py:class:`SmartNegative`
+=========================      ==========================
 
 Their parameters are documented below.
 
@@ -74,7 +75,12 @@ Available q-factors
 .. autoclass:: Hypergeometric
    :class-doc-from: class
 
-.. rubric:: Smart
+.. rubric:: SmartPositive
 
-.. autoclass:: Smart
+.. autoclass:: SmartPositive
+   :class-doc-from: class
+
+.. rubric:: SmartNegative
+
+.. autoclass:: SmartNegative
    :class-doc-from: class

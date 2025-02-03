@@ -13,7 +13,7 @@ from gcmotion.configuration.plot_parameters import ParticleEvolutionConfig
 from gcmotion.entities.particle import Particle
 
 
-def particle_evolution(particle: Particle, **args):
+def particle_evolution(particle: Particle, **kwargs):
     r"""Plots the time evolution of all the dynamical variables and
     canonical momenta from the particle's calculated orbit.
 
@@ -35,7 +35,7 @@ def particle_evolution(particle: Particle, **args):
     """
     # Unpack parameters
     config = ParticleEvolutionConfig()
-    for key, value in args.items():
+    for key, value in kwargs.items():
         setattr(config, key, value)
 
     # This suffix is used to yank the correct attributes from particle.

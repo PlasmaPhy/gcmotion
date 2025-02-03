@@ -11,7 +11,7 @@ from gcmotion.plot._base._config import _ProfilePzetaContourConfig
 from gcmotion.entities.profile import Profile
 
 
-def _base_profile_Pzeta_contour(profile: Profile, ax: Axes, **args):
+def _base_profile_Pzeta_contour(profile: Profile, ax: Axes, **kwargs):
     r"""Base plotting function. Only draws upon a given axis without showing
     any figures.
 
@@ -21,7 +21,7 @@ def _base_profile_Pzeta_contour(profile: Profile, ax: Axes, **args):
         The profile entity.
     ax : Axes
         The ax upon which to draw.
-    args : dict
+    kwargs : dict
         The optional arguement dictionary.
 
     Notes
@@ -34,7 +34,7 @@ def _base_profile_Pzeta_contour(profile: Profile, ax: Axes, **args):
 
     # Unpack parameters
     config = _ProfilePzetaContourConfig()
-    for key, value in args.items():
+    for key, value in kwargs.items():
         setattr(config, key, value)
 
     # Setup meshgrid

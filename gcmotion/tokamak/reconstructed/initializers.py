@@ -1,10 +1,17 @@
+r"""
+===================
+Initializers Module
+===================
+
+"""
+
 import os
 import xarray as xr
 
 from gcmotion.utils.quantity_constructor import QuantityConstructor
 
 
-class SmartInit:
+class _NumericalInitializer:
     r"""Imports the necessary constants (R, B0, :math:`\psi_{wall}`) from the
     dataset to initialize the Quantity Constructor and Tokamak
 
@@ -18,11 +25,11 @@ class SmartInit:
 
     """
 
-    def __init__(self, species):
+    def __init__(self, species: str, filename: str):
 
         # Open the dataset
         parent = os.path.dirname(__file__)
-        path = os.path.join(parent, "smart.nc")
+        path = os.path.join(parent, filename)
         try:
             ds = xr.open_dataset(path)
         except FileNotFoundError:
@@ -41,16 +48,26 @@ class SmartInit:
             species=species,
         )
 
-        # Create R, B0 and (phony) a Quantities
+        # Create R, B0
         self.R = self.Q(R, "meters")
         self.B0 = self.Q(B0, "Tesla")
         self.psi_wallNU = self.Q(psi_wallNU, "NUMagnetic_flux")
-        # self.a = self.Q(
-        #     ds.R.sel(psi=1000000, boozer_theta=0, method="nearest").data - R,
-        #     "meters",
-        # )
         psi_wall = self.psi_wallNU.to("Tesla * meters^2")
         self.a = (2 * psi_wall / self.B0) ** (1 / 2)
 
     def get_QuantityConstructor(self):
         return self.Q
+
+
+class SmartPositiveInit(_NumericalInitializer):
+
+    def __init__(self, species: str):
+        filename = "smart_positive.nc"
+        super().__init__(filename=filename, species=species)
+
+
+class SmartNegativeInit(_NumericalInitializer):
+
+    def __init__(self, species: str):
+        filename = "smart_negative.nc"
+        super().__init__(filename=filename, species=species)

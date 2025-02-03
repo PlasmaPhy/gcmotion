@@ -20,6 +20,7 @@ class _ProfileEnergyContourConfig:
     potential: bool = True
     wall: bool = True
     # Contour
+    projection: str | None = None  # None = default
     mode: str = "filled"  # "filled" or "lines"
     grid_density: int = 100
     cmap: str = "plasma"
@@ -65,3 +66,13 @@ class _ColorbarConfig:
     numticks: int = 15
     label: str = ""
     labelsize: float = 15
+
+
+@dataclass
+class _ParticlePoloidalDrift:
+    units: str = "SI"  # "SI" or "NU"
+    percentage: int = 100
+    # Scatter kw
+    s: float = 1
+    color: str = "r"
+    marker: str = "."
