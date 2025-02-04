@@ -86,7 +86,7 @@ class MagneticProfileConfig:
     plot_derivatives: bool = True
     show: bool = True
     # Contour options
-    grid_density: int = 100
+    grid_density: int = 200
     levels: int = 20
     bcmap: str = "inferno"
     icmap: str = "viridis"
@@ -104,10 +104,6 @@ class MagneticProfileConfig:
 
 @dataclass()
 class ParticleEvolutionConfig:
-    # Default parameter values
-    which: str = "all"
-    units: str = "SI"
-    percentage: int = 100
     # Figure keywords
     figsize: tuple = figsize
     dpi: int = dpi
@@ -134,8 +130,8 @@ class ParticlePoloidalDrift:
     dpi: int = dpi
     layout: str = "constrained"
     facecolor: str = "lightskyblue"
-    projection: str | None = None  # None = default
     # Default parameter values
+    projection: str | None = None  # None = default
     thetalim: tuple = (-pi, pi)
     psilim: tuple = (0, 1.2)  # times psi_wall
     levels: int = 30

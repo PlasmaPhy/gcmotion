@@ -21,7 +21,7 @@ def particle_evolution(particle: Particle, **kwargs):
 
     Parameters
     ----------
-    particle: :py:class:`~gcmotion.entities.particle.Particle`
+    particle: Particle
         The current working particle.
     which : str, optional
         Which of the dynamical variables to show. Must be a string containing
@@ -30,8 +30,9 @@ def particle_evolution(particle: Particle, **kwargs):
         psip, Ptheta Pzeta". Defaults to "all".
     percentage : int, optional
         The percentage of the orbit to be plotted. Defaults to 100.
-    units : str, optional
+    units : {"SI", "NU"}, optional
         The unit system. Can be either 'SI' or 'NU'. Defauls to "SI".
+
     """
     # Unpack parameters
     config = ParticleEvolutionConfig()

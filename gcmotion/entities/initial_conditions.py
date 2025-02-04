@@ -56,8 +56,8 @@ class InitialConditions:
     Pzeta0 : Quantity
         The particle's initial :math:`P_{\zeta 0}`.
 
-    Example
-    -------
+    Examples
+    --------
     How to initialize an `InitialConditions` object.
 
     >>> import gcmotion as gcm

@@ -13,3 +13,4 @@ Availiable plotters:
    profile_Energy_contour
    profile_Pzeta_contour
    particle_evolution
+   particle_poloidal_drift

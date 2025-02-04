@@ -28,7 +28,7 @@ def magnetic_profile(entity: Tokamak | Profile | Particle, **kwargs):
 
     Parameters
     ----------
-    entity : :py:class:`~gcmotion.Tokamak,~gcmotion.Profile,~gcmotion.Particle`
+    entity : Tokamak, Profile, Particle
         The object to plot the qfactor of.
 
     Other Parameters
@@ -90,16 +90,15 @@ def magnetic_profile(entity: Tokamak | Profile | Particle, **kwargs):
     # r = psi
 
     # Set appropriate units:
-    if config.units.lower() == "nu":
-        b = Q(b, "NUTesla")
-        i = Q(i, "NUPlasma_current")
-        g = Q(g, "NUPlasma_current")
-        r = Q(r, "NUmeters")
-    else:
-        b = bfield.B0 * b  # Tesla
-        i = Q(i, "NUPlasma_current").to("Plasma_current")
-        g = Q(g, "NUPlasma_current").to("Plasma_current")
-        r = Q(r, "NUmeters").to("meters")
+    b = Q(b, "NUTesla")
+    i = Q(i, "NUPlasma_current")
+    g = Q(g, "NUPlasma_current")
+    r = Q(r, "NUmeters")
+    if config.units.lower() == "si":
+        b.ito("Tesla")
+        i.ito("Plasma_current")
+        g.ito("Plasma_current")
+        r.ito("meters")
 
     # Locator setup
     locator = (

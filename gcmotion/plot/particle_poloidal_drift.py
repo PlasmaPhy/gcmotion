@@ -1,3 +1,7 @@
+r"""
+Plots the particle's poloidal drift on top of the energy contour plot.
+"""
+
 import matplotlib.pyplot as plt
 
 from gcmotion.entities.particle import Particle
@@ -12,6 +16,44 @@ from gcmotion.plot._base._base_particle_poloidal_drift import (
 
 
 def particle_poloidal_drift(particle: Particle, **kwargs):
+    r"""Plots the particle's poloidal drift on top of the energy contour
+    plot.
+
+    Parameters
+    ----------
+    particle: Particle
+        The current working particle
+
+    Other Parameters
+    ----------------
+    thetalim: list, optional
+        The :math:`\theta` span. Ignored when plotting in polar projection.
+        Defaults to [-π, π].
+    psilim: list, optional
+        The :math:`\psi` span, relative to :math:`\psi_{wall}`. Defaults to [0,
+        1.2]
+    projection: {None, "polar"}, optional
+        The plot projection. None means cartesian. Defaults to None.
+    levels: int, optional
+        The energy contour levels. Defaults to 30.
+    E_units: str, optional
+        The Energy units, as read by pint. Defaults to "keV".
+    flux_units: str, optional
+        The magnetic flux units, as read by pint. Defaults to "Tesla *
+        meter^2".
+    grid_density: int, optional
+        The contour's grid density. Defaults to 200.
+    potential: bool, optional
+        Whether or not to add the electric potential in the calculation of
+        energy. Defaults to True.
+    wall: bool, optional
+        Whether or not to shade the area :math:`\psi>\psi_{wall}`. Defaults to
+        True.
+    cursor: bool, optional
+        Whether or not to add cursor data to the plot. This is a mild
+        performance hit. Defaults to True.
+
+    """
 
     # Unpack parameters
     config = ParticlePoloidalDrift()

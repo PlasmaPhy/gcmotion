@@ -88,7 +88,12 @@ class MagneticField(ABC):
 
 
 class NumericalMagneticField(MagneticField):
-    # TODO: Write documentation
+    r"""Numerical Magnetic field base class
+
+    Opens the dataset and creates the splines needed for the querry methods.
+    Also defines Bmin and Bmax, used in the parabolas.
+    """
+
     def __init__(self, filename: str):
 
         # Open the dataset
@@ -142,6 +147,9 @@ class NumericalMagneticField(MagneticField):
         _B0 = float(dataset.Baxis.data)  # Tesla
         self.B0 = pint.UnitRegistry.Quantity(_B0, "Tesla")
         self.is_numerical = True
+
+        # Magnetic field strength extremum
+        # self.Bmin =
 
     def bigNU(self, psi: float | np.ndarray, theta: float | np.ndarray):
 

@@ -18,8 +18,8 @@ usr/
 examples/**/**.ipynb
 
 # log files
-log.txt
-log.log
+**/log.txt
+**/log.log
 
 # Numerical data
 **/**.nc

@@ -8,7 +8,6 @@ from gcmotion.utils.get_size import get_size
 from gcmotion.tokamak import qfactor
 from gcmotion.tokamak import bfield
 from gcmotion.tokamak import efield
-from gcmotion.scripts import events
 from gcmotion.tokamak.reconstructed.initializers import (
     SmartPositiveInit,
     SmartNegativeInit,
@@ -19,6 +18,9 @@ from gcmotion.entities.tokamak import Tokamak
 from gcmotion.entities.initial_conditions import InitialConditions
 from gcmotion.entities.profile import Profile
 from gcmotion.entities.particle import Particle
+
+# Scripts
+from gcmotion.scripts import events
 
 # main namespace
 __all__ = [
@@ -31,10 +33,11 @@ __all__ = [
     "qfactor",
     "bfield",
     "efield",
-    "events",
     # Entities
     "Tokamak",
     "InitialConditions",
     "Profile",
     "Particle",
+    # Scripts
+    "events",
 ]

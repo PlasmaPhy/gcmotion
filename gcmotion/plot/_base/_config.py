@@ -22,7 +22,7 @@ class _ProfileEnergyContourConfig:
     # Contour
     projection: str | None = None  # None = default
     mode: str = "filled"  # "filled" or "lines"
-    grid_density: int = 100
+    grid_density: int = 200
     cmap: str = "plasma"
     locator: str = "log"
     log_base: float = 1.0001
@@ -47,7 +47,7 @@ class _ProfilePzetaContourConfig:
     wall: bool = True
     # Contour
     mode: str = "filled"  # "filled" or "lines"
-    grid_density: int = 100
+    grid_density: int = 200
     cmap: str = "plasma"
     locator: str = ""  # Pzeta can be negative so dont use LogLocator
     log_base: float = 1.0001
