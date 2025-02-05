@@ -63,6 +63,16 @@ class QFactor(ABC):
 
 
 class NumericalQFactor(QFactor):
+    r"""Numerical QFactor base class.
+
+    Opens the dataset and creates the splines needed for the querry methods.
+
+    Parameters
+    ----------
+    filename : str
+        The "\*.nc" file located at gcmotion/tokamak/reconstructed.
+
+    """
 
     def __init__(self, filename: str):
         # Open the dataset
@@ -298,7 +308,7 @@ class Hypergeometric(QFactor):
 
 class SmartPositive(NumericalQFactor):
     r"""Initializes an object q with numerical data from the Smart Tokamak with
-    **Positive** Triangularity
+    **Positive** Triangularity.
 
     The dataset must be stored in
     *./gcmotion/tokamak/reconstructed/smart_positive.nc*.
@@ -318,7 +328,7 @@ class SmartPositive(NumericalQFactor):
 
 class SmartNegative(NumericalQFactor):
     r"""Initializes an object q with numerical data from the Smart Tokamak with
-    **Negative** Triangularity
+    **Negative** Triangularity.
 
     The dataset must be stored in
     *./gcmotion/tokamak/reconstructed/smart_negative.nc*.
@@ -332,5 +342,25 @@ class SmartNegative(NumericalQFactor):
     def __repr__(self):
         return (
             colored("Smart - Negative", "light_blue")
+            + f": q0={self.q0:.4g}, q_wall={self.q_wall:.4g}."
+        )
+
+
+class DivertorNegative(NumericalQFactor):
+    r"""Initializes an object q with numerical data from the Divertor Tokamak
+    with **Negative** Triangularity.
+
+    The dataset must be stored in
+    *./gcmotion/tokamak/reconstructed/divertor.nc*.
+
+    """
+
+    def __init__(self):
+        filename = "divertor_negative.nc"
+        super().__init__(filename=filename)
+
+    def __repr__(self):
+        return (
+            colored("Divertor - Negative", "light_blue")
             + f": q0={self.q0:.4g}, q_wall={self.q_wall:.4g}."
         )

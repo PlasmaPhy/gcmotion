@@ -46,3 +46,8 @@ All electric field classes inherit the abstract class `ElectricField` to ensure 
    qfactor
    bfield
    efield
+
+.. toctree::
+   :hidden:
+
+   _base_classes 

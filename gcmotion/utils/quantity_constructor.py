@@ -5,8 +5,11 @@ Sets up the `pint <https://pint.readthedocs.io/en/stable/>`_ configuration.
 from pint import UnitRegistry, set_application_registry
 from gcmotion.configuration.physical_constants import PhysicalConstants
 
-ureg = UnitRegistry(case_sensitive=False, on_redefinition="ignore")
-set_application_registry(ureg)  # Used only in testing
+# NOTE: we can set "on_redefinition='ignore'" here in case the consructor is
+# need somewhere and its not accessible without redifining, but lets try to
+# avoid that, its bad practice. The constructor should be a singleton.
+ureg = UnitRegistry(case_sensitive=False)
+set_application_registry(ureg)
 
 
 def QuantityConstructor(
@@ -44,7 +47,7 @@ def QuantityConstructor(
     ureg.setup_matplotlib()
 
     # Additional SI quantites (= aliases, for display only)
-    ureg.define("Magnetic_flux    = Tesla * m^2   = Tm^2")
+    ureg.define("Magnetic_flux    = Tesla * m^2   = Tm^2 = mf")
     ureg.define("Magnetic_moment  = Ampere * m^2  = keV/T")
     ureg.define("Plasma_current   = Tesla * m     = Tm")
 

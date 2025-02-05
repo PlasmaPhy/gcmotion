@@ -9,6 +9,10 @@ import numpy as np
 import xarray as xr
 from termcolor import colored
 from scipy.interpolate import UnivariateSpline, RectBivariateSpline
+from pint import UndefinedUnitError
+from time import time
+
+from gcmotion.utils.logger_setup import logger
 
 from math import cos, sin, sqrt
 from abc import ABC, abstractmethod
@@ -92,6 +96,23 @@ class NumericalMagneticField(MagneticField):
 
     Opens the dataset and creates the splines needed for the querry methods.
     Also defines Bmin and Bmax, used in the parabolas.
+
+    Parameters
+    ----------
+    filename : str
+        The "\*.nc" file located at gcmotion/tokamak/reconstructed.
+
+    Attributes
+    ----------
+    Bmin, Bmax : Quantities
+        The minimum and maximum magnetic field values.
+    theta_min, theta_max : Quantities
+        The :math:`\theta` coordinates where the magnetic field takes its
+        minimum/maximum value.
+    psi_min, psi_max : Quantities
+        The :math:`\psi` coordinates where the magnetic field takes its
+        minimum/maximum value.
+
     """
 
     def __init__(self, filename: str):
@@ -144,12 +165,41 @@ class NumericalMagneticField(MagneticField):
         self.gder_spline = self.g_spline.derivative(n=1)
 
         # Useful attributes
+        Q = pint.UnitRegistry.Quantity
         _B0 = float(dataset.Baxis.data)  # Tesla
-        self.B0 = pint.UnitRegistry.Quantity(_B0, "Tesla")
+        self.B0 = Q(_B0, "Tesla")
         self.is_numerical = True
 
         # Magnetic field strength extremum
-        # self.Bmin =
+        start = time()
+        da = dataset.b_field_norm
+        mins = da.where(da == da.min(), drop=True).squeeze()
+        maxs = da.where(da == da.max(), drop=True).squeeze()
+        self.Bmin = Q(mins.values, "Tesla")
+        self.Bmax = Q(maxs.values, "Tesla")
+        self.theta_min = float(mins.boozer_theta.values)
+        self.theta_max = float(maxs.boozer_theta.values)
+
+        # WARN: NU units must have been defined in the unit registry already.
+        # The quantity_constructor module sets the global "application
+        # registry" when imported, and *then* defines NU units. This means
+        # quantifying psi raises an exception if the object is created without
+        # having the Quantity constructor instantiated first. There is no way
+        # around that, but there is really no reason to do that.
+        # WARN: "type(self.Bmax) is Q" returns False which might cause
+        # problems.
+        try:
+            self.psi_min = Q(mins.psi.values, "NUMagnetic_flux")
+            self.psi_max = Q(maxs.psi.values, "NUMagnetic_flux")
+        except UndefinedUnitError:
+            logger.warning(
+                "psi coordinates of Bmin and Bmax cannot be defined. "
+                "Ensure that the Quantity Constructor has been instantiated "
+                "correctly first."
+            )
+        end = time()
+        duration = Q(end - start, "seconds")
+        logger.info(f"Numerical bfield extremum search took {duration:.4g~#P}")
 
     def bigNU(self, psi: float | np.ndarray, theta: float | np.ndarray):
 
@@ -301,4 +351,26 @@ class SmartNegative(NumericalMagneticField):
     def __repr__(self):
         return (
             colored("Smart - Negative", "light_blue") + f": B0={self.B0:.4g~}."
+        )
+
+
+class DivertorNegative(NumericalMagneticField):
+    r"""Initializes a bfield object with numerical data from the Divertor
+    Tokamak with **Negative** Triangularity.
+
+    The dataset must be stored in
+    *./gcmotion/tokamak/reconstructed/divertor_negative.nc*.
+
+    """
+
+    def __init__(self):
+        filename = "divertor_negative.nc"
+        super().__init__(filename=filename)
+
+        self.plain_name = "Divertor - Negative"
+
+    def __repr__(self):
+        return (
+            colored("Divertor - Negative", "light_blue")
+            + f": B0={self.B0:.4g~}."
         )

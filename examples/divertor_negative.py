@@ -1,11 +1,10 @@
 import gcmotion as gcm
 import gcmotion.plot as gplt
-import matplotlib.pyplot as plt
 import numpy as np
 
 # Quantity Constructor
 species = "p"
-smart_init = gcm.SmartPositiveInit(species)
+smart_init = gcm.DivertorNegativeInit(species)
 Q = smart_init.get_QuantityConstructor()
 
 # Intermediate Quantities
@@ -20,30 +19,31 @@ Ea = Q(735000, "Volts/meter")
 tokamak = gcm.Tokamak(
     R=R,
     a=a,
-    qfactor=gcm.qfactor.SmartPositive(),
-    bfield=gcm.bfield.SmartPositive(),
+    qfactor=gcm.qfactor.DivertorNegative(),
+    bfield=gcm.bfield.DivertorNegative(),
     efield=gcm.efield.Nofield(),
     # qfactor=gcm.qfactor.Unity(),
-    # bfield=gcm.bfield.LAR(B0=B0, i=i, g=g),
+    # qfactor=gcm.qfactor.Parabolic(a=a, B0=B0, q0=1, q_wall=5),
+    # bfield=gcm.bfield.LAR(B0, i, g),
 )
 
 # Setup Initial Conditions
 init = gcm.InitialConditions(
     species="p",
-    muB=Q(1e-4, "NUMagnetic_moment"),
-    Pzeta0=Q(-0.045, "NUMagnetic_flux"),
+    muB=Q(1e-7, "NUMagnetic_moment"),
+    Pzeta0=Q(-0.025, "NUMagnetic_flux"),
     theta0=0,
     zeta0=0,
-    psi0=Q(0.34, "psi_wall"),
-    t_eval=Q(np.linspace(0, 1e-4, 10000), "seconds"),
+    psi0=Q(0.616, "Magnetic_flux"),
+    t_eval=Q(np.linspace(0, 1e-2, 100000), "seconds"),
 )
 
 # Create the particle and calculate its obrit
 particle = gcm.Particle(tokamak=tokamak, init=init)
+event = gcm.events.when_theta(0, 10)
+# particle.run(events=[event])
 particle.run()
 print(particle)
 
-# B Derivatives plots
-# ds = particle.bfield.dataset
-# ds.db_dtheta_norm.plot.contourf(subplot_kws={"projection": "polar"}, levels=30)
-# plt.show()
+# gplt.particle_poloidal_drift(particle, projection="polar")
+# gplt.particle_poloidal_drift(particle, psilim=[0.2, 0.25])

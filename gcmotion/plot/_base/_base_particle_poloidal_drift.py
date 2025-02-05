@@ -1,14 +1,15 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 
 from gcmotion.utils.logger_setup import logger
 
+from gcmotion.utils.plot_utils import _pi_mod
 from gcmotion.entities.particle import Particle
 from gcmotion.plot._base._config import _ParticlePoloidalDrift
 
 
 def _base_particle_poloidal_drift(particle: Particle, ax: Axes, **kwargs):
+    # TODO: Write Documentation
 
     # Unpack parameters
     config = _ParticlePoloidalDrift()
@@ -31,9 +32,8 @@ def _base_particle_poloidal_drift(particle: Particle, ax: Axes, **kwargs):
     points = int(
         np.floor(particle.t_eval.shape[0] * config.percentage / 100) - 1
     )
-
-    theta = getattr(particle, "theta" + suffix)[:points]
-    psi = getattr(particle, "psi" + suffix)[:points]
+    theta = particle.theta[:points]
+    psi = particle.psi.to(config.flux_units)[:points]
 
     scatter_kw = {
         "s": config.s,
@@ -41,4 +41,6 @@ def _base_particle_poloidal_drift(particle: Particle, ax: Axes, **kwargs):
         "marker": config.marker,
     }
 
+    # Mod theta and plot
+    theta = _pi_mod(theta, config.thetalim)[0]
     ax.scatter(theta, psi, **scatter_kw)

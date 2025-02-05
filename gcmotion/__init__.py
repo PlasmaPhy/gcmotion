@@ -11,6 +11,7 @@ from gcmotion.tokamak import efield
 from gcmotion.tokamak.reconstructed.initializers import (
     SmartPositiveInit,
     SmartNegativeInit,
+    DivertorNegativeInit,
 )
 
 # Entities
@@ -30,6 +31,7 @@ __all__ = [
     # Tokamak objects
     "SmartPositiveInit",
     "SmartNegativeInit",
+    "DivertorNegativeInit",
     "qfactor",
     "bfield",
     "efield",

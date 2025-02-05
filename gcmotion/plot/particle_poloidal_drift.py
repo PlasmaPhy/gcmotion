@@ -70,6 +70,7 @@ def particle_poloidal_drift(particle: Particle, **kwargs):
     fig = plt.figure(**fig_kw)
     driftax = fig.add_subplot(projection=config.projection)
 
+    print(config.flux_units)
     # ==============
     # Energy Contour
     # ==============

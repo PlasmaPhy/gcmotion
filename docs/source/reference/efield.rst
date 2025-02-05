@@ -44,14 +44,8 @@ Their parameters are documented below.
 Methods
 *******
 
-The functions `solverqNU`, `psipNU` and `Er` work identically in every class, 
-so I list their methods here as to not repeat myself:
-
-.. autofunction:: gcmotion.efield.ElectricField.solverPhiderNU
-
-.. autofunction:: gcmotion.efield.ElectricField.PhiNU
-
-.. autofunction:: gcmotion.efield.ElectricField.Er
+The functions `PhiNU`, `Er` and `solverPhiderNU` work identically in every class, 
+so I list their methods :ref:`here <base-classes-documentation>`. 
 
 .. _available_efields:
 

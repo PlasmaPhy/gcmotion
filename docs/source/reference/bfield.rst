@@ -37,8 +37,8 @@ Their parameters are documented below.
 Methods
 *******
 
-The functions `bigNU` and `solverbNU` work identically in every class, so I
-list their methods here as to not repeat myself:
+The functions `bigNU` and `solverbNU` work identically in every class,
+so I list their methods :ref:`here <base-classes-documentation>`. 
 
 .. autofunction:: gcmotion.bfield.MagneticField.bigNU
    :no-index:

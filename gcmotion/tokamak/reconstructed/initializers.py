@@ -71,3 +71,10 @@ class SmartNegativeInit(_NumericalInitializer):
     def __init__(self, species: str):
         filename = "smart_negative.nc"
         super().__init__(filename=filename, species=species)
+
+
+class DivertorNegativeInit(_NumericalInitializer):
+
+    def __init__(self, species: str):
+        filename = "divertor_negative.nc"
+        super().__init__(filename=filename, species=species)

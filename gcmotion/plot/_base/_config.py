@@ -71,6 +71,7 @@ class _ColorbarConfig:
 @dataclass
 class _ParticlePoloidalDrift:
     units: str = "SI"  # "SI" or "NU"
+    thetalim: tuple = (-np.pi, np.pi)
     percentage: int = 100
     # Scatter kw
     s: float = 1
