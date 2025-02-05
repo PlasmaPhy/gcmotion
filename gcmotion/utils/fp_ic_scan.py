@@ -120,8 +120,9 @@ def fp_ic_scan(
                     theta_grid[i, j], psi_grid[i, j], profile, method=method
                 )
                 system_values[i, j] = (
-                    theta_dot**2 + (80 * psi_dot) ** 2
-                )  # 70 worked (between 60 - 120 in general)
+                    theta_dot**2 + (30 * psi_dot) ** 2
+                )  # 60, 70, 80 worked (between 60 - 120 in general) for LAR, SMART PT
+                # 30 for SMART NT
 
     # Find local minima
     indices = _find_local_minima(system_values)

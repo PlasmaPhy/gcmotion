@@ -129,10 +129,7 @@ def fixed_points_plot(
     print(f"\n FIXED POINTS RUN IN {(time() - start):.1f}s\n")
 
     # CAUTION: The xoc function takes in psis_fixed but returns P_thetas_fixed
-    X_points, O_points = xoc(
-        unclassified_fixed_points=fixed_points,
-        profile=profile,
-    )
+    X_points, O_points = xoc(unclassified_fixed_points=fixed_points, profile=profile)
 
     # Check axes
     if ax is None:

@@ -14,7 +14,7 @@ def XO_points_classification(
     unclassified_fixed_points: np.ndarray,
     profile: Profile,
     delta: float = 1e-5,
-    to_P_thetas: bool = True,
+    to_P_thetas: bool = False,
 ):
     r"""
     Takes in an array with fixed points of the form [:math:`\theta`, :math:`\psi`] and
@@ -32,7 +32,7 @@ def XO_points_classification(
             a finite difference method, needed for the Hessian. Deafults to 1e-5.
         to_P_thetas : bool, optional
             Boolean that determines weather :math:`\psi_{fixed}` will be turned into
-            :math:`P_{\theta,fixed}` in the resulting X,O Points lists. Defaults to True.
+            :math:`P_{\theta,fixed}` in the resulting X,O Points lists. Defaults to ``False``.
 
 
 
@@ -48,6 +48,10 @@ def XO_points_classification(
 
     # Define a Quantity object. Will be used later.
     Q = profile.Q
+
+    # Might need regulation depending on Pzeta (close or above 0)
+    if profile.PzetaNU.m >= -1e-3:
+        delta = 1e-9
 
     O_points = deque([])  # Deque for stable O-points
     X_points = deque([])  # Deque for unstable X-points and saddle X-points
@@ -67,14 +71,12 @@ def XO_points_classification(
 
         # Compute the Hessian matrix elements
         d2W_dtheta2 = higher_order_second_derivative(WNU, theta_fixed, psi_fixed, delta, delta, "x")
-        d2W_dPtheta2 = higher_order_second_derivative(
-            WNU, theta_fixed, psi_fixed, delta, delta, "y"
-        )
-        d2W_dtheta_dPtheta = higher_order_second_derivative(
+        d2W_dpsi2 = higher_order_second_derivative(WNU, theta_fixed, psi_fixed, delta, delta, "y")
+        d2W_dtheta_dpsi = higher_order_second_derivative(
             WNU, theta_fixed, psi_fixed, delta, delta, "mixed"
         )
         # Hessian matrix
-        Hessian = np.array([[d2W_dtheta2, d2W_dtheta_dPtheta], [d2W_dtheta_dPtheta, d2W_dPtheta2]])
+        Hessian = np.array([[d2W_dtheta2, d2W_dtheta_dpsi], [d2W_dtheta_dpsi, d2W_dpsi2]])
 
         # Determinant of the Hessian
         det_Hessian = np.linalg.det(Hessian)

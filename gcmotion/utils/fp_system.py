@@ -53,7 +53,7 @@ def system(theta: float, psi: float, profile: Profile, method: str):
     Pzeta0 = profile.PzetaNU.m
     Pzeta = Pzeta0
 
-    psi = max(psi, 1e-3)
+    psi = max(psi, 1e-12)
 
     # Object methods calls
     q = solverqNU(psi)
