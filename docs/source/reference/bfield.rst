@@ -8,13 +8,18 @@ gcmotion.bfield
 
 Here is a list of the availiable q-factor configurations:
 
-==================               ===============
+============================     ============================
 Large Aspect Ratio               :py:class:`LAR`
-==================               ===============
+(Numerical) SmartPositve         :py:class:`SmartPositive`
+(Numerical) SmartNegative        :py:class:`SmartNegative`
+(Numerical) DivertorNegative     :py:class:`DivertorNegative`
+============================     ============================
 
 Their parameters are documented below.
 
-.. rubric:: Example
+.. rubric:: Examples
+
+Creating an analytic Magnetic Field
 
 >>> import gcmotion as gcm
 >>>
@@ -31,7 +36,23 @@ Their parameters are documented below.
 >>> g = Q(1, "NUPlasma_current")
 >>>
 >>> # A magnetic field
->>> bfield1 = gcm.bfield.LAR(B0=B0, i=i, g=g)
+>>> bfield = gcm.bfield.LAR(B0=B0, i=i, g=g)
+
+Creating a numerical Magneticfield. Use the respective Initializer to grab the normalization constants from the dataset automatically. See :ref:`Initializers <initializers_docs>`
+
+>>> import gcmotion as gcm
+>>> 
+>>> # Quantity Constructor
+>>> species = "p"
+>>> smart_init = gcm.SmartNegativeInit(species)
+>>> Q = smart_init.QuantityConstructor()
+>>> 
+>>> # Intermediate Quantities
+>>> R = smart_init.R
+>>> a = smart_init.a
+>>> B0 = smart_init.B0
+>>>
+>>> bfield=gcm.bfield.SmartNegative(),
 
 *******
 Methods
@@ -40,11 +61,6 @@ Methods
 The functions `bigNU` and `solverbNU` work identically in every class,
 so I list their methods :ref:`here <base-classes-documentation>`. 
 
-.. autofunction:: gcmotion.bfield.MagneticField.bigNU
-   :no-index:
-
-.. autofunction:: gcmotion.bfield.MagneticField.solverbNU
-   :no-index:
 
 .. _available_bfields:
 
@@ -65,4 +81,9 @@ Available magnetic fields
 .. rubric:: SmartNegative
 
 .. autoclass:: SmartNegative
+   :class-doc-from: class
+
+.. rubric:: DivertorNegative
+
+.. autoclass:: DivertorNegative
    :class-doc-from: class

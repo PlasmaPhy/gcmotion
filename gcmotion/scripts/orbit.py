@@ -1,36 +1,36 @@
 r"""
-Simple function wrapper around SciPy's solve_ivp() solver. It solves
-the dynamical system:
+=====
+Orbit
+=====
 
-.. todo::
-    link to a markdown file with the system's formula.
+Simple function wrapper around SciPy's solve_ivp() solver. It solves White's
+differential equations in NU.
 
 It uses the RK4(5) solving method. The tolerance can be tweaked in
 gcmotion/configuration/solver_configuration.py.
 
-The solver only calculates the time evolution of
-:math:`\theta, \psi, \zeta, \rho_{||}`. The rest of the dynamical variables
-are calculated afterwards.
+The solver only calculates the time evolution of theta, psi, zeta and rho. The
+rest of the dynamical variables are calculated afterwards.
 
-.. important::
+Important
+---------
+The solver expects the input to be purely numerical quantites, in [NU], and
+returns the solution also in [NU]. The conversion to SI units is handled by the
+particle's run() method.
 
-    The solver expects the input to be purely numerical quantites, in [**NU**],
-    and returns the solution also in [**NU**]. The conversion to SI units is
-    handled by the particle's
-    :py:meth:`~gcmotion.classes.particle.Particle.run` method.
-
-.. tip::
-    When setting up the analytical function dSdt to pass to the solver, it is
-    better to use Python's built-in mathematical functions by importing the
-    ``math`` module, instead of their ``numpy`` counterparts. Python's
-    functions are much faster than numpy's when calculating single values
-    (often by a factor of 10 or more).
+Tip
+---
+When setting up the analytical function dSdt to pass to the solver, it is
+better to use Python's built-in mathematical functions by importing the math
+module, instead of their numpy counterparts. Python's functions are much faster
+than numpy's when calculating single values (often by a factor of 10 or more)..
 
 """
 
 from scipy.integrate import solve_ivp
 from collections import namedtuple
 
+from gcmotion.utils.logger_setup import logger
 from gcmotion.entities.profile import Profile
 
 from gcmotion.configuration.scripts_configuration import (
@@ -49,31 +49,29 @@ def orbit(
     ----------
     parameters : namedtuple
         Named tuple containing the initial conditions and constants in [NU]:
-        :math:`\theta_0, \psi_0, \zeta_0, \rho_{||,0}`, as well as
-        :math:`\mu` and :math:`t`.
+        theta_0, psi_0, zeta_0, rho_0, as well as mu and t.
     profile : namedtuple
         Named tuple containing the tokamak configuration objects.
     events : list, optional
-        List containing the independed events to track. Defaults to "SI"
+        List containing the independed events to track. Defaults to "SI". Note
+        that multiple events trigger independently from one another.
 
     Returns
     -------
     solution : namedtuple
         A named tuple containing the following:
 
-            #. The calculated solutions of
-                :math:`\theta, \psi, \zeta, \rho, \psi_p, P_\theta, P_\zeta`
-                as np.ndarrays in [NU].
+        -> The calculated solutions of theta, psi, zeta, rho, psi_p, P_theta,
+            P_zeta as np.ndarrays in [NU].
 
-            #. A np.ndarray containing the evaluation times in [NU].
-                This is useful in the case a terminating event is used, since
-                the orbit is terminated earlier..
+        -> A np.ndarray containing the evaluation times in [NU]. This is useful
+            in the case a terminating event is used, since the orbit is
+            terminated earlier.
 
-            #. 2 lists containing the time positions and values of the found
-                events in [NU]. If more than 1 event is used, the lists are
-                nested.
+        -> 2 lists containing the time positions and values of the found events
+            in [NU]. If more than 1 event is used, the lists are nested.
 
-            #. The solver status message.
+        #. The solver status message.
 
     """
 
@@ -99,6 +97,8 @@ def orbit(
     solverbNU = bfield.solverbNU
     solverPhiderNU = efield.solverPhiderNU
 
+    logger.trace("\torbit() | Unpacked Parameters.")
+
     def dSdt(t, S):
         """Sets the diff equations system to pass to scipy.
 
@@ -122,7 +122,7 @@ def orbit(
 
         # Intermediate values
         par = mu + rho**2 * b
-        bracket1 = -par * b_der_psi + phi_der_psi
+        bracket1 = par * b_der_psi + phi_der_psi
         bracket2 = par * b_der_theta + phi_der_theta
         D = g * q + i + rho * (g * i_der - i * g_der)
 
@@ -146,11 +146,13 @@ def orbit(
         dense_output=True,
     )
 
+    logger.trace("\torbit() | Solver returned.")
+
     theta = sol.y[0]
     psi = sol.y[1]
     zeta = sol.y[2]
     rho = sol.y[3]
-    t_eval = sol.t
+    t_solve = sol.t
     t_events = sol.t_events
     y_events = sol.y_events
     message = sol.message
@@ -160,6 +162,7 @@ def orbit(
     psip = qfactor.psipNU(psi)
     Ptheta = psi + rho * i
     Pzeta = rho * g - psip
+    logger.trace("\torbit() | Calculated psip, Ptheta and Pzeta. Returning.")
 
     # Pack results and return them
     Solution = namedtuple(
@@ -187,7 +190,7 @@ def orbit(
         psip=psip,
         Ptheta=Ptheta,
         Pzeta=Pzeta,
-        t_eval=t_eval,
+        t_eval=t_solve,
         t_events=t_events,
         y_events=y_events,
         message=message,

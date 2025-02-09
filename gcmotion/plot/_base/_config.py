@@ -16,6 +16,7 @@ class _ProfileEnergyContourConfig:
     psilim: tuple = (0, 1.2)
     levels: int = 30
     flux_units: str = "Tesla * meters^2"
+    canmon_units: str = "NUCanonical_momentum"
     E_units: str = "keV"
     potential: bool = True
     wall: bool = True
@@ -66,6 +67,11 @@ class _ColorbarConfig:
     numticks: int = 15
     label: str = ""
     labelsize: float = 15
+    # Energy line
+    energy_line: None = None
+    energy_line_color: str = "r"
+    energy_line_style: str = "-"
+    energy_line_zorder: int = 3
 
 
 @dataclass
@@ -73,7 +79,13 @@ class _ParticlePoloidalDrift:
     units: str = "SI"  # "SI" or "NU"
     thetalim: tuple = (-np.pi, np.pi)
     percentage: int = 100
+    flux_units: str = "Tesla * meter^2"
+    initial: bool = True
     # Scatter kw
     s: float = 1
     color: str = "r"
     marker: str = "."
+    # Inital point
+    init_s: float = 30
+    init_color: str = "k"
+    init_marker: str = "."

@@ -10,7 +10,6 @@ Base Classes
 
 .. autoclass:: gcmotion.tokamak.qfactor.NumericalQFactor
    :class-doc-from: class
-   :members: psipNU, solverqNU
 
 .. autoclass:: gcmotion.tokamak.bfield.MagneticField
    :class-doc-from: class
@@ -18,7 +17,6 @@ Base Classes
 
 .. autoclass:: gcmotion.tokamak.bfield.NumericalMagneticField
    :class-doc-from: class
-   :members: bigNU, solverbNU
 
 .. autoclass:: gcmotion.tokamak.efield.ElectricField
    :class-doc-from: class
@@ -26,4 +24,4 @@ Base Classes
 
 .. .. autoclass:: gcmotion.tokamak.efield.NumericalElectricField
 ..    :class-doc-from: class
-..    :members: bigNU, solverbNU
+..    :members: Er, PhiNU, solverPhiderNU

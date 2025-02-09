@@ -1,10 +1,11 @@
 import gcmotion as gcm
+import gcmotion.plot as gplt
 
 # Quantity Constructor
 Rnum = 1.65
 anum = 0.5
 B0num = 1
-species = "p"
+species = "D"
 Q = gcm.QuantityConstructor(R=Rnum, a=anum, B0=B0num, species=species)
 
 # Intermediate Quantities
@@ -14,9 +15,6 @@ B0 = Q(B0num, "Tesla")
 i = Q(0, "NUPlasma_current")
 g = Q(1, "NUPlasma_current")
 Ea = Q(73500, "Volts/meter")
-
-mu = Q(1e-5, "NUMagnetic_moment")
-Pzeta = Q(-0.015, "NUMagnetic_flux")
 
 # Construct a Tokamak
 tokamak = gcm.Tokamak(
@@ -31,8 +29,13 @@ tokamak = gcm.Tokamak(
 profile = gcm.Profile(
     tokamak=tokamak,
     species=species,
-    mu=mu,
-    Pzeta=Pzeta,
+    mu=Q(1e-4, "NUMagnetic_moment"),
+    Pzeta=Q(-0.03, "NUCanonical_momentum"),
 )
 
 print(profile)
+
+# Some Plots
+gplt.qfactor_profile(profile)
+gplt.profile_Energy_contour(profile)
+gplt.profile_Energy_contour(profile, projection="polar")

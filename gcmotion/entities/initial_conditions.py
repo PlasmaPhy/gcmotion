@@ -3,7 +3,9 @@ r"""
 InitialConditions Entity
 ========================
 
-This module defines the "InitialConditions" entity.
+This module defines the "InitialConditions" entity. The particle's initial
+conditions are defined in 2 steps, since some Quantities require a Tokamak
+object to be defined
 
 """
 
@@ -76,7 +78,7 @@ class InitialConditions:
     ...     zeta0=0,
     ...     psi0=Q(0.6, "psi_wall"),
     ...     muB=Q(0.5, "keV"),
-    ...     Pzeta0=Q(-0.015, "NUMagnetic_flux"),
+    ...     Pzeta0=Q(-0.015, "NUCanonical_momentum"),
     ...     t_eval=Q(np.linspace(0, 1e-3, 1000), "seconds"),
     ... )
 
@@ -96,7 +98,7 @@ class InitialConditions:
         logger.info("==> Initializing 1st step InitialConditions...")
 
         self.Q = type(Pzeta0)
-        self.species = species
+        self.species = species.lower()
         self.species_name = getattr(PhysicalConstants, self.species + "_name")
         # Grab particle's mass and charge
         M = getattr(PhysicalConstants, self.species + "_M")
@@ -120,17 +122,15 @@ class InitialConditions:
         self.zeta0 = float(zeta0)
 
         self.psi0 = psi0.to("Magnetic_flux")
-        self.Pzeta0 = Pzeta0.to("Magnetic_flux")
+        self.Pzeta0 = Pzeta0.to("Canonical_momentum")
         self.t_eval = t_eval.to("seconds")
 
         # Corresponding NU values
         self.psi0NU = self.psi0.to("NUMagnetic_flux")
-        self.Pzeta0NU = Pzeta0.to("NUMagnetic_flux")
+        self.Pzeta0NU = Pzeta0.to("NUCanonical_momentum")
         self.t_evalNU = self.t_eval.to("NUseconds")
 
-        # Flag indiciating if full set has been calculated
         self._full_set_calculated = False
-
         logger.info("--> InitialConditions 1st step Initialization Complete")
 
     def _calculate_full_set(self, tokamak: Tokamak):
@@ -149,45 +149,42 @@ class InitialConditions:
         _theta0 = self.theta0
         _b0NU, _i0NU, _g0NU = tokamak.bfield.bigNU(_psi0NU, _theta0)
         _Phi0NU = float(tokamak.efield.PhiNU(_psi0NU, _theta0))
-        B_init = (tokamak.B0 * _b0NU).to("Tesla")
-        i_init = self.Q(_i0NU, "NUPlasma_current").to("Plasma_current")
-        g_init = self.Q(_g0NU, "NUPlasma_current").to("Plasma_current")
-        Phi_init = self.Q(_Phi0NU, "Volts")
+        B_init = self.Q(_b0NU, "NUTesla").to("Tesla")  # UNSURE:
 
         # Calculate the 2 other mu/muB Quantities
         if hasattr(self, "mu"):
-            self.muB = self.mu * B_init
+            self.muB = (self.mu * B_init).to("keV")
         elif hasattr(self, "muB"):
-            self.mu = self.muB / B_init
+            self.mu = (self.muB / B_init).to("Magnetic_moment")
 
         # Calculate the rest of the initial conditions.
         self.psip0 = self.Q(  # psipNU only accepts [NU]
             tokamak.qfactor.psipNU(_psi0NU),
             "NUMagnetic_flux",
         ).to("Magnetic_flux")
+        self.psip0NU = self.psip0.to("NUMagnetic_flux")
 
-        self.rho0 = ((self.Pzeta0 + self.psip0) / g_init).to(
-            "meters"
-        )  # Note: [rho] = Magnetic_flux / Plasma_current = meters)
+        # Use magnitudes here to avoid multiplying psip0 with the proton charge
+        # Note: [rho] = Magnetic_flux / Plasma_current = meters)
+        _rho0NU = (self.Pzeta0NU.m + self.psip0NU.m) / _g0NU
+        self.rho0NU = self.Q(_rho0NU, "NUmeters")
+        self.rho0 = self.rho0NU.to("meters")
 
-        self.Ptheta0 = (self.psi0 + self.rho0 * i_init).to("Magnetic_flux")
-
-        # Energies
-        self.E = (
-            self.qi**2 / (2 * self.mi) * self.rho0**2 * B_init**2
-            + self.mu * B_init
-            + self.qi * Phi_init
-        ).to("Joule")
-
-        self.EkeV = self.E.to("keV")
+        _Ptheta0 = self.psi0NU.m + _rho0NU * _i0NU
+        self.Ptheta0NU = self.Q(_Ptheta0, "NUCanonical_momentum")
+        self.Ptheta0 = self.Ptheta0NU.to("Canonical_momentum")
 
         # Corresponding NU attributes
         self.muNU = self.mu.to("NUMagnetic_moment")
         self.muBNU = self.muB.to("NUJoule")
-        self.psip0NU = self.psip0.to("NUMagnetic_flux")
-        self.rho0NU = self.rho0.to("NUMeters")
-        self.Ptheta0NU = self.Ptheta0.to("NUMagnetic_flux")
-        self.ENU = self.E.to("NUJoule")
+
+        # Energies
+        # _ENU = _rho0NU**2 * _b0NU**2 + self.mu.m * _b0NU + _Phi0NU
+        _ENU = (1 / 2) * _rho0NU**2 * _b0NU**2 + self.muNU.m * _b0NU + _Phi0NU
+
+        self.ENU = self.Q(_ENU, "NUJoule")
+        self.E = self.ENU.to("Joule")
+        self.EkeV = self.E.to("keV")
 
         self._full_set_calculated = True
         logger.info("--> InitialConditions 2nd step Initialization Complete")
@@ -204,11 +201,11 @@ class InitialConditions:
 
         return (
             "InitialConditions: "
-            + f"theta0 = {self.theta0:.4g}, "
-            + f"zeta0 = {self.zeta0:.4g}, "
-            + f"psi0 = {self.psi0:.4g~P}, "
-            + f"t_eval: [t0, tf, dt]=[{t0:.4g}, {tf:.4g}, {dt:.4g}]s, "
-            + f"muB = {muB}"
+            f"theta0 = {self.theta0:.4g}, "
+            f"zeta0 = {self.zeta0:.4g}, "
+            f"psi0 = {self.psi0:.4g~P}, "
+            f"t_eval: [t0, tf, dt]=[{t0:.4g}, {tf:.4g}, {dt:.4g}]s, "
+            f"muB = {muB}"
         )
 
     def __str__(self):
@@ -223,16 +220,18 @@ class InitialConditions:
         return (
             colored("\nInitial Conditions :\n", "green")
             + f"{"Particle species":>23} : "
-            + f"{colored(self.species_name, "light_blue"):<16}\n"
-            + f"{"theta0":>23} : {f'{self.theta0:.4g} radians':<16} \n"
-            + f"{"zeta0":>23} : {f'{self.zeta0:.4g} radians':<16} \n"
-            + f"{"psi0":>23} : {f'{self.psi0:.4g~}':<16} ({self.psi0NU:.4g})\n"
-            + f"{"Pzeta0":>23} : {f'{self.Pzeta0:.4g~}':<16} "
-            + f"({self.Pzeta0NU:.4g~})\n"
-            + f"{"Magnetic Moment":>23} : {f'{self.mu:.4g~}':<16} "
-            + f"({self.muNU:4g~})\n"
-            + f"{"muB(initial)":>23} : {f'{self.muB:.4g~}':<16} "
-            + f"({self.muBNU:4g~})\n"
-            + f"{"t_eval":>23} : "
-            + f"{f'[t0, tf, dt] = [{t0:.4g}, {tf:.4g}, {dt:.4g}]s':<16}\n"
+            f"{colored(self.species_name, "light_blue"):<16}\n"
+            f"{"theta0":>23} : {f'{self.theta0:.4g} radians':<16} \n"
+            f"{"zeta0":>23} : {f'{self.zeta0:.4g} radians':<16} \n"
+            f"{"psi0":>23} : {f'{self.psi0:.4g~}':<16} ({self.psi0NU:.4g})\n"
+            f"{"Pzeta0":>23} : {f'{self.Pzeta0:.4g~}':<16} "
+            f"({self.Pzeta0NU:.4g~})\n"
+            f"{"Energy":>23} : {f'{self.EkeV:.4g~}':<16} "
+            f"({self.ENU:4g~})\n"
+            f"{"Magnetic Moment":>23} : {f'{self.mu:.4g~}':<16} "
+            f"({self.muNU:4g~})\n"
+            f"{"muB(initial)":>23} : {f'{self.muB:.4g~}':<16} "
+            f"({self.muBNU:4g~})\n"
+            f"{"t_eval":>23} : "
+            f"{f'[t0, tf, dt] = [{t0:.4g}, {tf:.4g}, {dt:.4g}]s':<16}\n"
         )

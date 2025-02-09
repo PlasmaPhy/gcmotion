@@ -7,7 +7,7 @@ line-length = 79
 
 [tool.pytest.ini_options]
 testpaths = "tests"
-addopts = "-vv --doctest-modules --durations 2"
+addopts = "-vvvv --doctest-modules --durations 2"
 console_output_style = "progress-even-when-capture-no"
 filterwarnings = [
     "ignore::DeprecationWarning:jupyter_client.*",
@@ -15,7 +15,7 @@ filterwarnings = [
 
 [project]
 name = "gcmotion"
-version = "0.0.1"
+version = "0.1.0"
 authors = [
   { name="George Tsiamasiotis", email="gtsiamasiotis@gmail.com" },
 ]

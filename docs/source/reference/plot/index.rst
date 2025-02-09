@@ -11,6 +11,5 @@ Availiable plotters:
    qfactor_profile
    magnetic_profile
    profile_Energy_contour
-   profile_Pzeta_contour
    particle_evolution
    particle_poloidal_drift

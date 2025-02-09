@@ -143,6 +143,7 @@ NUJoule              Joule, eV, keV, ...                   Normalized energy uni
 NUTesla              Tesla                                 Normalized magnetic flux density unit
 NUvelocity           m/s, km/h, ...                        Normalized velocity unit
 NUMagnetic_flux      Tesla * meter^2                       Normalized magnetic flux unit
+NUCanonical_momentum Canonical_momentum, Joule * second    Normalized Canonical Momentum
 NUPlasma_current     Tesla * meter                         Normalized plasma current unit
 NUMagnetic_moment    Ampere * meter^2                      Normalized magnetic moment unit
 NUVolts              Volts                                 Normalized electric potential strength unit

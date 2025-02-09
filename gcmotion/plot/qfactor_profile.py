@@ -27,12 +27,12 @@ def qfactor_profile(entity: Tokamak | Profile | Particle, **kwargs):
 
     Other Parameters
     ----------------
-    zoom: list, optional
+    span : list, optional
          The x-axis zoom limits, relative to :math:`\psi_{wall}`. Defaults to
          [0, 1.1].
 
     """
-    logger.info("Plotting qfactor profile...")
+    logger.info("==> Plotting qfactor profile...")
 
     # Unpack parameters
     config = QfactorProfileConfig()
@@ -42,6 +42,10 @@ def qfactor_profile(entity: Tokamak | Profile | Particle, **kwargs):
     # Grab qfactor object and needed attributes
     qfactor = entity.qfactor
     psi_wallNU = entity.psi_wallNU
+    if hasattr(qfactor, "is_numerical") and config.span[1] > 1:
+        logger.warning(
+            "\tNumerical qfactor: span[1] > 1 is an extrapolation of the data"
+        )
 
     # Setup figure
     fig_kw = {
@@ -60,8 +64,11 @@ def qfactor_profile(entity: Tokamak | Profile | Particle, **kwargs):
     psi = psi_wallNU * np.linspace(
         config.span[0], config.span[1], config.points
     )
+    logger.trace(psi)
     q = qfactor.solverqNU(psi.m)
     psip = qfactor.psipNU(psi.m)
+    logger.trace(q.shape)
+    logger.trace(psi_wallNU)
 
     # Plot
     axq.plot(psi / psi_wallNU, q)
@@ -97,4 +104,8 @@ def qfactor_profile(entity: Tokamak | Profile | Particle, **kwargs):
     axp.format_coord = fmt_psip
 
     if config.show:
-        plt.show(block=True)
+        logger.info("--> QFactor profile successfully plotted.")
+        plt.show()
+    else:
+        logger.info("--> QFactor profile returned without plotting")
+        plt.clf()

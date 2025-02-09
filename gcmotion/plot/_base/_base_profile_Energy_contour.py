@@ -30,7 +30,7 @@ def _base_profile_Energy_contour(profile: Profile, ax: Axes, **kwargs):
     _ProfileContour at gcmotion/plot/_base/_config. The defaults values are set
     there, and are overwritten if passed as arguements.
     """
-    logger.info("==> Plotting Base Profile Contour...")
+    logger.info("\t==> Plotting Base Profile Contour...")
 
     # Unpack parameters
     config = _ProfileEnergyContourConfig()
@@ -40,6 +40,8 @@ def _base_profile_Energy_contour(profile: Profile, ax: Axes, **kwargs):
     # Restrict thetalim for polar projection
     if config.projection == "polar":
         config.thetalim = [-np.pi, np.pi]
+        logger.debug("\t\tPolar projection: forcing thetalim to [-π,π]")
+
     # Setup meshgrid
     # The Energy calculation and y axis limits are always set with respect to
     # psilim. Pthetalim only acts as a way to move the axis window at the end,
@@ -77,6 +79,10 @@ def _base_profile_Energy_contour(profile: Profile, ax: Axes, **kwargs):
         if config.locator == "log"
         else ticker.MaxNLocator(nbins=config.levels)
     )
+    log_msg = f"\t\tContour locator: {type(locator).__name__} "
+    if config.locator == "log":
+        log_msg += f"with base {config.log_base:.20g}"
+    logger.debug(log_msg)
 
     kw = {
         "cmap": config.cmap,
@@ -87,8 +93,10 @@ def _base_profile_Energy_contour(profile: Profile, ax: Axes, **kwargs):
     # Contour plot
     if config.mode == "lines":
         C = ax.contour("theta", "flux", "Energy", data=data, **kw)
+        logger.debug("\t\tContour mode: lines")
     else:
         C = ax.contourf("theta", "flux", "Energy", data=data, **kw)
+        logger.debug("\t\tContour mode: filled")
 
     # Setup labels.
     # Also add a second axis for Ptheta
@@ -106,19 +114,29 @@ def _base_profile_Energy_contour(profile: Profile, ax: Axes, **kwargs):
     # Add secondary axes with Ptheta
     twin_ax_condition = bool(config.Pthetaax and config.projection is None)
     if twin_ax_condition:
+        logger.debug("\t\tAdding secondary Ptheta ax.")
         ax2 = ax.twinx()
-        ax2.set_ylabel(
-            rf"$P_\theta$ [{psigrid.units:.4g~P}]", size=config.labelsize
-        )
         psiticks = profile.Q(ax.get_yticks(), config.flux_units)
-        Pthetamin = profile.findPtheta(psiticks.min())
-        Pthetamax = profile.findPtheta(psiticks.max())
+        Pthetamin = profile.findPtheta(
+            psiticks.min(), units=config.canmon_units
+        )
+        Pthetamax = profile.findPtheta(
+            psiticks.max(), units=config.canmon_units
+        )
+        ax2.set_ylabel(
+            rf"$P_\theta$ [{Pthetamax.units:.4g~P}]", size=config.labelsize
+        )
         ax2.yaxis.set_major_locator(ticker.MaxNLocator(config.ticknum))
         ax2.set_ylim([Pthetamin.m, Pthetamax.m])
         ax2.tick_params(labelsize=config.ticksize)
+    logger.info(f"\t\tpsilim = [{psilim[0].m:.4g}, {psilim[1].m:.4g}]")
+
+    if twin_ax_condition:
+        logger.info(f"\t\tPthetalim = [{Pthetamin.m:.4g}, {Pthetamax.m:.4g}]")
 
     # Add a shade above psi_wall
     if config.wall and config.projection is None:
+        logger.debug("\t\tAdding wall shade.")
         rect = Rectangle(
             (
                 thetalim.min().m,
@@ -131,15 +149,6 @@ def _base_profile_Energy_contour(profile: Profile, ax: Axes, **kwargs):
         )
         ax.add_patch(rect)
 
-    # Cosmetic polar projection tweaks
-    if config.projection == "polar":
-        ax.grid(False)
-        ax.set_xticks(
-            np.linspace(-np.pi, np.pi, 5),
-            [" ", "3π/2", "0", "π/2", " "],
-            size=config.ticksize,
-        )
-
     if config.wall and config.projection == "polar":
         wall_pos = profile.Q(1, "psi_wall").to(config.flux_units).m
         ax_lim = ax.get_ylim()[1]
@@ -149,6 +158,15 @@ def _base_profile_Energy_contour(profile: Profile, ax: Axes, **kwargs):
 
         ax.fill_between(
             x=x, y1=y_lower, y2=y_upper, color="k", alpha=0.15, zorder=2
+        )
+
+    # Cosmetic polar projection tweaks
+    if config.projection == "polar":
+        ax.grid(False)
+        ax.set_xticks(
+            np.linspace(-np.pi, np.pi, 5),
+            [" ", "3π/2", "0", "π/2", " "],
+            size=config.ticksize,
         )
 
     # Format cursor
@@ -164,6 +182,7 @@ def _base_profile_Energy_contour(profile: Profile, ax: Axes, **kwargs):
     # Always add the main axes cursor, but the twin ax cursor is added only if
     # the projection is rectilinear (the default).
     if twin_ax_condition and config.cursor:
+        logger.debug("\t\tAdding twin ax cursor.")
 
         def cursor_format(x, y):
             # I have no idea why this works but it does :')
@@ -181,6 +200,7 @@ def _base_profile_Energy_contour(profile: Profile, ax: Axes, **kwargs):
 
         ax2.format_coord = cursor_format
     elif not twin_ax_condition and config.cursor:
+        logger.debug("\t\tAdding single ax cursor.")
 
         def cursor_format(x, y):
             z = np.take(values(x, y), 0)
@@ -194,4 +214,5 @@ def _base_profile_Energy_contour(profile: Profile, ax: Axes, **kwargs):
         ax.format_coord = cursor_format
 
     # Return the contour object
+    logger.info("\t--> Contour object succesfully created and returned.")
     return C

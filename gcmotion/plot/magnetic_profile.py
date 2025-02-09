@@ -37,13 +37,14 @@ def magnetic_profile(entity: Tokamak | Profile | Particle, **kwargs):
         The x-axis span, relative to :math:`\psi_{wall}`. Defaults to [0, 1.1].
     units: {"NU", "SI"}, optional
         The Quantities' units. Defaults to "NU".
+    coord: {"psi", "r"}, optional
+        Which variable to use as the polar coordinate. Defaults to "r"
     grid_density: int, optional
         The contour plots' grid density. Defaults to 100.
     levels: int, optional
         The contour plots' levels. Defaults to 20.
 
     """
-
     logger.info("==> Plotting Magnetic field profile...")
 
     # Unpack parameters
@@ -55,6 +56,10 @@ def magnetic_profile(entity: Tokamak | Profile | Particle, **kwargs):
     Q = entity.Q
     bfield = entity.bfield
     psi_wallNU = entity.psi_wallNU
+    if hasattr(bfield, "is_numerical") and config.span[1] > 1:
+        logger.warning(
+            "\tNumerical qfactor: span[1] > 1 is an extrapolation of the data"
+        )
 
     # Setup figure
     fig_kw = {
@@ -86,19 +91,28 @@ def magnetic_profile(entity: Tokamak | Profile | Particle, **kwargs):
         np.linspace(0, 2 * np.pi, config.grid_density),
     )
     b, i, g = bfield.bigNU(psi, theta)
-    r = np.sqrt(2 * psi)
-    # r = psi
+    if config.coord == "psi":
+        coord = Q(psi, "NUMagnetic_flux")
+        logger.info("\tPlotting with respect to psi.")
+    else:
+        coord = Q(np.sqrt(2 * psi), "NUmeters")
+        logger.info("\tPlotting with respect to r.")
 
     # Set appropriate units:
     b = Q(b, "NUTesla")
     i = Q(i, "NUPlasma_current")
     g = Q(g, "NUPlasma_current")
-    r = Q(r, "NUmeters")
+    log_units = "NU"
     if config.units.lower() == "si":
         b.ito("Tesla")
         i.ito("Plasma_current")
         g.ito("Plasma_current")
-        r.ito("meters")
+        if config.coord == "psi":
+            coord.ito("Magnetic_flux")
+        else:
+            coord.ito("meters")
+        log_units = "SI"
+    logger.info(f"\tPlotting in {log_units}.")
 
     # Locator setup
     locator = (
@@ -106,6 +120,11 @@ def magnetic_profile(entity: Tokamak | Profile | Particle, **kwargs):
         if config.locator == "log"
         else ticker.MaxNLocator(nbins=config.levels)
     )
+    log_msg = f"\tContour locator: {type(locator).__name__} "
+    if config.locator == "log":
+        log_msg += f"with base {config.log_base:.20g}"
+    logger.debug(log_msg)
+
     # ===============================================================
 
     # Bfield contour
@@ -114,7 +133,7 @@ def magnetic_profile(entity: Tokamak | Profile | Particle, **kwargs):
         "cmap": config.bcmap,
         "locator": locator,
     }
-    Cb = axb.contourf(theta, r.m, b.m, **bcontour_kw)
+    Cb = axb.contourf(theta, coord.m, b.m, **bcontour_kw)
     fig.colorbar(
         Cb,
         ax=axb,
@@ -128,7 +147,7 @@ def magnetic_profile(entity: Tokamak | Profile | Particle, **kwargs):
         "levels": config.levels,
         "cmap": config.icmap,
     }
-    C1 = axi.contourf(theta, r.m, i.m, **icontour_kw)
+    C1 = axi.contourf(theta, coord.m, i.m, **icontour_kw)
     fig.colorbar(
         C1,
         ax=axi,
@@ -141,7 +160,7 @@ def magnetic_profile(entity: Tokamak | Profile | Particle, **kwargs):
         "levels": config.levels,
         "cmap": config.gcmap,
     }
-    C2 = axg.contourf(theta, r.m, g.m, **gcontour_kw)
+    C2 = axg.contourf(theta, coord.m, g.m, **gcontour_kw)
     fig.colorbar(
         C2,
         ax=axg,
@@ -166,27 +185,38 @@ def magnetic_profile(entity: Tokamak | Profile | Particle, **kwargs):
 
     axid.set_title("Toroidal Current 'I'")
     axgd.set_title("Poloidal Current 'g'")
-    axid.set_xlabel(r"$\psi/\psi_{wall}$", size=config.labelsize)
-    axgd.set_xlabel(r"$\psi/\psi_{wall}$", size=config.labelsize)
     axid.set_ylabel(f"I [{i.units:~P}]", c=config.current_color)
     axgd.set_ylabel(f"g [{g.units:~P}]", c=config.current_color)
     axid.tick_params(axis="y", labelcolor=config.current_color)
     axgd.tick_params(axis="y", labelcolor=config.current_color)
 
+    if config.coord == "psi":
+        axid.set_xlabel(r"$\psi/\psi_{wall}$", size=config.labelsize)
+        axgd.set_xlabel(r"$\psi/\psi_{wall}$", size=config.labelsize)
+    else:
+        axid.set_xlabel(r"$r/r_{wall}$", size=config.labelsize)
+        axgd.set_xlabel(r"$r/r_{wall}$", size=config.labelsize)
+
     # If the magnetic field is numerical, also plot the derivatives
     if getattr(bfield, "is_numerical", False) and config.plot_derivatives:
+        logger.debug("\tNumerical bfield: Plotting currents' derivatives.")
         ider = bfield.ider_spline(psi[0])
         gder = bfield.gder_spline(psi[0])
         axid2 = axid.twinx()
         axgd2 = axgd.twinx()
+        wall_norm = (
+            psi_wallNU.m
+            if config.coord == "psi"
+            else np.sqrt(2 * psi_wallNU.m)
+        )
         axid2.plot(
-            psi[0] / psi_wallNU.m,
+            coord[0] / wall_norm,
             ider,
             c=config.derivative_color,
             lw=config.linewidth,
         )
         axgd2.plot(
-            psi[0] / psi_wallNU.m,
+            coord[0] / wall_norm,
             gder,
             c=config.derivative_color,
             lw=config.linewidth,
@@ -209,9 +239,15 @@ def magnetic_profile(entity: Tokamak | Profile | Particle, **kwargs):
     # ===============================================================
 
     # Misc plotting
-    axb.set_title(f"Magnetic field strength [{b.units:~P}]")
-    axi.set_title(rf"Toroidal current 'I'[{i.units:~P}]")
-    axg.set_title(rf"Poloidal current 'g'[{g.units:~P}]")
+    axb.set_title(
+        f"Magnetic field strength [{b.units:~P}]", pad=config.ax_title_pad
+    )
+    axi.set_title(
+        rf"Toroidal current 'I'[{i.units:~P}]", pad=config.ax_title_pad
+    )
+    axg.set_title(
+        rf"Poloidal current 'g'[{g.units:~P}]", pad=config.ax_title_pad
+    )
 
     axb.set_rlabel_position(70)
     axi.set_rlabel_position(70)
@@ -222,13 +258,18 @@ def magnetic_profile(entity: Tokamak | Profile | Particle, **kwargs):
     axi.set_xticks(np.linspace(0, 3 / 2 * np.pi, 4), xlabels)
     axg.set_xticks(np.linspace(0, 3 / 2 * np.pi, 4), xlabels)
 
-    rmax = r[0, -1]
-    axb.set_yticks([rmax.m], labels=[f"{rmax:.3g}"])
-    axi.set_yticks([rmax.m], labels=[f"{rmax:.3g}"])
-    axg.set_yticks([rmax.m], labels=[f"{rmax:.3g}"])
+    coord_max = coord[0, -1]
+    axb.set_yticks([coord_max.m], labels=[f"{coord_max:.3g}"])
+    axi.set_yticks([coord_max.m], labels=[f"{coord_max:.3g}"])
+    axg.set_yticks([coord_max.m], labels=[f"{coord_max:.3g}"])
 
     axb.grid(alpha=0.2)
     axi.grid(alpha=0.2)
     axg.grid(alpha=0.2)
 
-    plt.show()
+    if config.show:
+        logger.info("--> Magnetic profile successfully plotted.")
+        plt.show()
+    else:
+        logger.info("--> Magnetic profile returned without plotting")
+        plt.clf()

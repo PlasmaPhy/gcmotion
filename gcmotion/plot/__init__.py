@@ -1,7 +1,6 @@
 # Profile related plots
 from gcmotion.plot.profile_contour import (
     profile_Energy_contour,
-    profile_Pzeta_contour,
 )
 
 # Particle related plots

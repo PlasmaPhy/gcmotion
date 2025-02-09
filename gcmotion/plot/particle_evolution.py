@@ -34,6 +34,8 @@ def particle_evolution(particle: Particle, **kwargs):
         The unit system. Can be either 'SI' or 'NU'. Defauls to "SI".
 
     """
+    logger.info("==>Plotting Particle Evolution...")
+
     # Unpack parameters
     config = ParticleEvolutionConfig()
     for key, value in kwargs.items():
@@ -44,16 +46,17 @@ def particle_evolution(particle: Particle, **kwargs):
         "NU" if config.units == "NU" else "" if config.units == "SI" else ""
     )
     logger.info(
-        "Plotting time evolutions in "
+        "\tPlotting time evolutions in "
         + f"{"NU" if suffix == "NU" else "SI"}..."
     )
 
     # Make sure percentage is a valid number
     if config.percentage < 1 or config.percentage > 100:
         config.percentage = 100
-        logger.warning("Invalid percentage: Plotting the whole thing...")
+        logger.warning("\tInvalid percentage: Plotting the whole thing...")
+    logger.debug(f"\tOrbit percentage = {config.percentage}%")
     points = int(
-        np.floor(particle.t_eval.shape[0] * config.percentage / 100) - 1
+        np.floor(particle.t_solve.shape[0] * config.percentage / 100) - 1
     )
 
     # Parse "which" and yank the respective attributes form particle
@@ -63,13 +66,14 @@ def particle_evolution(particle: Particle, **kwargs):
     # Now only the variables we want to plot appear, and in the correct order
 
     # Yank the trimmed time arrays from particle and store them in a dict
-    t = getattr(particle, "t_eval" + suffix)[:points]
+    t = getattr(particle, "t_solve" + suffix)[:points]
     variables = {}
     for key in which:
         if key in ["theta", "zeta"]:
             variables[key] = getattr(particle, key)[:points]
         else:
             variables[key] = getattr(particle, key + suffix)[:points]
+    logger.info(f"\tVariables to be plotted: {which}")
 
     # Create figure
     fig_kw = {
@@ -105,6 +109,7 @@ def particle_evolution(particle: Particle, **kwargs):
             Pzeta_idx = i
         ax[i].scatter(t, value, **scatter_kw)
         i += 1
+    logger.debug(f"\tPzeta ax index={Pzeta_idx}")
 
     # Label setup
     # iterate over axes and change each label
@@ -136,9 +141,12 @@ def particle_evolution(particle: Particle, **kwargs):
 
     # Time axis limit
     ax[-1].set_xlim([t[0], t[-1]])
-    plt.show()
-
-    logger.info("--> Time evolutions successfully plotted.")
+    if config.show:
+        logger.info("--> Time evolutions successfully plotted.")
+        plt.show()
+    else:
+        logger.info("--> Time evolution returned without plotting")
+        plt.clf()
 
 
 def format_which(which: str):

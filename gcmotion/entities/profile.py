@@ -3,12 +3,9 @@ r"""
 Profile Entity
 ==============
 
-This module defines the "Profile" entity, which is a child class of the
-"Tokamak" and "PhysicalParameters" classes.
-
-A lot of analysis can be done upon this class, since it essentially specifies a
-family of particles with the same 3 Constants of Motion, E, mu and Pzeta, in a
-specific tokamak device, which fully define their Hamiltonian.
+A Profile entity defines the Constants of motion E, Pzeta and mu, as well as
+the particle species. Its methods findEnergy, findPzeta and findmu ignore the
+respective constant and return a new Quantity for a given pair of psi, theta.
 """
 
 import pint
@@ -35,10 +32,9 @@ class Profile:
     that by its nature lets it vary. For example, contouring over Energy
     levels, will simply ignore the E parameter.
 
-
     Parameters
     ----------
-    tokamak : Tokamak
+    tokamak : :py:class:`~gcmotion.Tokamak`
         The Tokamak entity.
     species : {'p', 'e', 'D', 'T', 'He3', 'He4'}
         The particle's species. This field is case-insensitive.
@@ -85,9 +81,6 @@ class Profile:
     >>> g = Q(1, "NUPlasma_current")
     >>> Ea = Q(73500, "Volts/meter")
     >>>
-    >>> mu = Q(1e-5, "NUMagnetic_moment")
-    >>> Pzeta = Q(-0.015, "NUMagnetic_flux")
-    >>>
     >>> # Construct a Tokamak
     >>> tokamak = gcm.Tokamak(
     ...     R=R,
@@ -101,8 +94,8 @@ class Profile:
     >>> profile = gcm.Profile(
     ...     tokamak=tokamak,
     ...     species=species,
-    ...     mu=mu,
-    ...     Pzeta=Pzeta,
+    ...     mu=Q(1e-5, "NUMagnetic_moment"),
+    ...     Pzeta=Q(-0.015, "NUCanonical_momentum")
     ... )
 
     """
@@ -123,7 +116,11 @@ class Profile:
             msg = "At least 2/3 Constants of motion must be specified"
             logger.error("\t" + msg)
             raise ValueError(msg)
-        logger.debug(f"\tParameters: {mu=}, {Pzeta=}, {E=}")
+
+        E_str = None if E is None else f"{E:.4g~}"
+        mu_str = None if mu is None else f"{mu:.4g~}"
+        Pzeta_str = None if Pzeta is None else f"{Pzeta:.4g~}"
+        logger.debug(f"\tParameters: " f"mu={mu_str}, {Pzeta_str}, {E_str}")
 
         # Grab attributes from tokamak object
         self.tokamak = tokamak
@@ -131,7 +128,7 @@ class Profile:
         logger.debug("\tCopied tokamak's attributes to self.")
 
         # Define species
-        self.Q = type(tokamak.R)
+        self.Q = tokamak.Q
         self.species = species.lower()
         self.species_name = getattr(
             PhysicalConstants, self.species + "_name", None
@@ -158,8 +155,8 @@ class Profile:
         if Pzeta is None:
             self.Pzeta = self.PzetaNU = None
         else:
-            self.Pzeta = Pzeta.to("Magnetic_flux")
-            self.PzetaNU = self.Pzeta.to("NUmagnetic_flux")
+            self.Pzeta = Pzeta.to("Canonical_momentum")
+            self.PzetaNU = self.Pzeta.to("NUCanonical_momentum")
             logger.debug(f"\tSet {self.Pzeta=:.4g~} and {self.PzetaNU=:.4g~}")
 
         if E is None:
@@ -172,8 +169,8 @@ class Profile:
 
         logger.info("--> Profile Initialization Complete.")
 
-    def findPtheta(self, psi: Quantity):
-        r"""Calculates Ptheta from psi. ``Pzeta`` must be defined.
+    def findPtheta(self, psi: Quantity, units: str):
+        r"""Calculates Ptheta from psi. "Pzeta"" must be defined.
 
         Output units are the same as input units.
 
@@ -183,34 +180,30 @@ class Profile:
         ----------
         psi : Quantity
             The psi Quantity.
+        units : str
+            The Ptheta units. Must have dimensionality of canonical momentum
+            (orbital momentum \ [energy] * [time]),
 
         Returns
         -------
         Quantity
             The calculated Ptheta Quantity.
+
         """
-        # Store input units
-        input_units = psi.units
-
-        # All Quantities and operations are in NU, and the conversion to input
-        # units takes place at the end.
+        # Do all operations in NU units, and Quantify at the end.
         psiNU = psi.to("NUMagnetic_flux")
-        _psiNU = psiNU.magnitude
+        psiNU = psiNU.magnitude
 
-        # Calculate and Quantify currents
-        _, _iNU, _gNU = self.bfield.bigNU(_psiNU, 0)
-        iNU = self.Q(_iNU, "NUPlasma_current")
-        gNU = self.Q(_gNU, "NUPlasma_current")
+        # Calculate currents. B not needed so theta value doesnt matter
+        _, iNU, gNU = self.bfield.bigNU(psiNU, 0)
+        psipNU = self.qfactor.psipNU(psiNU)
 
-        # Calculate and Quantify psip
-        _psipNU = self.qfactor.psipNU(_psiNU)
-        psipNU = self.Q(_psipNU, "NUmagnetic_flux")
-
-        rhoNU = (self.PzetaNU + psipNU) / gNU
+        rhoNU = (self.PzetaNU.m + psipNU) / gNU
         PthetaNU = psiNU + rhoNU * iNU
 
-        # Convert to input units and return
-        return PthetaNU.to(input_units)
+        # Quantify, convert to input units and return
+        PthetaNU = self.Q(PthetaNU, "NUCanonical_momentum")
+        return PthetaNU.to(units)
 
     def findEnergy(
         self, psi: Quantity, theta: float, units: str, potential: bool = True
@@ -235,39 +228,33 @@ class Profile:
         Quantity
             The calculated Energy Quantity in the specified units.
         """
-        # All Quantities and operations are in NU, and the conversion to input
-        # units takes place at the end.
-        psiNU = psi.to("NUMagnetic_flux")
-        _psiNU = psiNU.magnitude
+        # Do all operations in NU floats, and Quantify at the end.
+        _ = psi.to("NUMagnetic_flux")
+        psiNU = _.magnitude
 
-        # Calculate and Quantify bfield and currents
-        _bNU, _iNU, _gNU = self.bfield.bigNU(_psiNU, theta)
-        bNU = self.Q(_bNU, "NUTesla")
-        gNU = self.Q(_gNU, "NUPlasma_current")
+        # Calculate currents. B not needed so theta value doesnt matter
+        bNU, iNU, gNU = self.bfield.bigNU(psiNU, theta)
+        psipNU = self.qfactor.psipNU(psiNU)
 
-        # Calculate and Quantify psip
-        _psipNU = self.qfactor.psipNU(_psiNU)
-        psipNU = self.Q(_psipNU, "NUmagnetic_flux")
-
-        rhoNU = (self.PzetaNU + psipNU) / gNU
+        rhoNU = (self.PzetaNU.m + psipNU) / gNU
 
         EnergyNU = (
-            self.qiNU**2 / (2 * self.miNU)
-        ) * rhoNU**2 * bNU**2 + self.muNU * bNU  # Without potential
+            1 / 2
+        ) * rhoNU**2 * bNU**2 + self.muNU.m * bNU  # Without potential
 
         if potential:
-            _PhiNU = self.efield.PhiNU(_psiNU, theta)
-            PhiNU = self.Q(_PhiNU, "NUVolts")
-            EnergyNU += self.qiNU * PhiNU
+            PhiNU = self.efield.PhiNU(psiNU, theta)
+            EnergyNU += PhiNU
 
-        # Convert to input units and return
+        # Quantify, convert to input units and return
+        EnergyNU = self.Q(EnergyNU, "NUJoule")
         return EnergyNU.to(units)
 
     def findPzeta(
         self, psi: Quantity, theta: float, units: str, potential: bool = True
     ):
-        r"""Calculates the :math:`P_\zeta` COM. Both "mu" and "E" must be
-        defined.
+        r"""Calculates the "Pzeta" of a particle characterized by a (psi,
+        theta) pair. Both `Energy` and `mu` must be defined.
 
         Parameters
         ----------
@@ -287,42 +274,33 @@ class Profile:
             The calculated Pzeta Quantity in the specified units.
 
         """
-
-        # All Quantities and operations are in NU, and the conversion to input
-        # units takes place at the end.
+        # Do all operations in NU floats, and Quantify at the end.
         psiNU = psi.to("NUMagnetic_flux")
-        _psiNU = psiNU.magnitude
+        psiNU = psiNU.magnitude
 
-        # Calculate and Quantify bfield and currents
-        _bNU, _iNU, _gNU = self.bfield.bigNU(_psiNU, theta)
-        bNU = self.Q(_bNU, "NUTesla")
-        gNU = self.Q(_gNU, "NUPlasma_current")
-
-        # Calculate and Quantify psip
-        _psipNU = self.qfactor.psipNU(_psiNU)
-        psipNU = self.Q(_psipNU, "NUmagnetic_flux")
+        # Calculate currents. B not needed so theta value doesnt matter
+        bNU, iNU, gNU = self.bfield.bigNU(psiNU, theta)
+        psipNU = self.qfactor.psipNU(psiNU)
+        psipNU = self.qfactor.psipNU(psiNU)
 
         if potential:
-            _PhiNU = self.efield.PhiNU(_psiNU, theta)
-            PhiNU = self.Q(_PhiNU, "NUVolts")
+            PhiNU = self.efield.PhiNU(psiNU, theta)
         else:
-            PhiNU = self.Q(0, "NUVolts")
+            PhiNU = 0 * psi  # Keep psi's shape
 
         PzetaNU = (
-            2
-            * self.miNU
-            * gNU**2
-            * (self.ENU - self.muNU * bNU - self.qiNU * PhiNU)
-            / (self.qiNU * bNU) ** 2
+            (2 * gNU**2 / bNU**2) * (self.ENU.m - self.muNU.m * bNU - PhiNU)
         ) ** (1 / 2) - psipNU
 
+        # Quantify, convert to input units and return
+        PzetaNU = self.Q(PzetaNU, "NUCanonical_momentum")
         return PzetaNU.to(units)
 
     def findmu(
         self, psi: Quantity, theta: float, units: str, potential: bool = True
     ):
-        r"""Calculates the :math:`\mu` COM. Both "Pzeta" and "E" must be
-        defined.
+        r"""Calculates the "mu " of a particle characterized by a (psi, theta)
+        pair. Both `Energy` and `Pzeta` must be defined.
 
         Parameters
         ----------
@@ -341,43 +319,58 @@ class Profile:
         Quantity
             The calculated mu Quantity in the specified units.
         """
-
-        # All Quantities and operations are in NU, and the conversion to input
-        # units takes place at the end.
+        # Do all operations in NU floats, and Quantify at the end.
         psiNU = psi.to("NUMagnetic_flux")
-        _psiNU = psiNU.magnitude
+        psiNU = psiNU.magnitude
 
-        # Calculate and Quantify bfield and currents
-        _bNU, _iNU, _gNU = self.bfield.bigNU(_psiNU, theta)
-        bNU = self.Q(_bNU, "NUTesla")
-        gNU = self.Q(_gNU, "NUPlasma_current")
-
-        # Calculate and Quantify psip
-        _psipNU = self.qfactor.psipNU(_psiNU)
-        psipNU = self.Q(_psipNU, "NUmagnetic_flux")
+        # Calculate currents. B not needed so theta value doesnt matter
+        bNU, iNU, gNU = self.bfield.bigNU(psiNU, theta)
+        psipNU = self.qfactor.psipNU(psiNU)
+        psipNU = self.qfactor.psipNU(psiNU)
 
         if potential:
-            _PhiNU = self.efield.PhiNU(_psiNU, theta)
-            PhiNU = self.Q(_PhiNU, "NUVolts")
+            PhiNU = self.efield.PhiNU(psiNU, theta)
         else:
-            PhiNU = self.Q(0, "NUVolts")
+            PhiNU = 0 * psi  # Keep psi's shape
 
-        rhoNU = (self.PzetaNU - psipNU) / gNU
+        rhoNU = (self.PzetaNU.m + psipNU) / gNU
 
-        muNU = (self.ENU - self.qiNU * PhiNU) / bNU - (
-            self.qiNU**2 / (2 * self.miNU)
-        ) * rhoNU**2 * bNU
+        # UNSURE: Can μ be negative?
+        muNU = (self.ENU.m - PhiNU) / bNU - rhoNU**2 * bNU
 
+        # Quantify, convert to input units and return
+        muNU = self.Q(muNU, "NUMagnetic_moment")
         return muNU.to(units)
+
+    def _update_Pzeta(self, newPzeta: float | Quantity):
+        r"""Updates the Pzeta and PzetaNU attributes.
+
+        Parameters
+        ----------
+        newPzeta : float | Quantity
+            The new Pzeta value. If it is a float, then it is assumed it is in
+            Normalized units.
+
+        """
+        if isinstance(newPzeta, (int, float)):
+            self.PzetaNU = self.Q(newPzeta, "NUCanonical_momentum")
+            self.Pzeta = self.PzetaNU.to("Canonical_momentum")
+        elif isinstance(newPzeta, pint.Quantity):
+            self.PzetaNU = newPzeta.to("NUCanonical_momentum")
+            self.Pzeta = newPzeta.to("Canonical_momentum")
+        else:
+            raise ValueError("Input must be a float or a Quantity")
+
+        logger.trace(f"\tUpdated Pzeta/PzetaNU to {self.PzetaNU:.4g}")
 
     def __repr__(self):
         string = Tokamak.__repr__(self)
         string += (
             "PhysicalParameters: "
-            + f"species = {self.species}, "
-            + f"mu = {self.mu}, "
-            + f"Pzeta = {self.Pzeta}, "
-            + f"E = {self.E}\n"
+            f"species = {self.species}, "
+            f"mu = {self.mu}, "
+            f"Pzeta = {self.Pzeta}, "
+            f"E = {self.E}\n"
         )
         return string
 
@@ -390,12 +383,13 @@ class Profile:
         ENU = "None" if self.ENU is None else f"{self.ENU:.4g~}"
 
         string = Tokamak.__str__(self)
+        string += colored("\nConstans of Motion\n", "green")
         string += (
-            colored("\nConstans of Motion\n", "green")
-            + f"{"Particle species":>23} : "
-            + f"{colored(self.species_name, "light_blue"):<16}\n"
-            + f"{"mu":>23} : {mu:<16}({muNU})\n"
-            + f"{"Pzeta":>23} : {f'{Pzeta}':<16}({PzetaNU})\n"
-            + f"{"E":>23} : {f'{E}':<16}({ENU})\n"
+            f"{"Particle species":>23} : "
+            f"{colored(self.species_name, "light_blue"):<16}\n"
+            f"{"mu":>23} : {mu:<16}({muNU})\n"
+            f"{"Pzeta":>23} : {f'{Pzeta}':<16}({PzetaNU})\n"
+            f"{"E":>23} : {f'{E}':<16}({ENU})\n"
         )
+
         return string

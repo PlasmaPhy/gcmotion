@@ -10,9 +10,12 @@ import xarray as xr
 
 from abc import ABC, abstractmethod
 from termcolor import colored
-from math import sqrt, atan
+from math import sqrt, atan, asinh
 from scipy.special import hyp2f1
 from scipy.interpolate import UnivariateSpline
+
+from gcmotion.utils.logger_setup import logger
+
 
 # Quantity alias for type annotations
 type Quantity = pint.Quantity
@@ -67,6 +70,9 @@ class NumericalQFactor(QFactor):
 
     Opens the dataset and creates the splines needed for the querry methods.
 
+    ``solverq`` and ``psipNU`` work identically to the analytic QFactor
+    methods.
+
     Parameters
     ----------
     filename : str
@@ -81,7 +87,9 @@ class NumericalQFactor(QFactor):
         try:
             dataset = xr.open_dataset(path)
             self.dataset = dataset
+            logger.info("Dataset initialized correctly.")
         except FileNotFoundError:
+            logger.error("Error opening Dataset.")
             raise FileNotFoundError(f"No file found at '{path}'")
 
         # Extract the arrays
@@ -107,6 +115,8 @@ class NumericalQFactor(QFactor):
         self.q0 = q_values[0]
         self.q_wall = q_values[-1]
 
+        self.is_numerical = True
+
     def solverqNU(self, psi: float) -> float:
         return self.qspline(psi)
 
@@ -117,7 +127,7 @@ class NumericalQFactor(QFactor):
             return self.psip_spline(psi)
 
 
-# ====================================================
+# ============================================================================
 
 
 class Unity(QFactor):
@@ -125,11 +135,12 @@ class Unity(QFactor):
     and :math:`\psi_p=\psi`."""
 
     def __init__(self):
+        self.is_analytic = True
         pass
 
     def solverqNU(self, psi):
         r"""Always returns 1."""
-        return 1
+        return psi / psi
 
     def psipNU(self, psi):
         """Always returns `psi`."""
@@ -177,7 +188,6 @@ class Parabolic(QFactor):
         q0: float,
         q_wall: float,
     ):
-        r"""Parameters initialization."""
 
         # SI Quantities
         self.B0 = B0.to("Tesla")
@@ -186,14 +196,17 @@ class Parabolic(QFactor):
         self.psi_wallNU = self.psi_wall.to("NUMagnetic_flux")
 
         # Unitless quantities, makes it a bit faster if defined here
-        self._psi_wall = self.psi_wall.magnitude
-        self._psi_wallNU = self.psi_wallNU.magnitude
+        for key, value in self.__dict__.copy().items():
+            self.__setattr__("_" + key, value.magnitude)
+
         self.sra = sqrt(q0)
         self.srb = sqrt(q_wall - q0)
 
         # Purely Numerical Parameters
         self.q0 = q0
         self.q_wall = q_wall
+
+        self.is_analytic = True
 
     def solverqNU(self, psi):
         return (
@@ -237,6 +250,18 @@ class Hypergeometric(QFactor):
 
     where :math:`\phantom{1}_2 F_1` the hypergeometric function.
 
+    Parameters
+    ----------
+    a : Quantity
+        float The tokamak's minor radius in [m].
+    B0 : Quantity
+        The Magnetic field's strength in [T].
+    q0 : float
+        q-value at the magnetic axis.
+    q_wall : float
+        q_value at the wall.
+    n : int
+        Order of equillibrium (1: peaked, 2: round, 4: flat).
     """
 
     def __init__(
@@ -247,21 +272,6 @@ class Hypergeometric(QFactor):
         q_wall: float,
         n: int,
     ):
-        r"""Parameters initialization.
-
-        Parameters
-        ----------
-        a : Quantity
-            float The tokamak's minor radius in [m].
-        B0 : Quantity
-            The Magnetic field's strength in [T].
-        q0 : float
-            q-value at the magnetic axis.
-        q_wall : float
-            q_value at the wall.
-        n : int
-            Order of equillibrium (1: peaked, 2: round, 4: flat).
-        """
 
         # SI Quantities
         self.B0 = B0.to("Tesla")
@@ -279,6 +289,8 @@ class Hypergeometric(QFactor):
         self.q0 = q0
         self.q_wall = q_wall
         self.n = n
+
+        self.is_analytic = True
 
     def solverqNU(self, psi):
         return self.q0 * (
@@ -363,4 +375,57 @@ class DivertorNegative(NumericalQFactor):
         return (
             colored("Divertor - Negative", "light_blue")
             + f": q0={self.q0:.4g}, q_wall={self.q_wall:.4g}."
+        )
+
+
+class Chris(QFactor):
+    r"""Chris's thesis qfactor."""
+
+    def __init__(self, B0: Quantity, a: Quantity, q0: float, q_wall: float):
+
+        # SI Quantities
+        self.B0 = B0.to("Tesla")
+        self.a = a.to("meters")
+        self.psi_wall = (B0 * a**2 / 2).to("Magnetic_flux")
+
+        # [NU] Conversions
+        self.psi_wallNU = self.psi_wall.to("NUMagnetic_flux")
+
+        # Unitless quantities, makes it a bit faster if defined here
+        for key, value in self.__dict__.copy().items():
+            self.__setattr__("_" + key, value.magnitude)
+
+        # Purely Numerical Quantities
+        self.q0 = q0
+        self.q_wall = q_wall
+
+        self.is_analytic = True
+
+    def solverqNU(self, psi: float):
+
+        return self.q0 * (
+            1
+            + (-1 + (self.q_wall / self.q0) ** 2) * (psi / self._psi_wall) ** 2
+        ) ** (1 / 2)
+
+    def psipNU(self, psi: float):
+        if isinstance(psi, (int, float)):
+            sinh = asinh(
+                (psi * sqrt(-1 + (self.q_wall / self.q0) ** 2))
+                / self._psi_wall
+            )
+        else:
+            sinh = np.arcsinh(
+                (psi * sqrt(-1 + (self.q_wall / self.q0) ** 2))
+                / self._psi_wall
+            )
+        return (
+            self._psi_wall
+            / (self.q0 * sqrt(-1 + (self.q_wall / self.q0) ** 2))
+        ) * sinh
+
+    def __repr__(self):
+        return (
+            colored("Chris's q-factor", "light_blue")
+            + f": q0={self.q0:.4g}, q_wall={self.q_wall:.4g}"
         )

@@ -13,6 +13,8 @@ from gcmotion.configuration.plot_parameters import (
     ProfilePzetaContourConfig,
 )
 
+from gcmotion.utils.logger_setup import logger
+
 
 def profile_Energy_contour(profile: Profile, **kwargs):
     r"""Plots the Profile's energy contour plot.
@@ -48,6 +50,7 @@ def profile_Energy_contour(profile: Profile, **kwargs):
         The contour's grid density. Defaults to 200.
 
     """
+    logger.info("==> Plotting profile's energy contour...")
 
     # Unpack parameters
     config = ProfileEnergyContourConfig()
@@ -83,10 +86,13 @@ def profile_Energy_contour(profile: Profile, **kwargs):
     cbar.ax.set_title(
         label=f"Energy [{config.E_units}]", size=config.cbarlabelsize
     )
-
-    show = kwargs.get("show", True)
-    if show:
+    print(config.flux_units)
+    if config.show:
+        logger.info("--> Energy contour successfully plotted.")
         plt.show()
+    else:
+        logger.info("--> Energy contour returned without plotting")
+        plt.clf()
 
 
 def profile_Pzeta_contour(profile, **kwargs):
@@ -133,6 +139,7 @@ def profile_Pzeta_contour(profile, **kwargs):
     contourax = fig.subplots()
 
     # Draw the contour and get the contour object
+    logger.debug("\tCalling base contour...")
     Contour = _base_profile_Pzeta_contour(
         profile=profile, ax=contourax, **kwargs
     )
@@ -143,13 +150,19 @@ def profile_Pzeta_contour(profile, **kwargs):
     cbar = fig.colorbar(Contour, cax=None, ax=contourax)
 
     # Now that the colorbar is created, pass its "ax" to be customized
-    _base_contour_colorbar(ax=cbar.ax, contour=Contour, numticks=10)
+    logger.debug("\tCalling base cbar...")
+    _base_contour_colorbar(
+        ax=cbar.ax, contour=Contour, numticks=config.numticks
+    )
 
     # Add the title on the cbar's ax
     cbar.ax.set_title(
         label=f"Pzeta [{config.flux_units}]", size=config.cbarlabelsize
     )
 
-    show = kwargs.get("show", True)
-    if show:
+    if config.show:
+        logger.info("--> Pzeta Contour successfully plotted.")
         plt.show()
+    else:
+        logger.info("--> Pzeta Contour returned without plotting")
+        plt.clf()

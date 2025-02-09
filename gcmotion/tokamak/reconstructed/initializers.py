@@ -13,7 +13,7 @@ from gcmotion.utils.quantity_constructor import QuantityConstructor
 
 class _NumericalInitializer:
     r"""Imports the necessary constants (R, B0, :math:`\psi_{wall}`) from the
-    dataset to initialize the Quantity Constructor and Tokamak
+    dataset to initialize the Quantity Constructor.
 
     The particle's species must be defined by the user, while the rest of the
     Quantities are already stored in the dataset.
@@ -48,18 +48,35 @@ class _NumericalInitializer:
             species=species,
         )
 
-        # Create R, B0
+        # Create Quantities
         self.R = self.Q(R, "meters")
         self.B0 = self.Q(B0, "Tesla")
         self.psi_wallNU = self.Q(psi_wallNU, "NUMagnetic_flux")
         psi_wall = self.psi_wallNU.to("Tesla * meters^2")
         self.a = (2 * psi_wall / self.B0) ** (1 / 2)
 
-    def get_QuantityConstructor(self):
+    def QuantityConstructor(self):
+        r"""Return the Quantity Constructor Q, defined with the datasets
+        parameters."""
         return self.Q
 
 
 class SmartPositiveInit(_NumericalInitializer):
+    r"""Imports the necessary constants (R, B0, :math:`\psi_{wall}`) from the
+    **Smart - Positive** dataset to initialize the Quantity Constructor.
+
+    The particle's species must be defined by the user, while the rest of the
+    Quantities are already stored in the dataset.
+
+    Dataset location should be at
+    gcmotion/tokamak/reconstructed/smart_positive.nc
+
+    Parameters
+    ----------
+    species : {'p', 'e', 'D', 'T', 'He3', 'He4'}
+        The particle's species. This field is case-insensitive.
+
+    """
 
     def __init__(self, species: str):
         filename = "smart_positive.nc"
@@ -67,6 +84,21 @@ class SmartPositiveInit(_NumericalInitializer):
 
 
 class SmartNegativeInit(_NumericalInitializer):
+    r"""Imports the necessary constants (R, B0, :math:`\psi_{wall}`) from the
+    **Smart - Negative** dataset to initialize the Quantity Constructor.
+
+    The particle's species must be defined by the user, while the rest of the
+    Quantities are already stored in the dataset.
+
+    Dataset location should be at
+    gcmotion/tokamak/reconstructed/smart_negative.nc
+
+    Parameters
+    ----------
+    species : {'p', 'e', 'D', 'T', 'He3', 'He4'}
+        The particle's species. This field is case-insensitive.
+
+    """
 
     def __init__(self, species: str):
         filename = "smart_negative.nc"
@@ -74,6 +106,21 @@ class SmartNegativeInit(_NumericalInitializer):
 
 
 class DivertorNegativeInit(_NumericalInitializer):
+    r"""Imports the necessary constants (R, B0, :math:`\psi_{wall}`) from the
+    **Divertor - Negative** dataset to initialize the Quantity Constructor.
+
+    The particle's species must be defined by the user, while the rest of the
+    Quantities are already stored in the dataset.
+
+    Dataset location should be at
+    gcmotion/tokamak/reconstructed/divertor_negative.nc
+
+    Parameters
+    ----------
+    species : {'p', 'e', 'D', 'T', 'He3', 'He4'}
+        The particle's species. This field is case-insensitive.
+
+    """
 
     def __init__(self, species: str):
         filename = "divertor_negative.nc"

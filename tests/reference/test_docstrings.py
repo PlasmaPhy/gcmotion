@@ -1,4 +1,5 @@
 import doctest
+from gcmotion.scripts import events
 from gcmotion.entities import (
     tokamak,
     initial_conditions,
@@ -26,4 +27,9 @@ def test_profile_docstring():
 
 def test_particle_docstring():
     doctest_results = doctest.testmod(m=particle, verbose=V)
+    assert doctest_results.failed == 0
+
+
+def test_events_docstring():
+    doctest_results = doctest.testmod(m=events, verbose=V)
     assert doctest_results.failed == 0

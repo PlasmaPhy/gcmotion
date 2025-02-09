@@ -13,6 +13,9 @@ from gcmotion.plot._base._base_contour_colorbar import _base_contour_colorbar
 from gcmotion.plot._base._base_particle_poloidal_drift import (
     _base_particle_poloidal_drift,
 )
+from gcmotion.utils.plot_utils import _auto_yspan
+
+from gcmotion.utils.logger_setup import logger
 
 
 def particle_poloidal_drift(particle: Particle, **kwargs):
@@ -54,6 +57,7 @@ def particle_poloidal_drift(particle: Particle, **kwargs):
         performance hit. Defaults to True.
 
     """
+    logger.info("==> Plotting Particle Poloidal Drift...")
 
     # Unpack parameters
     config = ParticlePoloidalDrift()
@@ -70,18 +74,28 @@ def particle_poloidal_drift(particle: Particle, **kwargs):
     fig = plt.figure(**fig_kw)
     driftax = fig.add_subplot(projection=config.projection)
 
-    print(config.flux_units)
+    # Set up ylim now to pass to contour as well
+    if config.psilim == "auto":
+        psi = particle.psi.to(config.flux_units)
+        psi_wall = particle.profile.psi_wall.to(config.flux_units)
+        lim = _auto_yspan(psi.m, psi_wall.m)
+        limNU = particle.Q(lim, config.flux_units).to("NUMagnetic_flux")
+        contour_kw = {**kwargs, "psilim": limNU}
+    else:
+        contour_kw = kwargs
     # ==============
     # Energy Contour
     # ==============
     # Draw the contour and get the contour object
+    logger.debug("\tCalling base contour...")
     Contour = _base_profile_Energy_contour(
-        profile=particle.profile, ax=driftax, **kwargs
+        profile=particle.profile, ax=driftax, **contour_kw
     )
 
     # ==============
     # Poloidal Drift
     # ==============
+    logger.debug("\tCalling base poloidal drift...")
     _base_particle_poloidal_drift(particle=particle, ax=driftax, **kwargs)
 
     # ========
@@ -92,16 +106,26 @@ def particle_poloidal_drift(particle: Particle, **kwargs):
     cbar = fig.colorbar(Contour, cax=None, ax=driftax)
 
     # Now that the colorbar is created, pass its "ax" to be customized
-    _base_contour_colorbar(ax=cbar.ax, contour=Contour, numticks=10)
+    logger.debug("\tCalling base cbar...")
+    E = particle.ENU.to(config.E_units)
+    _base_contour_colorbar(
+        ax=cbar.ax, contour=Contour, numticks=config.numticks, energy_line=E
+    )
 
     cbar.ax.set_title(
         label=f"Energy [{config.E_units}]", size=config.cbarlabelsize
     )
 
-    driftax.set_ylim(
-        particle.Q(config.psilim, "NUpsi_wall").to(config.flux_units)
-    )
+    if config.psilim != "auto":
+        driftax.set_ylim(
+            particle.Q(config.psilim, "NUpsi_wall").to(config.flux_units)
+        )
+    else:
+        driftax.set_ylim(lim)
 
-    show = kwargs.get("show", True)
-    if show:
+    if config.show:
+        logger.info("--> Particle Poloidal Drift successfully plotted.")
         plt.show()
+    else:
+        logger.info("--> Particle Poloidal Drift returned without plotting.")
+        plt.clf()

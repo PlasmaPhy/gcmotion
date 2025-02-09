@@ -51,4 +51,5 @@ def _get_size(obj, seen=None):
 
 
 def get_size(obj):
+    r"""Quantifies _get_size() result and prints it."""
     print(f"{_get_size(obj) * byte:.4g~#P}")

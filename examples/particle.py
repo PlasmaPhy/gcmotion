@@ -28,21 +28,29 @@ tokamak = gcm.Tokamak(
 
 # Setup Initial Conditions
 init = gcm.InitialConditions(
-    species="p",
+    species=species,
     muB=Q(0.5, "keV"),
-    Pzeta0=Q(-0.025, "NUMagnetic_flux"),
-    theta0=0,
+    Pzeta0=Q(-0.025, "NUCanonical_momentum"),
+    theta0=np.pi,
     zeta0=0,
-    psi0=Q(0.96, "psi_wall"),
-    t_eval=Q(np.linspace(0, 1e-3, 5000), "seconds"),
+    psi0=Q(0.132, "Magnetic_flux"),
+    t_eval=Q(np.linspace(0, 1e-3, 100000), "seconds"),
 )
 
 # Create the particle and calculate its obrit
 particle = gcm.Particle(tokamak=tokamak, init=init)
-particle.run()
+event = gcm.events.when_psi(root=init.psi0, terminal=4)
+particle.run(events=[event])
 print(particle)
 
-# gplt.magnetic_profile(particle.profile)
-# gplt.profile_Energy_contour(particle.profile)
-# gplt.particle_evolution(particle)
-gplt.particle_poloidal_drift(particle, psilim=[0.79, 1.25])
+# Some Plots
+gplt.particle_evolution(particle)
+gplt.particle_poloidal_drift(particle, psilim=[0.8, 1.2])
+gplt.particle_poloidal_drift(
+    particle,
+    psilim=[0, 1.1],
+    E_units="NUjoule",
+    levels=20,
+    projection="polar",
+    wall=False,
+)

@@ -53,17 +53,19 @@ class Tokamak:
 
     Attributes
     ----------
-        R, RNU : Quantities
-            The tokamak's major radius in [meters]/[NUmeters].
-        a, aNU : Quantities
-            The tokamak's minor radius in [meters]/[NUmeters].
-        B0, B0NU : Quantities
-            The strength of the magnetic field on the magnetic field in
-            [Tesla]/[NUTesla].
-        psi_wall, psi_wallNU : Quantities
-            The :math:`\psi` value in the tokamak's wall.
-        psip_wall, psip_wallNU : Quantities
-            The :math:`\psi_p` value in the tokamak's wall.
+    R, RNU : Quantities
+        The tokamak's major radius in [meters]/[NUmeters].
+    a, aNU : Quantities
+        The tokamak's minor radius in [meters]/[NUmeters]. Purely
+        decorative when dealing with reconstructed equilibria.
+    B0, B0NU : Quantities
+        The strength of the magnetic field on the magnetic field in
+        [Tesla]/[NUTesla].
+    psi_wall, psi_wallNU : Quantities
+        The :math:`\psi` value in the tokamak's wall.
+    psip_wall, psip_wallNU : Quantities
+        The :math:`\psi_p` value in the tokamak's wall.
+    Q : Quantity Constructor
 
     Examples
     --------
@@ -107,10 +109,20 @@ class Tokamak:
         r"""Sets up fields in the correct units."""
         logger.info("==> Initializing Tokamak...")
 
-        # Construct objects
+        # Tokamak objects
         self.qfactor = qfactor
         self.bfield = bfield
         self.efield = efield
+
+        qfactor_str = type(qfactor).__name__
+        bfield_str = type(bfield).__name__
+        efield_str = type(efield).__name__
+        logger.info(
+            f"\tObjects: "
+            f"qfactor={qfactor_str}, "
+            f"bfield={bfield_str}, "
+            f"efield={efield_str}."
+        )
 
         # Construct Quantities
         self.R = R.to("meters")
@@ -121,9 +133,9 @@ class Tokamak:
         self.B0NU = self.B0.to("NUTesla")
 
         # Calculate last closed surfaces
-        Q = type(R)
+        self.Q = type(R)
         logger.info("\tGrabbed Quantity Constructor.")
-        self.psi_wall = Q(1, "psi_wall").to("Magnetic_flux")
+        self.psi_wall = self.Q(1, "psi_wall").to("Magnetic_flux")
         self.psi_wallNU = self.psi_wall.to("NUMagnetic_flux")
 
         self.psip_wallNU = (
@@ -132,29 +144,30 @@ class Tokamak:
         )
         self.psip_wall = self.psip_wallNU.to("Magnetic_flux")
 
+        logger.info("\tNU units OK.")
         logger.info("--> Tokamak Initialization Complete.")
 
     def __repr__(self):
         return (
             "Tokamak: "
-            + f"R={self.R:.4g~}, "
-            + f"a={self.a:.4g~}, "
-            + f"qfactor=[{self.qfactor}], "
-            + f"bfield=[{self.bfield}], "
-            + f"efield=[{self.efield}]\n"
+            f"R={self.R:.4g~}, "
+            f"a={self.a:.4g~}, "
+            f"qfactor=[{self.qfactor}], "
+            f"bfield=[{self.bfield}], "
+            f"efield=[{self.efield}]\n"
         )
 
     def __str__(self):
         return (
             colored("\nTokamak:\n", "green")
             + f"{'R':>23} : {f'{self.R:.4g~}':<16}({self.RNU:.4g~})\n"
-            + f"{'a':>23} : {f'{self.a:.4g~}':<16}({self.aNU:.4g~})\n"
-            + f"{'B0':>23} : {f'{self.B0:.4g~}':<16}({self.B0NU:.4g~})\n"
-            + f"{'q-factor':>23} : {self.qfactor}\n"
-            + f"{'Magnetic Field':>23} : {self.bfield}\n"
-            + f"{'Electric Field':>23} : {self.efield}\n"
-            + f"{'psi_wall':>23} : {f'{self.psi_wall:.4g~}':<16}"
-            + f"({self.psi_wallNU:.4g~})\n"
-            + f"{'psip_wall':>23} : {f'{self.psip_wall:.4g~}':<16}"
-            + f"({self.psip_wallNU:.4g~})\n"
+            f"{'a':>23} : {f'{self.a:.4g~}':<16}({self.aNU:.4g~})\n"
+            f"{'B0':>23} : {f'{self.B0:.4g~}':<16}({self.B0NU:.4g~})\n"
+            f"{'q-factor':>23} : {self.qfactor}\n"
+            f"{'Magnetic Field':>23} : {self.bfield}\n"
+            f"{'Electric Field':>23} : {self.efield}\n"
+            f"{'psi_wall':>23} : {f'{self.psi_wall:.4g~}':<16}"
+            f"({self.psi_wallNU:.4g~})\n"
+            f"{'psip_wall':>23} : {f'{self.psip_wall:.4g~}':<16}"
+            f"({self.psip_wallNU:.4g~})\n"
         )

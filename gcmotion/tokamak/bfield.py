@@ -97,6 +97,9 @@ class NumericalMagneticField(MagneticField):
     Opens the dataset and creates the splines needed for the querry methods.
     Also defines Bmin and Bmax, used in the parabolas.
 
+    ``solverB`` and ``bigNU`` work identically to the analytic Magnetic field
+    methods.
+
     Parameters
     ----------
     filename : str
@@ -123,7 +126,9 @@ class NumericalMagneticField(MagneticField):
         try:
             dataset = xr.open_dataset(path)
             self.dataset = dataset
+            logger.info("Dataset initialized correctly.")
         except FileNotFoundError:
+            logger.error("Error opening Dataset.")
             raise FileNotFoundError(f"No file found at '{path}'")
 
         # Extract the arrays
@@ -168,7 +173,6 @@ class NumericalMagneticField(MagneticField):
         Q = pint.UnitRegistry.Quantity
         _B0 = float(dataset.Baxis.data)  # Tesla
         self.B0 = Q(_B0, "Tesla")
-        self.is_numerical = True
 
         # Magnetic field strength extremum
         start = time()
@@ -177,8 +181,8 @@ class NumericalMagneticField(MagneticField):
         maxs = da.where(da == da.max(), drop=True).squeeze()
         self.Bmin = Q(mins.values, "Tesla")
         self.Bmax = Q(maxs.values, "Tesla")
-        self.theta_min = float(mins.boozer_theta.values)
-        self.theta_max = float(maxs.boozer_theta.values)
+        self.theta_min = float(mins.boozer_theta.values.flatten()[0])
+        self.theta_max = float(maxs.boozer_theta.values.flatten()[0])
 
         # WARN: NU units must have been defined in the unit registry already.
         # The quantity_constructor module sets the global "application
@@ -201,8 +205,9 @@ class NumericalMagneticField(MagneticField):
         duration = Q(end - start, "seconds")
         logger.info(f"Numerical bfield extremum search took {duration:.4g~#P}")
 
-    def bigNU(self, psi: float | np.ndarray, theta: float | np.ndarray):
+        self.is_numerical = True
 
+    def bigNU(self, psi: float | np.ndarray, theta: float | np.ndarray):
         theta = theta % (2 * np.pi)
         b = self.b_spline(x=theta, y=psi, grid=False)
         i = self.i_spline(x=psi)
@@ -232,7 +237,7 @@ class NumericalMagneticField(MagneticField):
         return b, b_der, currents, currents_der
 
 
-# =======================================================
+# ============================================================================
 
 
 class LAR(MagneticField):
@@ -269,6 +274,7 @@ class LAR(MagneticField):
         # Flags
         self.has_i = bool(i.m)
         self.plain_name = "LAR"
+        self.is_analytic = True
 
     def bigNU(self, psi: float | np.ndarray, theta: float | np.ndarray):
 
@@ -291,7 +297,7 @@ class LAR(MagneticField):
         # Field derivatives
         root = sqrt(2 * psi)
         cos_theta = cos(theta)
-        b_der_psi = cos_theta / root
+        b_der_psi = -cos_theta / root
         b_der_theta = root * sin(theta)
 
         # Current derivatives

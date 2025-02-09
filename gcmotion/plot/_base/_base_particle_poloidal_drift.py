@@ -30,7 +30,7 @@ def _base_particle_poloidal_drift(particle: Particle, ax: Axes, **kwargs):
         config.percentage = 100
         logger.warning("Invalid percentage: Plotting the whole thing...")
     points = int(
-        np.floor(particle.t_eval.shape[0] * config.percentage / 100) - 1
+        np.floor(particle.t_solve.shape[0] * config.percentage / 100) - 1
     )
     theta = particle.theta[:points]
     psi = particle.psi.to(config.flux_units)[:points]
@@ -44,3 +44,12 @@ def _base_particle_poloidal_drift(particle: Particle, ax: Axes, **kwargs):
     # Mod theta and plot
     theta = _pi_mod(theta, config.thetalim)[0]
     ax.scatter(theta, psi, **scatter_kw)
+
+    # This pulls its values from _config
+    initial_kw = {
+        "s": config.init_s,
+        "color": config.init_color,
+        "marker": config.init_marker,
+    }
+    if config.initial:
+        ax.scatter(theta[0], psi[0], **initial_kw)

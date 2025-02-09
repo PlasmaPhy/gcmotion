@@ -19,9 +19,11 @@ class ProfileEnergyContourConfig:
     levels: int = 30
     E_units: str = "keV"
     flux_units: str = "Tesla * meter^2"
+    canmon_units: str = "NUCanonical_momentum"
     potential: bool = True
     wall: bool = True
     cursor: bool = True  # Mild performance hit
+    show: bool = True
     # Colorbar
     numticks: int = 10
     cbarlabelsize: int = 12
@@ -43,6 +45,7 @@ class ProfilePzetaContourConfig:
     potential: bool = True
     wall: bool = True
     cursor: bool = True  # Mild performance hit
+    show: bool = True
     # Colorbar
     numticks: int = 10
     cbarlabelsize: int = 12
@@ -84,6 +87,7 @@ class MagneticProfileConfig:
     span: tuple = (0, 1.1)
     units: str = "NU"
     plot_derivatives: bool = True
+    coord: str = "r"  # psi / r
     show: bool = True
     # Contour options
     grid_density: int = 200
@@ -100,6 +104,7 @@ class MagneticProfileConfig:
     # Label options
     labelsize: float = 15
     ax_title_size: float = 20
+    ax_title_pad: float = 25
 
 
 @dataclass()
@@ -115,6 +120,7 @@ class ParticleEvolutionConfig:
     which: str = "all"
     units: str = "SI"
     percentage: int = 100
+    show: bool = True
     # Scatter kw
     s: float = 0.2
     color: str = "blue"
@@ -133,13 +139,21 @@ class ParticlePoloidalDrift:
     # Default parameter values
     projection: str | None = None  # None = default
     thetalim: tuple = (-pi, pi)
-    psilim: tuple = (0, 1.2)  # times psi_wall
+    psilim: str | tuple = "auto"  # times psi_wall, or "auto"
     levels: int = 30
     E_units: str = "keV"
     flux_units: str = "Tesla * meter^2"
     potential: bool = True
+    initial: bool = True
     wall: bool = True
     cursor: bool = True  # Mild performance hit
+    show: bool = True
     # Colorbar
     numticks: int = 10
     cbarlabelsize: int = 12
+
+
+@dataclass
+class AutoYspan:
+    zoomout: float = 0.75
+    hardylim: float = 3  # times psi_wall

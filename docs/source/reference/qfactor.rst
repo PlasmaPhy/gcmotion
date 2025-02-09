@@ -8,17 +8,20 @@ gcmotion.qfactor
 
 Here is a list of the availiable q-factor configurations:
 
-=========================      ==========================
+=============================  ==========================
 Unity q-factor                 :py:class:`Unity`
+Chris's q-factor               :py:class:`Chris`
 Parabolic q-factor             :py:class:`Parabolic`
 Hypergeometric q-factor        :py:class:`Hypergeometric`
 (Numerical) SmartPositive      :py:class:`SmartPositive`
 (Numerical) SmartNegative      :py:class:`SmartNegative`
-=========================      ==========================
+(Numerical) DivertorNegative   :py:class:`SmartNegative`
+=============================  ==========================
 
 Their parameters are documented below.
 
-.. rubric:: Example
+Examples
+--------
 
 >>> import gcmotion as gcm
 >>>
@@ -37,6 +40,22 @@ Their parameters are documented below.
 >>> qfactor1 = gcm.qfactor.Unity()
 >>> qfactor3 = gcm.qfactor.Parabolic(a, B0, q0=1.1, q_wall=3.8)
 >>> qfactor3 = gcm.qfactor.Hypergeometric(a, B0, q0=1.1, q_wall=3.8, n=2)
+
+Creating a numerical Qfactor. Use the respective Initializer to grab the normalization constants from the dataset automatically. See :ref:`Initializers <initializers_docs>`
+
+>>> import gcmotion as gcm
+>>> 
+>>> # Quantity Constructor
+>>> species = "p"
+>>> smart_init = gcm.SmartNegativeInit(species)
+>>> Q = smart_init.QuantityConstructor()
+>>> 
+>>> # Intermediate Quantities
+>>> R = smart_init.R
+>>> a = smart_init.a
+>>> B0 = smart_init.B0
+>>>
+>>> qfactor=gcm.qfactor.SmartNegative(),
 
 .. note::
 
@@ -83,4 +102,14 @@ Available q-factors
 .. rubric:: SmartNegative
 
 .. autoclass:: SmartNegative
+   :class-doc-from: class
+
+.. rubric:: DivertorNegative
+
+.. autoclass:: DivertorNegative
+   :class-doc-from: class
+
+.. rubric:: Chris's q-factor
+
+.. autoclass:: Chris
    :class-doc-from: class

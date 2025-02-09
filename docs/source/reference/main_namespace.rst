@@ -50,6 +50,12 @@ Utilities
 
 .. autosummary::
    :toctree: generated/
-   :caption: main_namespace
 
    get_size
+
+Scripts
+=======
+
+.. toctree:: 
+
+   events
