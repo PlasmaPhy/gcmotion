@@ -1,3 +1,5 @@
+.. _main_namespace:
+
 ###########################
 The main GCMotion namespace
 ###########################
@@ -33,6 +35,7 @@ See also:
    :maxdepth: 1
 
    tokamak
+   initializers
 
 Essential Entities
 ==================
@@ -57,5 +60,6 @@ Scripts
 =======
 
 .. toctree:: 
+   :maxdepth: 1
 
    events

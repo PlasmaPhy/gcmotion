@@ -3,14 +3,14 @@
 GCMotion API
 ============
 
-GCMotion maintains a seperate namespace for creating entities and for plotting.
+GCMotion maintains a seperate namespace for creating entities and for plotting. See Table of Contents.
 
 API Definition
 --------------
 
-* `gcmotion`
+* :ref:`gcmotion <main_namespace>`
 
-* `gcmotion.plotters`
+* :ref:`gcmotion.plot <plot_namespace>`
 
 .. toctree::
    :maxdepth: 1

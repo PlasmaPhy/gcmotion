@@ -1,3 +1,5 @@
+.. _plot_namespace:
+
 Plotters
 ========
 

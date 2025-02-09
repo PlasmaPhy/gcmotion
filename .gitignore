@@ -1,8 +1,10 @@
-
 # Python
 /.venv
 /.gcmvenv
 __pycache__
+
+# Build
+/dist
 
 # Pytest
 .pytest_cache/
