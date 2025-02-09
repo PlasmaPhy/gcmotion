@@ -10,10 +10,10 @@ cycler==0.12.1
 docutils==0.21.2
 flexcache==0.3
 flexparser==0.4
-fonttools==4.55.8
+fonttools==4.56.0
+GCMotion @ file:///home/george/Dev/python/gcmotion
 idna==3.10
 imagesize==1.4.1
-iniconfig==2.0.0
 Jinja2==3.1.5
 kiwisolver==1.4.8
 loguru==0.7.3
@@ -27,14 +27,12 @@ pandas==2.2.3
 pillow==11.1.0
 Pint==0.24.4
 platformdirs==4.3.6
-pluggy==1.5.0
 pydata-sphinx-theme==0.16.1
 Pygments==2.19.1
 pyparsing==3.2.1
-PyQt6==6.8.0
-PyQt6-Qt6==6.8.1
+PyQt6==6.8.1
+PyQt6-Qt6==6.8.2
 PyQt6_sip==13.10.0
-pytest==8.3.4
 python-dateutil==2.9.0.post0
 pytz==2025.1
 requests==2.32.3
