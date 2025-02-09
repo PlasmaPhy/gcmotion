@@ -164,19 +164,15 @@ class LAR(MagneticField):
 
 class Smart(MagneticField):
 
-    def __init__(self, triangularity: str = "positive"):
+    def __init__(self, filename: str = "smart_PT.nc"):
         r""" """
 
-        if triangularity == "positive":
-            path = r"C:\Users\georg\OneDrive\Desktop\My Files\Plasma & Fusion\smart_equil_for_internal_use\normalized_Equil-PT-S2-000021-B-updated-COCOS2.nc"
-        elif triangularity == "negative":
-            path = r"C:\Users\georg\OneDrive\Desktop\My Files\Plasma & Fusion\smart_equil_for_internal_use\normalized_SMART_NT_Jesus_delta_scans_d_11.nc"
-        else:
-            print('Triangularity must be either "positive" or "negative"')
-            return
+        # Open the dataset
+        parent = os.path.dirname(__file__)  # Relative to this directory
+        path = os.path.join(parent, "reconstructed", filename)
 
         try:
-            dataset = xr.open_dataset(path)
+            dataset = xr.open_dataset(path, engine="netcdf4")
             self.dataset = dataset
         except FileNotFoundError:
             raise FileNotFoundError(f"No file found at '{path}'")
