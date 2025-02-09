@@ -11,7 +11,6 @@ docutils==0.21.2
 flexcache==0.3
 flexparser==0.4
 fonttools==4.55.8
--e git+ssh://git@github.com/PlasmaPhy/gcmotion.git@9809f48faec15d3ef8a10a6ffb45dec737101530#egg=gcmotion
 idna==3.10
 imagesize==1.4.1
 iniconfig==2.0.0
