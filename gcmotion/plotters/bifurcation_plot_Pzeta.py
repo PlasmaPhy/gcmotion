@@ -6,30 +6,14 @@ with different :math:`\P_{\zeta}`'s.
 import matplotlib.pyplot as plt
 import numpy as np
 from time import time
+from gcmotion.utils.logger_setup import logger
 
-from gcmotion.scripts.bifurcation import bifurcation
+from gcmotion.scripts.bifurcation_Pzeta import bifurcation
 from collections import deque
+from gcmotion.configuration.fixed_points_bifurcation_parameters import BifurcationPlotConfig
 
 
-def bifurcation_plot(
-    profiles: list | deque,
-    theta_lim: list = [-np.pi, np.pi],
-    psi_lim: list = [0.01, 1.3],
-    fp_method: str = "differential evolution",
-    dist_tol: float = 1e-3,
-    fp_ic_scan_tol: float = 5 * 1e-8,
-    ic_theta_grid_density: int = 1000,
-    ic_psi_grid_density: int = 1000,
-    random_fp_init_cond: bool = False,
-    fp_info: bool = False,
-    bif_info: bool = False,
-    fp_ic_info: bool = False,
-    plot_energy_bif: bool = False,
-    energy_units: str = "NUJoule",
-    energies_info: bool = False,
-    fp_LAR_thetas: bool = False,
-    fp_only_confined: bool = False,
-):
+def bifurcation_plot(profiles: list | deque, **kwargs):
     r"""Draws the bifurcation diagrams for the :math:`theta`'s  fixed,
     the :math:`P_{theta}`'s fixed and the number of fixed points found for
     each :math:`P_{\zeta}`.
@@ -40,10 +24,12 @@ def bifurcation_plot(
         ----------
         profiles : list, deque
             List of profile objects that contain Tokamak and Particle information.
-        theta_lim : list, optional
+        Other Parameters
+        ----------
+        thetalim : list, optional
             Limits of the of the :math:`\theta`, :math:`\psi` search area with respect
             to the :math:`\theta` variable. Defaults to [-:math:`\pi`, :math:`\pi`].
-        psi_lim : list, optional
+        psilim : list, optional
             Limits of the of the :math:`\theta`, :math:`\psi` search area with respect
             to the :math:`\psi` variable. Defaults to [0.01 , 1.8]. CUTION: The limits are given
             normalized to :math:`\psi_{wall}`.
@@ -85,7 +71,7 @@ def bifurcation_plot(
             String specifying the unit of the calculated fixed points' energies. Defaults to ``"NUJoule"``.
         energies_info : bool, optional
             Boolean determining weather information on the fixed points' energies is to be printed.
-            Defaults to ``False``.
+            Defaults to ``True``.
         fp_LAR_thetas : bool, optional
             Boolean determining weather the theta values for which fixed points occur are to be
             considered known (LAR thetas are 0 and :math:`\pi`). Defaults to ``False``.
@@ -94,32 +80,30 @@ def bifurcation_plot(
             :math:`\psi` < :math:`\psi_{wall}` (confined particles). Defaults to ``False``.
     """
 
+    # Unpack parameters
+    config = BifurcationPlotConfig()
+    for key, value in kwargs.items():
+        setattr(config, key, value)
+
+    # print(f"\n\nCONFIG_CLASS:{vars(config)}\n\n")
+
     start = time()
     # CAUTION: The bifurcation function takes in psis_fixed but returns P_thetas_fixed
     X_thetas, X_P_thetas, O_thetas, O_P_thetas, num_of_XP, num_of_OP, X_energies, O_energies = (
         bifurcation(
             profiles=profiles,
-            theta_lim=theta_lim,
-            psi_lim=psi_lim,
-            method=fp_method,
-            dist_tol=dist_tol,
-            fp_ic_scan_tol=fp_ic_scan_tol,
-            ic_theta_grid_density=ic_theta_grid_density,
-            ic_psi_grid_density=ic_psi_grid_density,
-            random_fp_init_cond=random_fp_init_cond,
-            fp_info=fp_info,
-            bif_info=bif_info,
-            fp_ic_info=fp_ic_info,
-            fp_only_confined=fp_only_confined,
-            calc_energies=plot_energy_bif,
-            energy_units=energy_units,
-            LAR_thetas=fp_LAR_thetas,
+            calc_energies=config.plot_energy_bif,
+            **kwargs,
         )
     )
 
     print(f"BIFURCATION RUN IN {(time() - start)/60:.1f} mins")
 
     profile1 = profiles[0]
+    profileN = profiles[-1]
+    logger.info(
+        f"Ran bifurcation script for bifurcation plot with N={len(profiles)} Pzetas={profile1.PzetaNU}...{profileN.PzetaNU}"
+    )
     psi_wallNU = profile1.psi_wall.to("NUMagnetic_flux")
     P_theta_wallNU = profile1.findPtheta(psi=psi_wallNU, units="NUCanonical_momentum").m
 
@@ -152,6 +136,8 @@ def bifurcation_plot(
     ax_theta.set_ylim([-np.pi - 0.5, np.pi + 0.5])
     ax_theta.scatter(P_zeta_plot, X_theta_plot, s=2, color="#E65100")
 
+    logger.info(f"Made Xthetas fixed bifurcation plot")
+
     P_zeta_plot = []
 
     for i, profile in enumerate(profiles):
@@ -161,6 +147,8 @@ def bifurcation_plot(
         O_theta_plot.extend(y_list)
 
     ax_theta.scatter(P_zeta_plot, O_theta_plot, s=2)
+
+    logger.info(f"Made Othetas fixed bifurcation plot")
 
     P_zeta_plot1 = []
 
@@ -196,6 +184,8 @@ def bifurcation_plot(
     ax_P_theta.axhline(y=P_theta_wallNU, color="black", linestyle="--", linewidth=1, alpha=0.5)
     ax_P_theta.legend(loc="lower left")
 
+    logger.info(f"Made P_thetas fixed bifurcation plot")
+
     # Number of distinct fixed points Diagram
     P_zetas = [profile.PzetaNU for profile in profiles]
     ax_ndfp.set_ylabel("Number of Fixed Points")
@@ -203,10 +193,12 @@ def bifurcation_plot(
     ax_ndfp.scatter(P_zetas, num_of_OP, s=2, label="O points")
     ax_ndfp.legend()
 
-    if plot_energy_bif:
+    logger.info(f"Made number of fixed points bifurcation plot")
+
+    if config.plot_energy_bif:
         fig, ax = plt.subplots(1, 1, figsize=(9, 7), sharex=True)
         plt.xlabel(r"$P_{\zeta}$" + f"[{profiles[1].Pzeta.units}]")
-        ax.set_ylabel(f"Energies [{energy_units}]")
+        ax.set_ylabel(f"Energies [{config.energy_units}]")
 
         X_energies_plot = []
         O_energies_plot = []
@@ -242,9 +234,7 @@ def bifurcation_plot(
         ax.scatter(P_zeta_plot1, X_energies_plot, s=2, color="#E65100", label="X points")
         ax.scatter(P_zeta_plot2, O_energies_plot, s=2, label="O points")
 
-        if energies_info:
-            print(f"X energies {X_energies}\n\n")
-            print(f"O energies {O_energies}\n\n")
+        logger.info(f"Made fixed points' energies bifurcation plot")
 
         ax.legend()
 

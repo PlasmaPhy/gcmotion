@@ -8,6 +8,7 @@ from gcmotion.entities.profile import Profile
 
 from gcmotion.utils.XO_points_classification import XO_points_classification as xoc
 from gcmotion.utils.points_psi_to_P_theta import points_psi_to_P_theta
+from gcmotion.configuration.fixed_points_bifurcation_parameters import FixedPointsPlotConfig
 
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
@@ -20,21 +21,8 @@ from gcmotion.utils.logger_setup import logger
 
 def fixed_points_plot(
     profile: Profile,
-    theta_lim: list,
-    psi_lim: list,
-    method: str = "fsolve",
-    dist_tol: float = 1e-3,
-    fp_ic_scan_tol: float = 5 * 1e-8,
-    ic_theta_grid_density: int = 400,
-    ic_psi_grid_density: int = 400,
-    random_init_cond: bool = False,
-    info: bool = False,
-    ic_info: bool = False,
-    plot_init_cond: bool = False,
-    LAR_thetas: bool = False,
-    only_confined: bool = False,
     ax: Axes = None,
-    **args,
+    **kwargs,
 ):
     r"""
 
@@ -44,21 +32,26 @@ def fixed_points_plot(
     will be passed into :py:func:`fixed_points`. This function is almost always used in
     :py:func:`profile_contour`, in order to visualize the results.
 
-    Parameters
+            Parameters
             ----------
             profile : Profile
                 Profile object that contains Tokamak and Particle information.
-            theta_lim : list, optional
+            ax : Axes, optional
+                The axes upon which the plot is to be realized.
+            Other Parameters
+            ----------
+            psilim : list, optional
+                Limits of the of the :math:`\theta`, :math:`\psi` search area with respect
+                to the :math:`\psi` variable. Defaults to [0.01 , 1.8]. CUTION: The limits are given
+                normalized to :math:`\psi_{wall}`.
+            thetalim : list, optional
                 Limits of the of the :math:`\theta`, :math:`\psi` search area with respect
                 to the :math:`\theta` variable. Defaults to [-:math:`\pi`, :math:`\pi`].
             method : str, optional
                 String that indicates which method will be used to find the systems fixed
                 points in :py:func:`single_fixed_point`. Can either be "fsolve" (deterministic)
                 or "differential evolution" (stochastic). Defaults to "fsolve".
-            psi_lim : list, optional
-                Limits of the of the :math:`\theta`, :math:`\psi` search area with respect
-                to the :math:`\psi` variable. Defaults to [0.01 , 1.8]. CUTION: The limits are given
-                normalized to :math:`\psi_{wall}`.
+
             dist_tol : float
                 Tolerance below which two fixed points are not considered distinct. The differences between
                 both :math:`\theta` and :math:`\psi` of the fixed points must be below this tolerance for
@@ -92,39 +85,18 @@ def fixed_points_plot(
             only_confined : bool, optional
                 Boolean determining if the search for :math:`\psi_{fixed}` will be conducted only for
                 :math:`\psi` < :math:`\psi_{wall}` (confined particles). Defaults to ``False``.
-            ax : Axes, optional
-                The axes upon which the plot is to be realized.
-            args : dict, optional
-                Extra arguements.
     """
 
-    # Unpack params
-    _internal_call = args.pop("_internal_call", False)  # POP!
-
-    if _internal_call:
-        logger.disable("gcmotion")
-    else:
-        logger.enable("gcmotion")
-
-    logger.info(f"Plotting fixed points")
+    # Unpack Parameters
+    config = FixedPointsPlotConfig()
+    for key, value in kwargs.items():
+        setattr(config, key, value)
 
     start = time()
     # Calculate fixed points
-    _, fixed_points, initial_conditions = fp(
-        method=method,
-        profile=profile,
-        Q=profile.Q,
-        theta_lim=theta_lim,
-        psi_lim=psi_lim,
-        dist_tol=dist_tol,
-        fp_ic_scan_tol=fp_ic_scan_tol,
-        ic_theta_grid_density=ic_theta_grid_density,
-        ic_psi_grid_density=ic_psi_grid_density,
-        random_init_cond=random_init_cond,
-        info=info,
-        ic_info=ic_info,
-        LAR_thetas=LAR_thetas,
-        only_confined=only_confined,
+    _, fixed_points, initial_conditions = fp(profile=profile, **kwargs)
+    logger.info(
+        f"Calculated fixed points ['NUMagnetic_flux'] for fixed_points_plot with Pz={profile.PzetaNU}"
     )
     print(f"\n FIXED POINTS RUN IN {(time() - start):.1f}s\n")
 
@@ -141,8 +113,12 @@ def fixed_points_plot(
     X_thetas, X_P_thetasNU = zip(*X_points) if X_points else ([], [])
     O_thetas, O_P_thetasNU = zip(*O_points) if O_points else ([], [])
 
-    X_P_thetas = profile.Q(X_P_thetasNU, "NUmagnetic_flux").to("Magnetic_flux")
-    O_P_thetas = profile.Q(O_P_thetasNU, "NUmagnetic_flux").to("Magnetic_flux")
+    logger.info(
+        f"Classified fixed points and XPoints={X_points}, OPoints={O_points} ['NUCanonical_momentum'] in form [theta,P_theta]"
+    )
+
+    X_P_thetas = profile.Q(X_P_thetasNU, "NUMagnetic_flux").to("Magnetic_flux")
+    O_P_thetas = profile.Q(O_P_thetasNU, "NUMagnetic_flux").to("Magnetic_flux")
 
     ax.set_xticks([-np.pi, 0, np.pi])
     ax.set_xticklabels([r"$-\pi$", "0", r"$\pi$"])
@@ -154,7 +130,9 @@ def fixed_points_plot(
     if len(O_thetas) > 0 and len(O_P_thetas) > 0:
         ax.scatter(O_thetas, O_P_thetas, marker="o", edgecolor="yellow", facecolors="none", s=100)
 
-    if plot_init_cond:
+    logger.info(f"Plotted fixed points for fixed_points_plot with Pz={profile.PzetaNU}")
+
+    if config.fp_plot_init_cond:
 
         # Turn points (theta, psi) --> (theta, P_theta)
         initial_conditions = points_psi_to_P_theta(initial_conditions, profile=profile)
@@ -163,3 +141,5 @@ def fixed_points_plot(
 
         P_thetas_init = profile.Q(P_thetas_initNU, "NUmagnetic_flux").to("Magnetic_flux")
         ax.scatter(thetas_init, P_thetas_init.m, marker=">", color="red", s=100)
+
+        logger.info(f"Plotted initial conditions for fixed points")
