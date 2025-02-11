@@ -92,6 +92,9 @@ def fixed_points_plot(
     for key, value in kwargs.items():
         setattr(config, key, value)
 
+    # Determine output units
+    output_units = config.flux_units
+
     start = time()
     # Calculate fixed points
     _, fixed_points, initial_conditions = fp(profile=profile, **kwargs)
@@ -100,8 +103,10 @@ def fixed_points_plot(
     )
     print(f"\n FIXED POINTS RUN IN {(time() - start):.1f}s\n")
 
-    # CAUTION: The xoc function takes in psis_fixed but returns P_thetas_fixed
-    X_points, O_points = xoc(unclassified_fixed_points=fixed_points, profile=profile)
+    # CAUTION: The xoc function takes in psis_fixed but returns P_thetas_fixed if ssked
+    X_points, O_points = xoc(
+        unclassified_fixed_points=fixed_points, profile=profile, to_P_thetas=False
+    )
 
     # Check axes
     if ax is None:
@@ -110,36 +115,31 @@ def fixed_points_plot(
         logger.debug("\tCreating a new canvas.")
 
     # Convert deque to numpy arrays for easy manipulation
-    X_thetas, X_P_thetasNU = zip(*X_points) if X_points else ([], [])
-    O_thetas, O_P_thetasNU = zip(*O_points) if O_points else ([], [])
+    X_thetas, X_psisNU = zip(*X_points) if X_points else ([], [])
+    O_thetas, O_psisNU = zip(*O_points) if O_points else ([], [])
 
-    logger.info(
-        f"Classified fixed points and XPoints={X_points}, OPoints={O_points} ['NUCanonical_momentum'] in form [theta,P_theta]"
-    )
+    logger.info(f"Classified fixed points and XPoints={X_points}, OPoints={O_points} ")
 
-    X_P_thetas = profile.Q(X_P_thetasNU, "NUMagnetic_flux").to("Magnetic_flux")
-    O_P_thetas = profile.Q(O_P_thetasNU, "NUMagnetic_flux").to("Magnetic_flux")
+    X_psis = profile.Q(X_psisNU, "NUMagnetic_flux").to(output_units)
+    O_psis = profile.Q(O_psisNU, "NUMagnetic_flux").to(output_units)
 
     ax.set_xticks([-np.pi, 0, np.pi])
     ax.set_xticklabels([r"$-\pi$", "0", r"$\pi$"])
     ax.set_xlim([-np.pi, np.pi])
 
-    if len(X_thetas) > 0 and len(X_P_thetas) > 0:
-        ax.scatter(X_thetas, X_P_thetas, marker="x", color="#80FF80", s=100)
+    if len(X_thetas) > 0 and len(X_psis) > 0:
+        ax.scatter(X_thetas, X_psis, marker="x", color="#80FF80", s=100)
 
-    if len(O_thetas) > 0 and len(O_P_thetas) > 0:
-        ax.scatter(O_thetas, O_P_thetas, marker="o", edgecolor="yellow", facecolors="none", s=100)
+    if len(O_thetas) > 0 and len(O_psis) > 0:
+        ax.scatter(O_thetas, O_psis, marker="o", edgecolor="yellow", facecolors="none", s=100)
 
     logger.info(f"Plotted fixed points for fixed_points_plot with Pz={profile.PzetaNU}")
 
     if config.fp_plot_init_cond:
 
-        # Turn points (theta, psi) --> (theta, P_theta)
-        initial_conditions = points_psi_to_P_theta(initial_conditions, profile=profile)
+        thetas_init, psis_initNU = zip(*initial_conditions) if initial_conditions else ([], [])
 
-        thetas_init, P_thetas_initNU = zip(*initial_conditions) if initial_conditions else ([], [])
-
-        P_thetas_init = profile.Q(P_thetas_initNU, "NUmagnetic_flux").to("Magnetic_flux")
-        ax.scatter(thetas_init, P_thetas_init.m, marker=">", color="red", s=100)
+        psis_init = profile.Q(psis_initNU, "NUmagnetic_flux").to(output_units)
+        ax.scatter(thetas_init, psis_init.m, marker=">", color="red", s=100)
 
         logger.info(f"Plotted initial conditions for fixed points")
