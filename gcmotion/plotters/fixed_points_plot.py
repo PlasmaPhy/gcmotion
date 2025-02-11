@@ -123,6 +123,8 @@ def fixed_points_plot(
     X_psis = profile.Q(X_psisNU, "NUMagnetic_flux").to(output_units)
     O_psis = profile.Q(O_psisNU, "NUMagnetic_flux").to(output_units)
 
+    logger.info(f"Converted fixed points from 'NUMagnetic_flux' to {output_units} ")
+
     ax.set_xticks([-np.pi, 0, np.pi])
     ax.set_xticklabels([r"$-\pi$", "0", r"$\pi$"])
     ax.set_xlim([-np.pi, np.pi])
