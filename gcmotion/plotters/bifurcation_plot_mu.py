@@ -1,6 +1,6 @@
 r"""
 Calculates and plots the bifurcation diagram of the fixed points for multiple profiles
-with different :math:`\P_{\zeta}`'s.
+with different :math:`\mu`'s.
 """
 
 import matplotlib.pyplot as plt
@@ -13,7 +13,7 @@ from collections import deque
 from gcmotion.configuration.fixed_points_bifurcation_parameters import BifurcationPlotConfig
 
 
-def bifurcation_plot_Pzeta(profiles: list | deque, **kwargs):
+def bifurcation_plot_mu(profiles: list | deque, **kwargs):
     r"""Draws the bifurcation diagrams for the :math:`theta`'s  fixed,
     the :math:`P_{theta}`'s fixed and the number of fixed points found for
     each :math:`P_{\zeta}`.
@@ -91,7 +91,7 @@ def bifurcation_plot_Pzeta(profiles: list | deque, **kwargs):
         bifurcation(
             profiles=profiles,
             calc_energies=config.plot_energy_bif,
-            which_COM="Pzeta",
+            which_COM="mu",
             **kwargs,
         )
     )
@@ -101,20 +101,20 @@ def bifurcation_plot_Pzeta(profiles: list | deque, **kwargs):
     profile1 = profiles[0]
     profileN = profiles[-1]
     logger.info(
-        f"Ran bifurcation script for bifurcation plot with N={len(profiles)} Pzetas={profile1.PzetaNU}...{profileN.PzetaNU}"
+        f"Ran bifurcation script for bifurcation plot with N={len(profiles)} mus={profile1.muNU}...{profileN.muNU}"
     )
     psi_wallNU = profile1.psi_wall.to("NUMagnetic_flux")
     P_theta_wallNU = profile1.findPtheta(psi=psi_wallNU, units="NUCanonical_momentum").m
 
     fig, ax = plt.subplots(3, 1, figsize=(9, 7), sharex=True)
-    plt.xlabel(r"$P_{\zeta}$" + f"[{profiles[1].PzetaNU.units}]")
+    plt.xlabel(r"${\mu}$" + f"[{profiles[1].muNU.units}]")
     fig.suptitle("Fixed Points Bifurcation Diagram")
 
     ax_theta = ax[0]
     ax_P_theta = ax[1]
     ax_ndfp = ax[2]
 
-    P_zeta_plot = []
+    mu_plot = []
 
     X_theta_plot = []
     X_P_theta_plot = []
@@ -124,47 +124,46 @@ def bifurcation_plot_Pzeta(profiles: list | deque, **kwargs):
 
     # Theta Fixed Bifurcation
     for i, profile in enumerate(profiles):
-        P_zeta = profile.PzetaNU.m
+        mu = profile.muNU.m
         y_list = X_thetas[i]
-        P_zeta_plot.extend([P_zeta] * len(list(y_list)))
+        mu_plot.extend([mu] * len(list(y_list)))
         X_theta_plot.extend(y_list)
 
     ax_theta.set_ylabel(r"$\theta_s$ Fixed")
     ax_theta.set_yticks([-np.pi, 0, np.pi])
     ax_theta.set_yticklabels([r"$-\pi$", "0", r"$\pi$"])
     ax_theta.set_ylim([-np.pi - 0.5, np.pi + 0.5])
-    ax_theta.scatter(P_zeta_plot, X_theta_plot, s=2, color="#E65100")
+    ax_theta.scatter(mu_plot, X_theta_plot, s=2, color="#E65100")
 
     logger.info(f"Made Xthetas fixed bifurcation plot")
 
-    P_zeta_plot = []
+    mu_plot = []
 
     for i, profile in enumerate(profiles):
-        P_zeta = profile.PzetaNU.m
+        mu = profile.muNU.m
         y_list = O_thetas[i]
-        P_zeta_plot.extend([P_zeta] * len(list(y_list)))
+        mu_plot.extend([mu] * len(list(y_list)))
         O_theta_plot.extend(y_list)
 
-    ax_theta.scatter(P_zeta_plot, O_theta_plot, s=2)
+    ax_theta.scatter(mu_plot, O_theta_plot, s=2)
 
     logger.info(f"Made Othetas fixed bifurcation plot")
 
-    P_zeta_plot1 = []
+    mu_plot1 = []
 
     # P_theta Fixed Bifurcation
     for i, profile in enumerate(profiles):
-        P_zeta = profile.PzetaNU.m
+        mu = profile.muNU.m
         y_list = X_P_thetas[i]
-        P_zeta_plot1.extend([P_zeta] * len(list(y_list)))
+        mu_plot1.extend([mu] * len(list(y_list)))
         X_P_theta_plot.extend(y_list)
 
-    P_zeta_plot2 = []
+    mu_plot2 = []
 
-    # P_theta Fixed Bifurcation
     for i, profile in enumerate(profiles):
-        P_zeta = profile.PzetaNU.m
+        mu = profile.muNU.m
         y_list = O_P_thetas[i]
-        P_zeta_plot2.extend([P_zeta] * len(list(y_list)))
+        mu_plot2.extend([mu] * len(list(y_list)))
         O_P_theta_plot.extend(y_list)
 
     # Set the upper limit of the y axis properly
@@ -178,60 +177,62 @@ def bifurcation_plot_Pzeta(profiles: list | deque, **kwargs):
 
     ax_P_theta.set_ylabel(r"$P_{\theta_s}$ Fixed")
     ax_P_theta.set_ylim(0, ul)
-    ax_P_theta.scatter(P_zeta_plot1, X_P_theta_plot, s=2, color="#E65100", label="X points")
-    ax_P_theta.scatter(P_zeta_plot2, O_P_theta_plot, s=2, label="O points")
+    ax_P_theta.scatter(mu_plot1, X_P_theta_plot, s=2, color="#E65100", label="X points")
+    ax_P_theta.scatter(mu_plot2, O_P_theta_plot, s=2, label="O points")
     ax_P_theta.axhline(y=P_theta_wallNU, color="black", linestyle="--", linewidth=1, alpha=0.5)
     ax_P_theta.legend(loc="lower left")
 
     logger.info(f"Made P_thetas fixed bifurcation plot")
 
     # Number of distinct fixed points Diagram
-    P_zetas = [profile.PzetaNU.m for profile in profiles]
+    mus = [profile.muNU.m for profile in profiles]
     ax_ndfp.set_ylabel("Number of Fixed Points")
-    ax_ndfp.scatter(P_zetas, num_of_XP, s=2, color="#E65100", label="X points")
-    ax_ndfp.scatter(P_zetas, num_of_OP, s=2, label="O points")
+    ax_ndfp.scatter(mus, num_of_XP, s=2, color="#E65100", label="X points")
+    ax_ndfp.scatter(mus, num_of_OP, s=2, label="O points")
     ax_ndfp.legend()
 
     logger.info(f"Made number of fixed points bifurcation plot")
 
     if config.plot_energy_bif:
         fig, ax = plt.subplots(1, 1, figsize=(9, 7), sharex=True)
-        plt.xlabel(r"$P_{\zeta}$" + f"[{profiles[1].PzetaNU.units}]")
-        ax.set_ylabel(f"Energies [{config.energy_units}]")
+        plt.xlabel(r"$E-{\mu}B_0$" + f"[{config.energy_units}]")
+        ax.set_ylabel(r"$\mu$" + f"[{profile1.muNU.units}]")
 
         X_energies_plot = []
         O_energies_plot = []
 
-        P_zeta_plot1 = []
+        mu_plot1 = []
 
-        # P_theta Fixed Bifurcation
+        # XPoints Energies - muB0 Bifurcation
         for i, profile in enumerate(profiles):
-            P_zeta = profile.PzetaNU.m
-            y_list = X_energies[i].m
+            mu = profile.muNU
+            muB0 = (mu * profile.Q(1, "NUTesla")).to(config.energy_units)
+            y_list = X_energies[i].m - muB0.m
 
             # Ensure y_list is iterable
             if np.isscalar(y_list):
                 y_list = [y_list]
 
-            P_zeta_plot1.extend([P_zeta] * len(list(y_list)))
+            mu_plot1.extend([mu.m] * len(list(y_list)))
             X_energies_plot.extend(y_list)
 
-        P_zeta_plot2 = []
+        mu_plot2 = []
 
-        # P_theta Fixed Bifurcation
+        # OPoints Energies - muB0 Bifurcation
         for i, profile in enumerate(profiles):
-            P_zeta = profile.PzetaNU.m
-            y_list = O_energies[i].m
+            mu = profile.muNU
+            muB0 = (mu * profile.Q(1, "NUTesla")).to(config.energy_units)
+            y_list = O_energies[i].m - muB0.m
 
             # Ensure y_list is iterable
             if np.isscalar(y_list):
                 y_list = [y_list]
 
-            P_zeta_plot2.extend([P_zeta] * len(list(y_list)))
+            mu_plot2.extend([mu.m] * len(list(y_list)))
             O_energies_plot.extend(y_list)
 
-        ax.scatter(P_zeta_plot1, X_energies_plot, s=2, color="#E65100", label="X points")
-        ax.scatter(P_zeta_plot2, O_energies_plot, s=2, label="O points")
+        ax.scatter(X_energies_plot, mu_plot1, s=2, color="#E65100", label="X points")
+        ax.scatter(O_energies_plot, mu_plot2, s=2, label="O points")
 
         logger.info(f"Made fixed points' energies bifurcation plot")
 
