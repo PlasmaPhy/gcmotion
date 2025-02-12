@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from time import time
 from gcmotion.utils.logger_setup import logger
+import matplotlib.ticker as ticker
 
 from gcmotion.scripts.bifurcation import bifurcation
 from collections import deque
@@ -114,6 +115,10 @@ def bifurcation_plot_mu(profiles: list | deque, **kwargs):
     ax_P_theta = ax[1]
     ax_ndfp = ax[2]
 
+    ax_theta.ticklabel_format(style="sci", axis="x", scilimits=(0, 0))
+    ax_P_theta.ticklabel_format(style="sci", axis="x", scilimits=(0, 0))
+    ax_ndfp.ticklabel_format(style="sci", axis="x", scilimits=(0, 0))
+
     mu_plot = []
 
     X_theta_plot = []
@@ -194,9 +199,10 @@ def bifurcation_plot_mu(profiles: list | deque, **kwargs):
     logger.info(f"Made number of fixed points bifurcation plot")
 
     if config.plot_energy_bif:
-        fig, ax = plt.subplots(1, 1, figsize=(9, 7), sharex=True)
+        fig, ax = plt.subplots(1, 1, figsize=(9, 7))
         plt.xlabel(r"$E-{\mu}B_0$" + f"[{config.energy_units}]")
         ax.set_ylabel(r"$\mu$" + f"[{profile1.muNU.units}]")
+        ax.ticklabel_format(style="sci", axis="y", scilimits=(0, 0))
 
         X_energies_plot = []
         O_energies_plot = []

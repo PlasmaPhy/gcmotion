@@ -195,7 +195,7 @@ def bifurcation_plot_Pzeta(profiles: list | deque, **kwargs):
     logger.info(f"Made number of fixed points bifurcation plot")
 
     if config.plot_energy_bif:
-        fig, ax = plt.subplots(1, 1, figsize=(9, 7), sharex=True)
+        fig, ax = plt.subplots(1, 1, figsize=(9, 7))
         plt.xlabel(r"$P_{\zeta}$" + f"[{profiles[1].PzetaNU.units}]")
         ax.set_ylabel(f"Energies [{config.energy_units}]")
 
