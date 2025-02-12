@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from time import time
 from gcmotion.utils.logger_setup import logger
-import matplotlib.ticker as ticker
 
 from gcmotion.scripts.bifurcation import bifurcation
 from collections import deque
@@ -172,13 +171,12 @@ def bifurcation_plot_mu(profiles: list | deque, **kwargs):
         O_P_theta_plot.extend(y_list)
 
     # Set the upper limit of the y axis properly
-    ul = 1.05 * P_theta_wallNU
-
     # Combine the two lists for comparison
     combined_P_theta_plot = X_P_theta_plot + O_P_theta_plot
+    ul = max(combined_P_theta_plot) * 1.05
 
-    if max(combined_P_theta_plot) > P_theta_wallNU:
-        ul = max(combined_P_theta_plot) * 1.05
+    if np.isclose(max(combined_P_theta_plot), P_theta_wallNU):
+        ul = P_theta_wallNU * 1.05
 
     ax_P_theta.set_ylabel(r"$P_{\theta_s}$ Fixed")
     ax_P_theta.set_ylim(0, ul)
