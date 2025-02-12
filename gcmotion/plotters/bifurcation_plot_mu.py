@@ -106,8 +106,17 @@ def bifurcation_plot_mu(profiles: list | deque, **kwargs):
     psi_wallNU = profile1.psi_wall.to("NUMagnetic_flux")
     P_theta_wallNU = profile1.findPtheta(psi=psi_wallNU, units="NUCanonical_momentum").m
 
-    fig, ax = plt.subplots(3, 1, figsize=(9, 7), sharex=True)
-    plt.xlabel(r"${\mu}$" + f"[{profiles[1].muNU.units}]")
+    # Create figure
+    fig_kw = {
+        "figsize": config.figsize,
+        "dpi": config.dpi,
+        "layout": config.layout,
+        "facecolor": config.facecolor,
+        "sharex": config.sharex,
+    }
+
+    fig, ax = plt.subplots(3, 1, **fig_kw)
+    plt.xlabel(r"${\mu}$" + f"[{profile1.muNU.units}]")
     fig.suptitle("Fixed Points Bifurcation Diagram")
 
     ax_theta = ax[0]
@@ -197,7 +206,7 @@ def bifurcation_plot_mu(profiles: list | deque, **kwargs):
     logger.info(f"Made number of fixed points bifurcation plot")
 
     if config.plot_energy_bif:
-        fig, ax = plt.subplots(1, 1, figsize=(9, 7))
+        fig, ax = plt.subplots(1, 1, **fig_kw)
         plt.xlabel(r"$E-{\mu}B_0$" + f"[{config.energy_units}]")
         ax.set_ylabel(r"$\mu$" + f"[{profile1.muNU.units}]")
         ax.ticklabel_format(style="sci", axis="y", scilimits=(0, 0))

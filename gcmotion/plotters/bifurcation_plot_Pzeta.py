@@ -106,8 +106,17 @@ def bifurcation_plot_Pzeta(profiles: list | deque, **kwargs):
     psi_wallNU = profile1.psi_wall.to("NUMagnetic_flux")
     P_theta_wallNU = profile1.findPtheta(psi=psi_wallNU, units="NUCanonical_momentum").m
 
-    fig, ax = plt.subplots(3, 1, figsize=(9, 7), sharex=True)
-    plt.xlabel(r"$P_{\zeta}$" + f"[{profiles[1].PzetaNU.units}]")
+    # Create figure
+    fig_kw = {
+        "figsize": config.figsize,
+        "dpi": config.dpi,
+        "layout": config.layout,
+        "facecolor": config.facecolor,
+        "sharex": config.sharex,
+    }
+
+    fig, ax = plt.subplots(3, 1, **fig_kw)
+    plt.xlabel(r"$P_{\zeta}$" + f"[{profile1.PzetaNU.units}]")
     fig.suptitle("Fixed Points Bifurcation Diagram")
 
     ax_theta = ax[0]
@@ -194,8 +203,8 @@ def bifurcation_plot_Pzeta(profiles: list | deque, **kwargs):
     logger.info(f"Made number of fixed points bifurcation plot")
 
     if config.plot_energy_bif:
-        fig, ax = plt.subplots(1, 1, figsize=(9, 7))
-        plt.xlabel(r"$P_{\zeta}$" + f"[{profiles[1].PzetaNU.units}]")
+        fig, ax = plt.subplots(1, 1, **fig_kw)
+        plt.xlabel(r"$P_{\zeta}$" + f"[{profile1.PzetaNU.units}]")
         ax.set_ylabel(f"Energies [{config.energy_units}]")
 
         X_energies_plot = []
