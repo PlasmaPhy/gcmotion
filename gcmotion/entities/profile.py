@@ -361,8 +361,6 @@ class Profile:
         else:
             raise ValueError("Input must be a float or a Quantity")
 
-        logger.trace(f"\tUpdated Pzeta/PzetaNU to {self.PzetaNU:.4g}")
-
     def __repr__(self):
         string = Tokamak.__repr__(self)
         string += (
