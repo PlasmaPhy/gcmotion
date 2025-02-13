@@ -2,7 +2,7 @@ import matplotlib
 
 # Utilities
 # Import the logger first
-from gcmotion.utils import logger_setup
+from gcmotion.utils.logger_setup import logger
 from gcmotion.utils.quantity_constructor import QuantityConstructor
 from gcmotion.utils.get_size import get_size
 
@@ -47,5 +47,12 @@ __all__ = [
     "events",
 ]
 
-# Uncomment to switch from pygt6 (default) backend. Requires PyGObject
-# matplotlib.use("gtk3agg")
+# gtk3agg backend needs PyGObject, which needs a C compiler to be installed.
+try:
+    import gi
+except ModuleNotFoundError:
+    logger.warning("PyGobject not found. Using default backend")
+    pass
+else:
+    logger.info("PyGObject availiable. using 'gtk3bagg' backend")
+    matplotlib.use("gtk3agg")
