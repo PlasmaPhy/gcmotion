@@ -41,15 +41,6 @@ def parabolas_diagram(profile: Profile, ax=None, **kwargs):
     LAR_TPB : bool, optional
         Boolean that determines weather the LAR trapped-passing boundary is to
         be plotted. Defaults to ``False``.
-
-    Returns
-    -------
-    x, x_LAR, y_R, y_L, y_MA, LAR_tpb_O, LAR_tpb_X : tuple
-    Tuple that contains the the x values x and x_LAR that were used to calculate the parabolas
-    values and the trapped passing LAR boundary values respectively, y_R,y_L,Y_MA the parabolas values
-    for th right and left wall and magnetic axis parabolas, LAR_tpb_O, LAR_tpb_X the lower and upper
-    branch of the trapped passing LAR boundary curve respetively.
-
     """
 
     # Unpack parameters
@@ -107,7 +98,7 @@ def parabolas_diagram(profile: Profile, ax=None, **kwargs):
         # In case the Pzeta limits are very close to zero
         par_ax.set_xlim([1.1 * config.Pzetalim[0], 1.1 * config.Pzetalim[1]])
 
-        logger.info("Plotted LAR trapped-passing boundaries in parabolas diagram.")
+        logger.info("Plotted LAR trapped-passing boundary in parabolas diagram.")
 
     par_ax.set_xlabel(r"$\dfrac{P_\zeta}{\psi_{p_w}}$", fontsize=config.xlabel_fontsize)
     par_ax.set_ylabel(
