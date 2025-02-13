@@ -7,7 +7,7 @@ dpi = 100  # Global dpi
 
 @dataclass()
 class ParabolasConfig:
-    Pzetalim: tuple = (-1, 1)  # result after division by psip_wall.m
+    Pzetalim: tuple = (-1.5, 1)  # result after division by psip_wall.m
     Pzeta_density: int = 1000
 
 
