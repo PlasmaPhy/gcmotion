@@ -8,6 +8,7 @@ import numpy as np
 from time import time
 from gcmotion.utils.logger_setup import logger
 
+from gcmotion.utils.bif_values_setup import set_up_bif_plot_values
 from gcmotion.scripts.bifurcation import bifurcation
 from collections import deque
 from gcmotion.configuration.plot_parameters import BifurcationPlotConfig
@@ -85,13 +86,15 @@ def bifurcation_plot_Pzeta(profiles: list | deque, **kwargs):
     for key, value in kwargs.items():
         setattr(config, key, value)
 
+    which_COM_loc = "Pzeta"
+
     start = time()
     # CAUTION: The bifurcation function takes in psis_fixed but returns P_thetas_fixed
     X_thetas, X_P_thetas, O_thetas, O_P_thetas, num_of_XP, num_of_OP, X_energies, O_energies = (
         bifurcation(
             profiles=profiles,
             calc_energies=config.plot_energy_bif,
-            which_COM="Pzeta",
+            which_COM=which_COM_loc,
             **kwargs,
         )
     )
@@ -123,58 +126,30 @@ def bifurcation_plot_Pzeta(profiles: list | deque, **kwargs):
     ax_P_theta = ax[1]
     ax_ndfp = ax[2]
 
-    P_zeta_plot = []
-
-    X_theta_plot = []
-    X_P_theta_plot = []
-
-    O_theta_plot = []
-    O_P_theta_plot = []
-
     # Theta Fixed Bifurcation
-    for i, profile in enumerate(profiles):
-        P_zeta = profile.PzetaNU.m
-        y_list = X_thetas[i]
-        P_zeta_plot.extend([P_zeta] * len(list(y_list)))
-        X_theta_plot.extend(y_list)
+    Pzeta_plotX, X_theta_plot = set_up_bif_plot_values(
+        profiles=profiles, y_values=X_thetas, which_COM=which_COM_loc
+    )
+    Pzeta_plotO, O_theta_plot = set_up_bif_plot_values(
+        profiles=profiles, y_values=O_thetas, which_COM=which_COM_loc
+    )
 
     ax_theta.set_ylabel(r"$\theta_s$ Fixed")
     ax_theta.set_yticks([-np.pi, 0, np.pi])
     ax_theta.set_yticklabels([r"$-\pi$", "0", r"$\pi$"])
     ax_theta.set_ylim([-np.pi - 0.5, np.pi + 0.5])
-    ax_theta.scatter(P_zeta_plot, X_theta_plot, s=2, color="#E65100")
+    ax_theta.scatter(Pzeta_plotX, X_theta_plot, s=2, color="#E65100")
+    ax_theta.scatter(Pzeta_plotO, O_theta_plot, s=2)
 
-    logger.info(f"Made Xthetas fixed bifurcation plot")
-
-    P_zeta_plot = []
-
-    for i, profile in enumerate(profiles):
-        P_zeta = profile.PzetaNU.m
-        y_list = O_thetas[i]
-        P_zeta_plot.extend([P_zeta] * len(list(y_list)))
-        O_theta_plot.extend(y_list)
-
-    ax_theta.scatter(P_zeta_plot, O_theta_plot, s=2)
-
-    logger.info(f"Made Othetas fixed bifurcation plot")
-
-    P_zeta_plot1 = []
+    logger.info(f"Made Xthetas, Othetas fixed bifurcation plot")
 
     # P_theta Fixed Bifurcation
-    for i, profile in enumerate(profiles):
-        P_zeta = profile.PzetaNU.m
-        y_list = X_P_thetas[i]
-        P_zeta_plot1.extend([P_zeta] * len(list(y_list)))
-        X_P_theta_plot.extend(y_list)
-
-    P_zeta_plot2 = []
-
-    # P_theta Fixed Bifurcation
-    for i, profile in enumerate(profiles):
-        P_zeta = profile.PzetaNU.m
-        y_list = O_P_thetas[i]
-        P_zeta_plot2.extend([P_zeta] * len(list(y_list)))
-        O_P_theta_plot.extend(y_list)
+    Pzeta_plotX, X_P_theta_plot = set_up_bif_plot_values(
+        profiles=profiles, y_values=X_P_thetas, which_COM=which_COM_loc
+    )
+    Pzeta_plotO, O_P_theta_plot = set_up_bif_plot_values(
+        profiles=profiles, y_values=O_P_thetas, which_COM=which_COM_loc
+    )
 
     # Set the upper limit of the y axis properly
     # Combine the two lists for comparison
@@ -186,8 +161,8 @@ def bifurcation_plot_Pzeta(profiles: list | deque, **kwargs):
 
     ax_P_theta.set_ylabel(r"$P_{\theta_s}$ Fixed")
     ax_P_theta.set_ylim(0, ul)
-    ax_P_theta.scatter(P_zeta_plot1, X_P_theta_plot, s=2, color="#E65100", label="X points")
-    ax_P_theta.scatter(P_zeta_plot2, O_P_theta_plot, s=2, label="O points")
+    ax_P_theta.scatter(Pzeta_plotX, X_P_theta_plot, s=2, color="#E65100", label="X points")
+    ax_P_theta.scatter(Pzeta_plotO, O_P_theta_plot, s=2, label="O points")
     ax_P_theta.axhline(y=P_theta_wallNU, color="black", linestyle="--", linewidth=1, alpha=0.5)
     ax_P_theta.legend(loc="lower left")
 
@@ -207,39 +182,16 @@ def bifurcation_plot_Pzeta(profiles: list | deque, **kwargs):
         plt.xlabel(r"$P_{\zeta}$" + f"[{profile1.PzetaNU.units}]")
         ax.set_ylabel(f"Energies [{config.energy_units}]")
 
-        X_energies_plot = []
-        O_energies_plot = []
+        # X O Energies bifurcation plot
+        Pzeta_plotX, X_energies_plot = set_up_bif_plot_values(
+            profiles=profiles, y_values=X_energies, which_COM=which_COM_loc
+        )
+        Pzeta_plotO, O_energies_plot = set_up_bif_plot_values(
+            profiles=profiles, y_values=O_energies, which_COM=which_COM_loc
+        )
 
-        P_zeta_plot1 = []
-
-        # P_theta Fixed Bifurcation
-        for i, profile in enumerate(profiles):
-            P_zeta = profile.PzetaNU.m
-            y_list = X_energies[i].m
-
-            # Ensure y_list is iterable
-            if np.isscalar(y_list):
-                y_list = [y_list]
-
-            P_zeta_plot1.extend([P_zeta] * len(list(y_list)))
-            X_energies_plot.extend(y_list)
-
-        P_zeta_plot2 = []
-
-        # P_theta Fixed Bifurcation
-        for i, profile in enumerate(profiles):
-            P_zeta = profile.PzetaNU.m
-            y_list = O_energies[i].m
-
-            # Ensure y_list is iterable
-            if np.isscalar(y_list):
-                y_list = [y_list]
-
-            P_zeta_plot2.extend([P_zeta] * len(list(y_list)))
-            O_energies_plot.extend(y_list)
-
-        ax.scatter(P_zeta_plot1, X_energies_plot, s=2, color="#E65100", label="X points")
-        ax.scatter(P_zeta_plot2, O_energies_plot, s=2, label="O points")
+        ax.scatter(Pzeta_plotX, X_energies_plot, s=2, color="#E65100", label="X points")
+        ax.scatter(Pzeta_plotO, O_energies_plot, s=2, label="O points")
 
         logger.info(f"Made fixed points' energies bifurcation plot")
 
