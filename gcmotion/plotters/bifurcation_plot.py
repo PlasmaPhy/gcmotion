@@ -1,6 +1,6 @@
 r"""
 Calculates and plots the bifurcation diagram of the fixed points for multiple profiles
-with different :math:`\mu`'s.
+with different :math:`\mu`s or :math:`P_{\zeta}`s.
 """
 
 import matplotlib.pyplot as plt
@@ -11,16 +11,30 @@ from gcmotion.plotters._bif_base._thetas_bif_plot import _thetas_bif_plot
 from gcmotion.plotters._bif_base._P_thetas_bif_plot import _P_thetas_bif_plot
 from gcmotion.plotters._bif_base._ndfp_bif_plot import _ndfp_bif_plot
 from gcmotion.plotters._bif_base._tpb_plot import _plot_trapped_passing_boundary
-
 from gcmotion.scripts.bifurcation import bifurcation
+
+from gcmotion.entities.profile import Profile
 from collections import deque
 from gcmotion.configuration.plot_parameters import BifurcationPlotConfig
 
 
-def bifurcation_plot_mu(profiles: list | deque, **kwargs):
+def _setup_x_label(which_COM: str):
+
+    return r"${\mu}$" if which_COM == "mu" else r"$P_{\zeta}$"
+
+
+def _other_COM(profile: Profile, COM: str):
+
+    if COM == "mu":
+        return "PzetaNU", getattr(profile, "PzetaNU")
+    elif COM == "Pzeta":
+        return "muNU", getattr(profile, "muNU")
+
+
+def bifurcation_plot(profiles: list | deque, **kwargs):
     r"""Draws the bifurcation diagrams for the :math:`theta`'s  fixed,
     the :math:`P_{theta}`'s fixed and the number of fixed points found for
-    each :math:`P_{\zeta}`.
+    each :math:`\mu` or :math:`P_{\zeta}`.
 
     :meta public:
 
@@ -71,6 +85,10 @@ def bifurcation_plot_mu(profiles: list | deque, **kwargs):
         plot_energy_bif : bool, optional
             Boolean determining weather the energy of each fixed point of each profile (each :math:`\P_{\zeta}`)
             is to be plotted. Defaults to ``False``.
+        which_COM : str, optional
+            Determines with regard to which COM (:math:`\mu` or :math:`P_{zeta}`) will the bifurcation
+            analysis take place. Essentially determinies the independent variable on the axis' of the
+            bifurcation diagram.
         energy_units : str, optional
             String specifying the unit of the calculated fixed points' energies. Defaults to ``"NUJoule"``.
         energies_info : bool, optional
@@ -89,25 +107,20 @@ def bifurcation_plot_mu(profiles: list | deque, **kwargs):
     for key, value in kwargs.items():
         setattr(config, key, value)
 
-    which_COM_loc = "mu"
-
     start = time()
     # CAUTION: The bifurcation function takes in psis_fixed but returns P_thetas_fixed
     X_thetas, X_P_thetas, O_thetas, O_P_thetas, num_of_XP, num_of_OP, X_energies, O_energies = (
         bifurcation(
             profiles=profiles,
             calc_energies=config.plot_energy_bif,
-            which_COM=which_COM_loc,
             **kwargs,
         )
     )
 
     print(f"BIFURCATION RUN IN {(time() - start)/60:.1f} mins")
 
-    profile1 = profiles[0]
-    profileN = profiles[-1]
     logger.info(
-        f"Ran bifurcation script for bifurcation plot with N={len(profiles)}, Pz={profile1.PzetaNU} mus={profile1.muNU}...{profileN.muNU}"
+        f"Ran bifurcation script for bifurcation plot with N={len(profiles)} and for COM = {config.which_COM}"
     )
 
     # Create figure
@@ -119,62 +132,70 @@ def bifurcation_plot_mu(profiles: list | deque, **kwargs):
         "sharex": config.sharex,
     }
 
+    selected_COMNU_str = config.which_COM + "NU"
+    selected_COM_Q = getattr(profiles[0], selected_COMNU_str, "PzetaNU")
+    other_COM = _other_COM(profile=profiles[0], COM=config.which_COM)
+
     fig, ax = plt.subplots(3, 1, **fig_kw)
-    plt.xlabel(r"${\mu}$" + f"[{profile1.muNU.units}]")
+    plt.xlabel(_setup_x_label(config.which_COM) + f"[{selected_COM_Q.units}]")
     fig.suptitle("Fixed Points Bifurcation Diagram")
 
     ax_theta = ax[0]
     ax_P_theta = ax[1]
     ax_ndfp = ax[2]
 
-    ax_theta.ticklabel_format(style="sci", axis="x", scilimits=(0, 0))
-    ax_P_theta.ticklabel_format(style="sci", axis="x", scilimits=(0, 0))
-    ax_ndfp.ticklabel_format(style="sci", axis="x", scilimits=(0, 0))
-
     # Fixed thetas bifurcation diagram
     _thetas_bif_plot(
         profiles=profiles,
         X_thetas=X_thetas,
         O_thetas=O_thetas,
-        which_COM=which_COM_loc,
+        which_COM=config.which_COM,
         ax=ax_theta,
     )
 
-    logger.info(f"Made Xthetas, Othetas fixed bifurcation plot")
+    logger.info(
+        f"Made Xthetas, Othetas fixed bifurcation plot for COM = {config.which_COM} for {other_COM[0]} = {other_COM[1]}"
+    )
 
     # P_theta Fixed Bifurcation
     _P_thetas_bif_plot(
         profiles=profiles,
         X_P_thetas=X_P_thetas,
         O_P_thetas=O_P_thetas,
-        which_COM=which_COM_loc,
+        which_COM=config.which_COM,
         ax=ax_P_theta,
     )
 
-    logger.info(f"Made P_thetas fixed bifurcation plot")
+    logger.info(
+        f"Made P_thetas fixed bifurcation plot for COM = {config.which_COM} for {other_COM[0]} = {other_COM[1]}"
+    )
 
     # Number of distinct fixed points Diagram
     _ndfp_bif_plot(
         profiles=profiles,
         num_of_XP=num_of_XP,
         num_of_OP=num_of_OP,
-        which_COM=which_COM_loc,
+        which_COM=config.which_COM,
         ax=ax_ndfp,
     )
 
-    logger.info(f"Made number of fixed points bifurcation plot")
+    logger.info(
+        f"Made number of fixed points bifurcation plot for COM = {config.which_COM} for {other_COM[0]} = {other_COM[1]}"
+    )
 
     if config.plot_energy_bif:
         _plot_trapped_passing_boundary(
             profiles=profiles,
             X_energies=X_energies,
             O_energies=O_energies,
-            which_COM=which_COM_loc,
+            which_COM=config.which_COM,
             config=config,
             ax=ax,
         )
 
-        logger.info(f"Made fixed points' energies bifurcation plot")
+        logger.info(
+            f"Made fixed points' energies bifurcation plot for COM = {config.which_COM} for {other_COM[0]} = {other_COM[1]}"
+        )
 
     plt.ion()
     plt.show(block=True)

@@ -36,5 +36,12 @@ def _ndfp_bif_plot(
     ax.set_ylabel("Number of Fixed Points")
     ax.scatter(selected_COMs, num_of_XP, s=2, color="#E65100", label="X points")
     ax.scatter(selected_COMs, num_of_OP, s=2, label="O points")
-    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+
+    # If multiple unique y-values exist, use MaxNLocator
+    if len(set(num_of_XP)) > 1 or len(set(num_of_OP)) > 1:
+        ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+    else:
+        # If only a single unique y-value, set the tick manually
+        ax.set_yticks([int(num_of_OP[0])])
+
     ax.legend()
