@@ -5,7 +5,6 @@ from math import isclose
 from matplotlib.path import Path
 
 from gcmotion.utils.logger_setup import logger
-from gcmotion.scripts.utils.shoelace import shoelace
 from gcmotion.configuration.scripts_configuration import ContourFreqConfig
 
 config = ContourFreqConfig()
@@ -13,77 +12,98 @@ tau = 2 * np.pi
 
 
 class ContourSegment:
+    r"""Object that constructs, validates and classifies a contour path, to
+    calculate its action J and its frequency ωθ.
 
-    def __init__(self, segment: Path, profile: float, psilim: tuple, E):
+    Parameters
+    ----------
+    segment : Path
+        The contour segment as extracted from matplotlib's contour function.
+    E : float
+        The path's corresponding energy level.
+    ylim : tuple
+        The contour's y-axis limits. Needed to validate the segment.
+    """
+
+    __slots__ = [
+        "vertices",
+        "ylim",
+        "E",
+        "xmin",
+        "xmax",
+        "ymin",
+        "ymax",
+        "valid",
+        "passing",
+        "trapped",
+        "left_to_right",
+        "J",
+        "omega_theta",
+        "color",
+    ]
+
+    def __init__(self, segment: Path, E: float, ylim: tuple):
+        r"""Only keep Path's attributes needed for validating andcalculating
+        J. Do not run anything.
+        """
+
         self.vertices = segment.vertices
-        self.psilim = psilim
+        self.ylim = ylim
         self.E = E
 
         # Bounding box
-        [self.theta_min, self.psi_min], [self.theta_max, self.psi_max] = (
+        [self.xmin, self.ymin], [self.xmax, self.ymax] = (
             segment.get_extents().get_points()
         )
 
-        # Run in that order
-        self.validate()
-        if self.valid:
-            self.classify()
-
-        # if self.valid:
-        #     self.calculate_area()
-
     def validate(self) -> None:
         r"""Checks if the bbox of the contour line touches the upper or lower
-        walls, which means the path gets cut off and must be discarded."""
-        inbounds = _is_inbounds(self)
-        is_cutoff_trapped = _is_cutoff_trapped(self)
-        self.valid = inbounds and not is_cutoff_trapped
+        walls, which means the path gets cut off and must be discarded.
+        """
+        self.valid = _is_inbounds(self) and not _is_cutoff_trapped(self)
 
     def classify(self):
+        r"""Classifies the segment to trapped/passing and left-to-right, needed
+        to correctly add the bottom points.
+        """
         self.passing, self.trapped = _tp_classify(self)
         self.left_to_right = _is_left_to_right(self)
 
-    def calculate_area(self):
-        extra_left = [[2 * np.pi, 0], [-2 * np.pi, 0]]
-        extra_right = extra_left[::-1]
+    def close_segment(self):
+        r"""If the segment is passing, append the two bottom points, as well as
+        the first point to close the segment. Not needed for the shoelace
+        algorithm, but makes plotting clearer.
+        """
+        if self.trapped:
+            return
 
-        if self.passing and self.left_to_right:
-            first = self.vertices[0]
-            extra = extra_left + [first]
+        closeoff_point = [self.vertices[0]]  # same for bot cases
+        if self.left_to_right:
+            extra = [[tau, 0], [-tau, 0]] + closeoff_point
             self.vertices = np.append(self.vertices, extra, axis=0)
-        elif self.passing and not self.left_to_right:
-            last = self.vertices[0]  # right-to-left!
-            extra = extra_right + [last]
-            self.vertices = np.append(self.vertices, extra, axis=0)
-        elif self.trapped:
-            pass
         else:
-            return None
+            extra = [[-tau, 0], [tau, 0]] + closeoff_point
+            self.vertices = np.append(self.vertices, extra, axis=0)
 
+    def calculate_J(self):
+        r"""Calculates the action J."""
         area = shoelace(self.vertices)
         if self.passing:
             area /= 2  # because theta span = 4π
         self.J = area / (2 * np.pi)
 
-        return self.J
-
     def bbox_distance(self, xy: tuple[float, float]):
         r"""Returns the distance (squared) of the origin point from self's
-        origin point."""
-        return (self.theta_min - xy[0]) ** 2 + (self.psi_min - xy[1]) ** 2
+        origin point. The closest bbox is the correct contour to calculate J.
+        """
+        return (self.xmin - xy[0]) ** 2 + (self.ymin - xy[1]) ** 2
 
-    def simple_plot(self, ax=None, show=True):
-        if ax is None:
-            fig = plt.figure()
-            ax = fig.add_subplot()
-
-        # color = "b" if self.valid else "r"
-        color = "b" if self.passing else "r"
-
-        x, y = self.vertices.T[:]
-        ax.plot(x, y, color=color, linewidth=1)
-        if show:
-            plt.show()
+    def pick_color(self):
+        self.color = (
+            config.trapped_color
+            if self.trapped
+            else config.copassing_color if self.passing else "k"
+        )
 
 
 # ================================ Validation ================================
@@ -93,20 +113,25 @@ def _is_inbounds(path: ContourSegment) -> bool:
     r"""Checks if the path's bounding box is in bounds of the whole contour,
     e.g the contour line doesn't get cutoff.
     """
-    atol = 1e-7  # Must not be 0(default) when comparing with 0
+    # Must not be 0(default) when comparing with
+    atol = config.is_inbounds_atol
     return not (
-        isclose(path.psi_min, path.psilim[0], abs_tol=atol)  # Touches floor
-        or isclose(path.psi_max, path.psilim[1], abs_tol=atol)  # Touches ceil
+        isclose(path.ymin, path.ylim[0], abs_tol=atol)  # Touches floor
+        or isclose(path.ymax, path.ylim[1], abs_tol=atol)  # Touches ceil
     )
 
 
 def _is_cutoff_trapped(path: ContourSegment) -> bool:
-    r"""Checks that the bounding box doesn't touch the left *and* the right
-    wall, but touches at least one of them.
+    r"""Checks if the segment is cut off by left or the right walls.
+
+    Checks that the bounding box doesn't touch the left *and* the right wall
+    (e.g. not passing), but touches at least one of them. This means that it is
+    a trapped orbit that gets cutoff by the contour. This orbit is reduntant
+    since it will be found at θ=0 too.
     """
-    return (
-        isclose(path.theta_min, -tau) and not isclose(path.theta_max, tau)
-    ) or (isclose(path.theta_max, tau) and not isclose(path.theta_min, -tau))
+    return (isclose(path.xmin, -tau) and not isclose(path.xmax, tau)) or (
+        isclose(path.xmax, tau) and not isclose(path.xmin, -tau)
+    )
 
 
 # ===================== Trapped - Passing Classification =====================
@@ -115,10 +140,16 @@ def _is_cutoff_trapped(path: ContourSegment) -> bool:
 def _tp_classify(path: ContourSegment) -> list[bool, bool]:
     r"""Checks the left and right bbox edges to check if passing or trapped."""
 
-    if isclose(path.theta_min, -tau) and isclose(path.theta_max, tau):
+    # TODO: check if == is enough, else define tolerances
+    if isclose(path.xmin, -tau) and isclose(path.xmax, tau):
         return True, False
     else:
         return False, True
+
+
+def _cocu_classify(path: ContourSegment) -> list[bool, bool]:
+    # TODO: put in the correct module
+    pass
 
 
 # ======================= Left-to-Right Classification =======================
@@ -131,6 +162,7 @@ def _is_left_to_right(path: ContourSegment) -> bool:
     if path.trapped:
         return None
 
+    # TODO: check if == is enough, else define tolerances
     return (
         True
         if (
@@ -138,4 +170,30 @@ def _is_left_to_right(path: ContourSegment) -> bool:
             and isclose(path.vertices[-1][0], tau)
         )
         else False
+    )
+
+
+# ================================= Shoelace =================================
+
+
+def shoelace(array: np.ndarray) -> float:
+    r"""Calculates the area of a polygon.
+
+    It is not necessary that the polygon is closed. The algorithm assumes the
+    first and last points are connected.
+
+    Parameters
+    ----------
+    array: np.ndarray
+        (N,2) numpy array containing the polygon's points.
+
+    Returns
+    -------
+    float
+        The area of the polygon.
+
+    """
+    x, y = array.T[:]
+    return float(
+        0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
     )
