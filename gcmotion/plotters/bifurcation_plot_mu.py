@@ -187,41 +187,24 @@ def bifurcation_plot_mu(profiles: list | deque, **kwargs):
         ax.set_ylabel(r"$\mu$" + f"[{profile1.muNU.units}]")
         ax.ticklabel_format(style="sci", axis="y", scilimits=(0, 0))
 
-        X_energies_plot = []
-        O_energies_plot = []
+        # X O Tilted Energies bifurcation plot
+        mu_plotX, X_tilted_energies_plot = set_up_bif_plot_values(
+            profiles=profiles,
+            y_values=X_energies,
+            which_COM=which_COM_loc,
+            tilt_energies=True,
+            output_energy_units=config.energy_units,
+        )
+        mu_plotO, O_tilted_energies_plot = set_up_bif_plot_values(
+            profiles=profiles,
+            y_values=O_energies,
+            which_COM=which_COM_loc,
+            tilt_energies=True,
+            output_energy_units=config.energy_units,
+        )
 
-        mu_plot1 = []
-
-        # XPoints Energies - muB0 Bifurcation
-        for i, profile in enumerate(profiles):
-            mu = profile.muNU
-            muB0 = (mu * profile.Q(1, "NUTesla")).to(config.energy_units)
-            y_list = X_energies[i].m - muB0.m
-
-            # Ensure y_list is iterable
-            if np.isscalar(y_list):
-                y_list = [y_list]
-
-            mu_plot1.extend([mu.m] * len(list(y_list)))
-            X_energies_plot.extend(y_list)
-
-        mu_plot2 = []
-
-        # OPoints Energies - muB0 Bifurcation
-        for i, profile in enumerate(profiles):
-            mu = profile.muNU
-            muB0 = (mu * profile.Q(1, "NUTesla")).to(config.energy_units)
-            y_list = O_energies[i].m - muB0.m
-
-            # Ensure y_list is iterable
-            if np.isscalar(y_list):
-                y_list = [y_list]
-
-            mu_plot2.extend([mu.m] * len(list(y_list)))
-            O_energies_plot.extend(y_list)
-
-        ax.scatter(X_energies_plot, mu_plot1, s=2, color="#E65100", label="X points")
-        ax.scatter(O_energies_plot, mu_plot2, s=2, label="O points")
+        ax.scatter(X_tilted_energies_plot, mu_plotX, s=2, color="#E65100", label="X points")
+        ax.scatter(O_tilted_energies_plot, mu_plotO, s=2, label="O points")
 
         logger.info(f"Made fixed points' energies bifurcation plot")
 
