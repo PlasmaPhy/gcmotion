@@ -6,7 +6,7 @@ if asked.
 from gcmotion.utils.logger_setup import logger
 import matplotlib.pyplot as plt
 
-from gcmotion.configuration.parabolas_parameters import ParabolasPlotConfig
+from gcmotion.configuration.plot_parameters import ParabolasPlotConfig
 from gcmotion.entities.profile import Profile
 from gcmotion.scripts.parabolas import calc_parabolas
 

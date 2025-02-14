@@ -10,7 +10,7 @@ from gcmotion.utils.logger_setup import logger
 
 from gcmotion.scripts.bifurcation import bifurcation
 from collections import deque
-from gcmotion.configuration.fixed_points_bifurcation_parameters import BifurcationPlotConfig
+from gcmotion.configuration.plot_parameters import BifurcationPlotConfig
 
 
 def bifurcation_plot_mu(profiles: list | deque, **kwargs):

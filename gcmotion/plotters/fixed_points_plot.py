@@ -7,8 +7,7 @@ from gcmotion.scripts.fixed_points import fixed_points as fp
 from gcmotion.entities.profile import Profile
 
 from gcmotion.utils.XO_points_classification import XO_points_classification as xoc
-from gcmotion.utils.points_psi_to_P_theta import points_psi_to_P_theta
-from gcmotion.configuration.fixed_points_bifurcation_parameters import FixedPointsPlotConfig
+from gcmotion.configuration.plot_parameters import FixedPointsPlotConfig
 
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
@@ -51,7 +50,6 @@ def fixed_points_plot(
                 String that indicates which method will be used to find the systems fixed
                 points in :py:func:`single_fixed_point`. Can either be "fsolve" (deterministic)
                 or "differential evolution" (stochastic). Defaults to "fsolve".
-
             dist_tol : float
                 Tolerance below which two fixed points are not considered distinct. The differences between
                 both :math:`\theta` and :math:`\psi` of the fixed points must be below this tolerance for
@@ -68,6 +66,11 @@ def fixed_points_plot(
                 Density of the :math:`\theta`, :math:`\psi` 2D grid to be scanned for initial conditiond
                 (fixed points candidates) with respect to the :math:`\psi` variable. It is passed into
                 :py:func:`fp_ic_scan` Defaults to 400.
+            psi_dot_scaling_factor : float,optional
+                Scaling factor that is used in the sum of squares of the time derivatives of the
+                :math:`\theta` and :math:`\psi` values like so -->
+                :math:`\dot{\theta}^2` + (psi_dot_scaling_factor:math:`\dot{\psi})^2` because physiacally
+                the time derivative of :math:`\psi` is quite smaller than that of :math:`\theta`. Defaults to 70.
             random_init_cond : bool, optional
                 Boolean determining weather random initial conditions are to be used instead of those
                 provided by :py:func:`fp_ic_scan`. Defaults to ``False``.
@@ -92,6 +95,18 @@ def fixed_points_plot(
     for key, value in kwargs.items():
         setattr(config, key, value)
 
+    # Check axes
+    if ax is None:
+        fig_kw = {
+            "figsize": config.figsize,
+            "dpi": config.dpi,
+            "layout": config.layout,
+            "facecolor": config.facecolor,
+        }
+        fig, ax = plt.subplots(1, 1, **fig_kw)
+
+        logger.info("Axes was not given for fixed point plot. Creating figure")
+
     # Determine output units
     output_units = config.flux_units
 
@@ -99,7 +114,7 @@ def fixed_points_plot(
     # Calculate fixed points
     _, fixed_points, initial_conditions = fp(profile=profile, **kwargs)
     logger.info(
-        f"Calculated fixed points ['NUMagnetic_flux'] for fixed_points_plot with Pz={profile.PzetaNU}"
+        f"Calculated fixed points ['NUMagnetic_flux'] for fixed_points_plot with Pz={profile.PzetaNU}, mu={profile.muNU}"
     )
     print(f"\n FIXED POINTS RUN IN {(time() - start):.1f}s\n")
 
@@ -107,12 +122,6 @@ def fixed_points_plot(
     X_points, O_points = xoc(
         unclassified_fixed_points=fixed_points, profile=profile, to_P_thetas=False
     )
-
-    # Check axes
-    if ax is None:
-        fig = plt.figure(figsize=(12, 8))
-        ax = fig.add_subplot(111)
-        logger.debug("\tCreating a new canvas.")
 
     # Convert deque to numpy arrays for easy manipulation
     X_thetas, X_psisNU = zip(*X_points) if X_points else ([], [])
