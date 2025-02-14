@@ -4,11 +4,14 @@ with different :math:`\mu`'s.
 """
 
 import matplotlib.pyplot as plt
-import numpy as np
 from time import time
 from gcmotion.utils.logger_setup import logger
 
-from gcmotion.utils.bif_values_setup import set_up_bif_plot_values
+from gcmotion.plotters._bif_base._thetas_bif_plot import _thetas_bif_plot
+from gcmotion.plotters._bif_base._P_thetas_bif_plot import _P_thetas_bif_plot
+from gcmotion.plotters._bif_base._ndfp_bif_plot import _ndfp_bif_plot
+from gcmotion.plotters._bif_base._tpb_plot import _plot_trapped_passing_boundary
+
 from gcmotion.scripts.bifurcation import bifurcation
 from collections import deque
 from gcmotion.configuration.plot_parameters import BifurcationPlotConfig
@@ -104,10 +107,8 @@ def bifurcation_plot_mu(profiles: list | deque, **kwargs):
     profile1 = profiles[0]
     profileN = profiles[-1]
     logger.info(
-        f"Ran bifurcation script for bifurcation plot with N={len(profiles)} mus={profile1.muNU}...{profileN.muNU}"
+        f"Ran bifurcation script for bifurcation plot with N={len(profiles)}, Pz={profile1.PzetaNU} mus={profile1.muNU}...{profileN.muNU}"
     )
-    psi_wallNU = profile1.psi_wall.to("NUMagnetic_flux")
-    P_theta_wallNU = profile1.findPtheta(psi=psi_wallNU, units="NUCanonical_momentum").m
 
     # Create figure
     fig_kw = {
@@ -130,85 +131,50 @@ def bifurcation_plot_mu(profiles: list | deque, **kwargs):
     ax_P_theta.ticklabel_format(style="sci", axis="x", scilimits=(0, 0))
     ax_ndfp.ticklabel_format(style="sci", axis="x", scilimits=(0, 0))
 
-    # Theta Fixed Bifurcation
-    mu_plotX, X_theta_plot = set_up_bif_plot_values(
-        profiles=profiles, y_values=X_thetas, which_COM=which_COM_loc
+    # Fixed thetas bifurcation diagram
+    _thetas_bif_plot(
+        profiles=profiles,
+        X_thetas=X_thetas,
+        O_thetas=O_thetas,
+        which_COM=which_COM_loc,
+        ax=ax_theta,
     )
-    mu_plotO, O_theta_plot = set_up_bif_plot_values(
-        profiles=profiles, y_values=O_thetas, which_COM=which_COM_loc
-    )
-
-    ax_theta.set_ylabel(r"$\theta_s$ Fixed")
-    ax_theta.set_yticks([-np.pi, 0, np.pi])
-    ax_theta.set_yticklabels([r"$-\pi$", "0", r"$\pi$"])
-    ax_theta.set_ylim([-np.pi - 0.5, np.pi + 0.5])
-    ax_theta.scatter(mu_plotX, X_theta_plot, s=2, color="#E65100")
-    ax_theta.scatter(mu_plotO, O_theta_plot, s=2)
 
     logger.info(f"Made Xthetas, Othetas fixed bifurcation plot")
 
     # P_theta Fixed Bifurcation
-    mu_plotX, X_P_theta_plot = set_up_bif_plot_values(
-        profiles=profiles, y_values=X_P_thetas, which_COM=which_COM_loc
+    _P_thetas_bif_plot(
+        profiles=profiles,
+        X_P_thetas=X_P_thetas,
+        O_P_thetas=O_P_thetas,
+        which_COM=which_COM_loc,
+        ax=ax_P_theta,
     )
-    mu_plotO, O_P_theta_plot = set_up_bif_plot_values(
-        profiles=profiles, y_values=O_P_thetas, which_COM=which_COM_loc
-    )
-
-    # Set the upper limit of the y axis properly
-    # Combine the two lists for comparison
-    combined_P_theta_plot = X_P_theta_plot + O_P_theta_plot
-    ul = max(combined_P_theta_plot) * 1.05
-
-    if np.isclose(max(combined_P_theta_plot), P_theta_wallNU):
-        ul = P_theta_wallNU * 1.05
-
-    ax_P_theta.set_ylabel(r"$P_{\theta_s}$ Fixed")
-    ax_P_theta.set_ylim(0, ul)
-    ax_P_theta.scatter(mu_plotX, X_P_theta_plot, s=2, color="#E65100", label="X points")
-    ax_P_theta.scatter(mu_plotO, O_P_theta_plot, s=2, label="O points")
-    ax_P_theta.axhline(y=P_theta_wallNU, color="black", linestyle="--", linewidth=1, alpha=0.5)
-    ax_P_theta.legend(loc="lower left")
 
     logger.info(f"Made P_thetas fixed bifurcation plot")
 
     # Number of distinct fixed points Diagram
-    mus = [profile.muNU.m for profile in profiles]
-    ax_ndfp.set_ylabel("Number of Fixed Points")
-    ax_ndfp.scatter(mus, num_of_XP, s=2, color="#E65100", label="X points")
-    ax_ndfp.scatter(mus, num_of_OP, s=2, label="O points")
-    ax_ndfp.legend()
+    _ndfp_bif_plot(
+        profiles=profiles,
+        num_of_XP=num_of_XP,
+        num_of_OP=num_of_OP,
+        which_COM=which_COM_loc,
+        ax=ax_ndfp,
+    )
 
     logger.info(f"Made number of fixed points bifurcation plot")
 
     if config.plot_energy_bif:
-        fig, ax = plt.subplots(1, 1, **fig_kw)
-        plt.xlabel(r"$E-{\mu}B_0$" + f"[{config.energy_units}]")
-        ax.set_ylabel(r"$\mu$" + f"[{profile1.muNU.units}]")
-        ax.ticklabel_format(style="sci", axis="y", scilimits=(0, 0))
-
-        # X O Tilted Energies bifurcation plot
-        mu_plotX, X_tilted_energies_plot = set_up_bif_plot_values(
+        _plot_trapped_passing_boundary(
             profiles=profiles,
-            y_values=X_energies,
+            X_energies=X_energies,
+            O_energies=O_energies,
             which_COM=which_COM_loc,
-            tilt_energies=True,
-            output_energy_units=config.energy_units,
+            config=config,
+            ax=ax,
         )
-        mu_plotO, O_tilted_energies_plot = set_up_bif_plot_values(
-            profiles=profiles,
-            y_values=O_energies,
-            which_COM=which_COM_loc,
-            tilt_energies=True,
-            output_energy_units=config.energy_units,
-        )
-
-        ax.scatter(X_tilted_energies_plot, mu_plotX, s=2, color="#E65100", label="X points")
-        ax.scatter(O_tilted_energies_plot, mu_plotO, s=2, label="O points")
 
         logger.info(f"Made fixed points' energies bifurcation plot")
-
-        ax.legend()
 
     plt.ion()
     plt.show(block=True)
