@@ -1,10 +1,9 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from math import isclose
 
 from matplotlib.path import Path
 
-from gcmotion.utils.logger_setup import logger
+from gcmotion.entities.profile import Profile
 from gcmotion.configuration.scripts_configuration import ContourFreqConfig
 
 config = ContourFreqConfig()
@@ -25,22 +24,24 @@ class ContourSegment:
         The contour's y-axis limits. Needed to validate the segment.
     """
 
-    __slots__ = [
-        "vertices",
-        "ylim",
-        "E",
-        "xmin",
-        "xmax",
-        "ymin",
-        "ymax",
-        "valid",
-        "passing",
-        "trapped",
-        "left_to_right",
-        "J",
-        "omega_theta",
-        "color",
-    ]
+    # __slots__ = [
+    #     "vertices",
+    #     "ylim",
+    #     "E",
+    #     "xmin",
+    #     "xmax",
+    #     "ymin",
+    #     "ymax",
+    #     "valid",
+    #     "passing",
+    #     "trapped",
+    #     "copassing",
+    #     "cupassing",
+    #     "left_to_right",
+    #     "J",
+    #     "omega_theta",
+    #     "color",
+    # ]
 
     def __init__(self, segment: Path, E: float, ylim: tuple):
         r"""Only keep Path's attributes needed for validating andcalculating
@@ -62,12 +63,15 @@ class ContourSegment:
         """
         self.valid = _is_inbounds(self) and not _is_cutoff_trapped(self)
 
-    def classify(self):
+    def classify(self, profile: Profile = None):
         r"""Classifies the segment to trapped/passing and left-to-right, needed
         to correctly add the bottom points.
         """
         self.passing, self.trapped = _tp_classify(self)
         self.left_to_right = _is_left_to_right(self)
+        if profile is None:
+            return
+        self.copassing, self.cupassing = _cocu_classify(self, profile)
 
     def close_segment(self):
         r"""If the segment is passing, append the two bottom points, as well as
@@ -91,18 +95,30 @@ class ContourSegment:
         if self.passing:
             area /= 2  # because theta span = 4π
         self.J = area / (2 * np.pi)
+        if config.del_vertices:
+            del self.vertices
 
     def bbox_distance(self, xy: tuple[float, float]):
-        r"""Returns the distance (squared) of the origin point from self's
+        r"""Returns a distance-like quantity of the origin point from self's
         origin point. The closest bbox is the correct contour to calculate J.
         """
-        return (self.xmin - xy[0]) ** 2 + (self.ymin - xy[1]) ** 2
+        return abs(self.xmin - xy[0]) + abs(self.ymin - xy[1])
 
     def pick_color(self):
+        r"""Sets the segment's color depending on its orbit type."""
+        # TODO: find a better way to do this, its a bit slow.
         self.color = (
             config.trapped_color
             if self.trapped
-            else config.copassing_color if self.passing else "k"
+            else (
+                config.copassing_color
+                if self.copassing
+                else (
+                    config.cupassing_color
+                    if self.cupassing
+                    else config.undefined_color
+                )
+            )
         )
 
 
@@ -140,16 +156,29 @@ def _is_cutoff_trapped(path: ContourSegment) -> bool:
 def _tp_classify(path: ContourSegment) -> list[bool, bool]:
     r"""Checks the left and right bbox edges to check if passing or trapped."""
 
-    # TODO: check if == is enough, else define tolerances
+    # NOTE: isclose() is needed here
     if isclose(path.xmin, -tau) and isclose(path.xmax, tau):
         return True, False
     else:
         return False, True
 
 
-def _cocu_classify(path: ContourSegment) -> list[bool, bool]:
-    # TODO: put in the correct module
-    pass
+def _cocu_classify(path: ContourSegment, profile: Profile) -> list[bool, bool]:
+    r"""Classifies the segment as co-passing or counter-passing depending on
+    the sign of rho"""
+    # OPTIM: After some testing, we can see that for passing particles, the rho
+    # variable is always either negative or positive. For the shake of
+    # optimization, it is safe to assume that if some evenly spaced values of
+    # psi correspond to negative rho, then all of them do. The sample size can
+    # be tweaked in the configuration
+
+    psis = path.vertices.T[1]
+    sample_idx = np.round(
+        np.linspace(1, len(psis) - 1, config.rho_sample_size)
+    ).astype(int)
+    co = profile._rhosign(psis[sample_idx])
+
+    return co, not co
 
 
 # ======================= Left-to-Right Classification =======================
@@ -162,7 +191,7 @@ def _is_left_to_right(path: ContourSegment) -> bool:
     if path.trapped:
         return None
 
-    # TODO: check if == is enough, else define tolerances
+    # NOTE: isclose() is needed here
     return (
         True
         if (
