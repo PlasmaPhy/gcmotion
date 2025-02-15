@@ -22,7 +22,7 @@ class _ThetasFixedPlotConfig:
     theta_ylabel_fontsize: float = 10
     theta_ylabel_rotation: int = 90
     # Legend keywords
-    theta_legend: bool = True
+    theta_legend: bool = False
 
 
 @dataclass

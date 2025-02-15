@@ -2,7 +2,7 @@ from collections import deque
 from matplotlib.ticker import MaxNLocator
 from gcmotion.utils.logger_setup import logger
 
-from gcmotion.plotters._base._bif_base._bif_config import _NDFPlotConfig
+from gcmotion.plot._base._bif_base._bif_config import _NDFPlotConfig
 
 
 def _ndfp_bif_plot(
@@ -33,7 +33,7 @@ def _ndfp_bif_plot(
     Notes
     -----
     For a full list of all available optional parameters, see the dataclass
-    _NDFPlotConfig at gcmotion/plotters/_base/_bif_base/_bif_config. The defaults
+    _NDFPlotConfig at gcmotion/plot/_base/_bif_base/_bif_config. The defaults
     values are set there, and are overwritten if passed as arguements.
 
     """

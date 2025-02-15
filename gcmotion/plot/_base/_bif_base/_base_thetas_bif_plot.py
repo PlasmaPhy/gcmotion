@@ -2,7 +2,7 @@ import numpy as np
 from collections import deque
 from gcmotion.utils.logger_setup import logger
 
-from gcmotion.plotters._base._bif_base._bif_config import _ThetasFixedPlotConfig
+from gcmotion.plot._base._bif_base._bif_config import _ThetasFixedPlotConfig
 from gcmotion.utils.bif_values_setup import set_up_bif_plot_values
 
 
@@ -34,7 +34,7 @@ def _thetas_bif_plot(
     Notes
     -----
     For a full list of all available optional parameters, see the dataclass
-    _ThetasFixedPlotConfig at gcmotion/plotters/_base/_bif_base/_bif_config.
+    _ThetasFixedPlotConfig at gcmotion/plot/_base/_bif_base/_bif_config.
     The defaults values are set there, and are overwritten if passed as arguements.
 
     """

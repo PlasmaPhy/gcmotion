@@ -3,7 +3,7 @@ from gcmotion.utils.logger_setup import logger
 import matplotlib.pyplot as plt
 
 from gcmotion.utils.bif_values_setup import set_up_bif_plot_values
-from gcmotion.plotters._base._bif_base._bif_config import _TPBPlotConfig
+from gcmotion.plot._base._bif_base._bif_config import _TPBPlotConfig
 
 
 def _set_up_tpb_base_plot(
@@ -83,7 +83,7 @@ def _plot_trapped_passing_boundary(
     Notes
     -----
     For a full list of all available optional parameters, see the dataclass
-    _TPBPlotConfig at gcmotion/plotters/_base/_bif_base/_bif_config. The defaults
+    _TPBPlotConfig at gcmotion/plot/_base/_bif_base/_bif_config. The defaults
     values are set there, and are overwritten if passed as arguements.
 
 

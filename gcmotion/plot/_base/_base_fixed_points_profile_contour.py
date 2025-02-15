@@ -7,7 +7,7 @@ from gcmotion.scripts.fixed_points import fixed_points as fp
 from gcmotion.entities.profile import Profile
 
 from gcmotion.utils.XO_points_classification import XO_points_classification as xoc
-from gcmotion.configuration.plot_parameters import FixedPointsPlotConfig
+from gcmotion.plot._base._config import _FixedPointsPlotConfig
 
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
@@ -18,7 +18,7 @@ from time import time
 from gcmotion.utils.logger_setup import logger
 
 
-def fixed_points_plot(
+def _base_fixed_points_plot(
     profile: Profile,
     ax: Axes = None,
     **kwargs,
@@ -91,7 +91,7 @@ def fixed_points_plot(
     """
 
     # Unpack Parameters
-    config = FixedPointsPlotConfig()
+    config = _FixedPointsPlotConfig()
     for key, value in kwargs.items():
         setattr(config, key, value)
 
@@ -138,13 +138,12 @@ def fixed_points_plot(
     ax.set_xticklabels([r"$-\pi$", "0", r"$\pi$"])
     ax.set_xlim([-np.pi, np.pi])
 
-    if len(X_thetas) > 0 and len(X_psis) > 0:
-        ax.scatter(X_thetas, X_psis, marker="x", color="#80FF80", s=100)
+    ax.scatter(X_thetas, X_psis, marker="x", color="#80FF80", s=100)
+    ax.scatter(O_thetas, O_psis, marker="o", edgecolor="yellow", facecolors="none", s=100)
 
-    if len(O_thetas) > 0 and len(O_psis) > 0:
-        ax.scatter(O_thetas, O_psis, marker="o", edgecolor="yellow", facecolors="none", s=100)
-
-    logger.info(f"Plotted fixed points for fixed_points_plot with Pz={profile.PzetaNU}")
+    logger.info(
+        f"Plotted fixed points for fixed_points_plot with Pz={profile.PzetaNU} and mu={profile.muNU}"
+    )
 
     if config.fp_plot_init_cond:
 

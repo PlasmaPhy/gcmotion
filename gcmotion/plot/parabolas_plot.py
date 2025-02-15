@@ -8,14 +8,14 @@ import matplotlib.pyplot as plt
 
 from gcmotion.configuration.plot_parameters import ParabolasPlotConfig
 from gcmotion.entities.profile import Profile
-from gcmotion.plotters._base._parabolas_base._base_calc_parabolas import _calc_parabolas
+from gcmotion.plot._base._base_calc_parabolas import _calc_parabolas
 
 
 def parabolas_diagram(profile: Profile, ax=None, **kwargs):
     r"""
 
     This script draw the parabolas diagram along with the trapped passing LAR boundary
-    (if asked) by plotting the values calculated in :py:func:`calc_parabolas`.
+    (if asked) by plotting the values calculated in :py:func:`_calc_parabolas`.
 
     Parameters
     ----------
