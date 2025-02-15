@@ -72,9 +72,6 @@ class _TPBPlotConfig:
     dpi: int = 100
     layout: str = "constrained"
     facecolor: str = "lightskyblue"
-    # Title keywords
-    titlesize: float = 15
-    titlecolor: str = "black"
     # Energies of X points keywords
     tpb_X_marker: str = "."
     tpb_X_markersize: float = 2
