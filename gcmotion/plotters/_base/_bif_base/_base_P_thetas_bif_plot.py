@@ -3,6 +3,7 @@ from collections import deque
 from gcmotion.utils.logger_setup import logger
 
 from gcmotion.utils.bif_values_setup import set_up_bif_plot_values
+from gcmotion.plotters._base._bif_base._bif_config import _PThetasFixedPlotConfig
 
 
 def _P_thetas_bif_plot(
@@ -11,6 +12,7 @@ def _P_thetas_bif_plot(
     O_P_thetas: list | deque,
     which_COM: str,
     ax=None,
+    **kwargs,
 ):
     r"""Base plotting function. Only draws upon a given axis without showing
     any figures.
@@ -28,10 +30,22 @@ def _P_thetas_bif_plot(
         or :math:`P_{\zeta}` the :math:`P_{\theta}`s fixed are plotted.
     ax : Axes
         The ax upon which to draw.
+
+    Notes
+    -----
+    For a full list of all available optional parameters, see the dataclass
+    _PPThetasFixedPlotConfig at gcmotion/plotters/_base/_bif_base/_bif_config.
+    The defaults values are set there, and are overwritten if passed as arguements.
+
     """
     logger.info("\t==> Plotting Base P_thetas Fixed Bifurcation Diagram...")
 
-    # Theta Fixed Bifurcation
+    # Unpack parameters
+    config = _PThetasFixedPlotConfig()
+    for key, value in kwargs.items():
+        setattr(config, key, value)
+
+    # P_theta Fixed Bifurcation
     COM_plotX, X_P_theta_plot = set_up_bif_plot_values(
         profiles=profiles, y_values=X_P_thetas, which_COM=which_COM
     )
@@ -52,9 +66,39 @@ def _P_thetas_bif_plot(
 
     ax.ticklabel_format(style="sci", axis="x", scilimits=(0, 0))
 
-    ax.set_ylabel(r"$P_{\theta_s}$ Fixed")
+    ax.set_ylabel(
+        r"$P_{\theta_s}$ Fixed",
+        rotation=config.Ptheta_ylabel_rotation,
+        fontsize=config.Ptheta_ylabel_fontsize,
+    )
+
     ax.set_ylim(0, ul)
-    ax.scatter(COM_plotX, X_P_theta_plot, s=2, color="#E65100", label="X points")
-    ax.scatter(COM_plotO, O_P_theta_plot, s=2, label="O points")
-    ax.axhline(y=P_theta_wallNU, color="black", linestyle="--", linewidth=1, alpha=0.5)
-    ax.legend(loc="lower left")
+
+    ax.scatter(
+        COM_plotX,
+        X_P_theta_plot,
+        marker=config.Pthetas_X_marker,
+        s=config.Pthetas_X_markersize,
+        color=config.Pthetas_X_markercolor,
+        label="X points",
+    )
+
+    ax.scatter(
+        COM_plotO,
+        O_P_theta_plot,
+        marker=config.Pthetas_O_marker,
+        s=config.Pthetas_O_markersize,
+        color=config.Pthetas_O_markercolor,
+        label="O points",
+    )
+
+    ax.axhline(
+        y=P_theta_wallNU,
+        color=config.wall_line_color,
+        linestyle=config.wall_linestyle,
+        linewidth=config.wall_linewidth,
+        alpha=config.wall_line_alpha,
+    )
+
+    if config.Ptheta_legend:
+        ax.legend(loc=config.Ptheta_legend_loc)

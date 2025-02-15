@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 from gcmotion.configuration.plot_parameters import ParabolasPlotConfig
 from gcmotion.entities.profile import Profile
-from gcmotion.plotters._parabolas_base._base_calc_parabolas import _calc_parabolas
+from gcmotion.plotters._base._parabolas_base._base_calc_parabolas import _calc_parabolas
 
 
 def parabolas_diagram(profile: Profile, ax=None, **kwargs):
@@ -105,15 +105,16 @@ def parabolas_diagram(profile: Profile, ax=None, **kwargs):
         linewidth=config.linewidth,
     )
 
-    # Plot vertical dashed line to set tpb left limit
-    par_ax.plot(
-        [v_R[0], v_L[0]],
-        [v_R[1], v_L[1]],
-        color="black",
-        linestyle="dashed",
-        linewidth=1,
-        alpha=0.5,
-    )
+    # Plot vertical dashed line to set tpb left limit if asked
+    if config.show_d_line:
+        par_ax.plot(
+            [v_R[0], v_L[0]],
+            [v_R[1], v_L[1]],
+            color=config.d_line_color,
+            linestyle="dashed",
+            linewidth=config.d_linewidth,
+            alpha=config.d_line_alplha,
+        )
 
     logger.info("Plotted RW, LW, MA parabolas.")
 
@@ -140,12 +141,16 @@ def parabolas_diagram(profile: Profile, ax=None, **kwargs):
 
         logger.info("Plotted LAR trapped-passing boundary in parabolas diagram.")
 
-    par_ax.set_xlabel(r"$\dfrac{P_\zeta}{\psi_{p_w}}$", fontsize=config.xlabel_fontsize)
+    par_ax.set_xlabel(
+        r"$\dfrac{P_\zeta}{\psi_{p_w}}$",
+        rotation=config.xlabel_rotation,
+        fontsize=config.xlabel_fontsize,
+    )
     par_ax.set_ylabel(
         r"$\dfrac{E}{\mu B_0}$", rotation=config.ylabel_rotation, fontsize=config.ylabel_fontsize
     )
 
-    par_ax.set_title(config.title)
+    par_ax.set_title(config.title, fontsize=config.title_fontsize)
     par_ax.set_ylim(config.enlim)
 
     if config.legend:

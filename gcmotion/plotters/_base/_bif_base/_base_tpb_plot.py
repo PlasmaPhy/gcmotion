@@ -3,7 +3,7 @@ from gcmotion.utils.logger_setup import logger
 import matplotlib.pyplot as plt
 
 from gcmotion.utils.bif_values_setup import set_up_bif_plot_values
-from gcmotion.configuration.plot_parameters import BifurcationPlotConfig
+from gcmotion.plotters._base._bif_base._bif_config import _TPBPlotConfig
 
 
 def _set_up_tpb_base_plot(
@@ -47,13 +47,18 @@ def _set_up_tpb_base_plot(
     return x_label_loc, y_label_loc, xX_values, yX_values, xO_values, yO_values, axis_to_format
 
 
+def _setup_which_COM_title(which_COM: str):
+    return r"$\mu$" if which_COM == "mu" else r"$P_{\zeta}$"
+
+
 def _plot_trapped_passing_boundary(
     profiles: list,
     X_energies: list | deque,
     O_energies: list | deque,
     which_COM: str,
-    config: BifurcationPlotConfig,
+    input_energy_units: str,
     ax=None,
+    **kwargs,
 ):
     r"""Base plotting function. Only draws upon a given axis without showing
     any figures.
@@ -74,17 +79,27 @@ def _plot_trapped_passing_boundary(
         available optional parameters, see the dataclass BifurcationPlotConfig at
         gcmotion/configuration/plot_parameters. The defaults values are set there,
         and are overwritten if passed as arguements.
-    ax : Axes
-        The ax upon which to draw.
+
+    Notes
+    -----
+    For a full list of all available optional parameters, see the dataclass
+    _TPBPlotConfig at gcmotion/plotters/_base/_bif_base/_bif_config. The defaults
+    values are set there, and are overwritten if passed as arguements.
+
+
     """
     logger.info("\t==> Plotting Base Trapped Passing Boundary...")
+
+    # Unpack parameters
+    config = _TPBPlotConfig()
+    for key, value in kwargs.items():
+        setattr(config, key, value)
 
     fig_kw = {
         "figsize": config.figsize,
         "dpi": config.dpi,
         "layout": config.layout,
         "facecolor": config.facecolor,
-        "sharex": config.sharex,
     }
 
     fig, ax = plt.subplots(1, 1, **fig_kw)
@@ -102,14 +117,14 @@ def _plot_trapped_passing_boundary(
         y_values=X_energies,
         which_COM=which_COM,
         tilt_energies=tilted_energies_loc,
-        input_energy_units=config.energy_units,
+        input_energy_units=input_energy_units,
     )
     COM_plotO, O_energies_plot = set_up_bif_plot_values(
         profiles=profiles,
         y_values=O_energies,
         which_COM=which_COM,
         tilt_energies=tilted_energies_loc,
-        input_energy_units=config.energy_units,
+        input_energy_units=input_energy_units,
     )
 
     x_label_loc, y_label_loc, xX_values, yX_values, xO_values, yO_values, axis_to_format = (
@@ -120,15 +135,40 @@ def _plot_trapped_passing_boundary(
             COM_plotX=COM_plotX,
             X_energies_plot=X_energies_plot,
             which_COM=which_COM,
-            label_energy_units=config.energy_units,
+            label_energy_units=input_energy_units,
         )
     )
 
-    plt.xlabel(x_label_loc)
-    ax.set_ylabel(y_label_loc)
+    which_COM_title = _setup_which_COM_title(which_COM)
+
+    ax.set_title(
+        rf"Trapped Passing Boundary for {which_COM_title} Bifurcation",
+        fontsize=config.tpb_title_fontsize,
+        color=config.tpb_title_color,
+    )
+
+    ax.set_xlabel(x_label_loc, fontsize=config.tpb_xlabel_fontzise)
+    ax.set_ylabel(
+        y_label_loc, rotation=config.tpb_ylabel_rotation, fontsize=config.tpb_ylabel_fontzise
+    )
     ax.ticklabel_format(style="sci", axis=axis_to_format, scilimits=(0, 0))
 
-    ax.scatter(xX_values, yX_values, s=2, color="#E65100", label="X points")
-    ax.scatter(xO_values, yO_values, s=2, label="O points")
+    ax.scatter(
+        xX_values,
+        yX_values,
+        marker=config.tpb_X_marker,
+        s=config.tpb_X_markersize,
+        color=config.tpb_X_markercolor,
+        label="X points",
+    )
+    ax.scatter(
+        xO_values,
+        yO_values,
+        marker=config.tpb_O_marker,
+        s=config.tpb_O_markersize,
+        color=config.tpb_O_markercolor,
+        label="O points",
+    )
 
-    ax.legend()
+    if config.tpb_legend:
+        ax.legend()

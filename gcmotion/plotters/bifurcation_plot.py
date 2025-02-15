@@ -7,10 +7,10 @@ import matplotlib.pyplot as plt
 from time import time
 from gcmotion.utils.logger_setup import logger
 
-from gcmotion.plotters._bif_base._base_thetas_bif_plot import _thetas_bif_plot
-from gcmotion.plotters._bif_base._base_P_thetas_bif_plot import _P_thetas_bif_plot
-from gcmotion.plotters._bif_base._base_ndfp_bif_plot import _ndfp_bif_plot
-from gcmotion.plotters._bif_base._base_tpb_plot import _plot_trapped_passing_boundary
+from gcmotion.plotters._base._bif_base._base_thetas_bif_plot import _thetas_bif_plot
+from gcmotion.plotters._base._bif_base._base_P_thetas_bif_plot import _P_thetas_bif_plot
+from gcmotion.plotters._base._bif_base._base_ndfp_bif_plot import _ndfp_bif_plot
+from gcmotion.plotters._base._bif_base._base_tpb_plot import _plot_trapped_passing_boundary
 from gcmotion.scripts.bifurcation import bifurcation
 
 from gcmotion.entities.profile import Profile
@@ -137,8 +137,15 @@ def bifurcation_plot(profiles: list | deque, **kwargs):
     other_COM = _other_COM(profile=profiles[0], COM=config.which_COM)
 
     fig, ax = plt.subplots(3, 1, **fig_kw)
-    plt.xlabel(_setup_x_label(config.which_COM) + f"[{selected_COM_Q.units}]")
-    fig.suptitle("Fixed Points Bifurcation Diagram")
+    plt.xlabel(
+        _setup_x_label(config.which_COM) + f"[{selected_COM_Q.units}]",
+        fontsize=config.xlabel_fontsize,
+    )
+    fig.suptitle(
+        "Fixed Points Bifurcation Diagram",
+        fontsize=config.suptitle_fontsize,
+        color=config.suptitle_color,
+    )
 
     ax_theta = ax[0]
     ax_P_theta = ax[1]
@@ -149,8 +156,8 @@ def bifurcation_plot(profiles: list | deque, **kwargs):
         profiles=profiles,
         X_thetas=X_thetas,
         O_thetas=O_thetas,
-        which_COM=config.which_COM,
         ax=ax_theta,
+        **kwargs,
     )
 
     logger.info(
@@ -162,8 +169,8 @@ def bifurcation_plot(profiles: list | deque, **kwargs):
         profiles=profiles,
         X_P_thetas=X_P_thetas,
         O_P_thetas=O_P_thetas,
-        which_COM=config.which_COM,
         ax=ax_P_theta,
+        **kwargs,
     )
 
     logger.info(
@@ -175,8 +182,8 @@ def bifurcation_plot(profiles: list | deque, **kwargs):
         profiles=profiles,
         num_of_XP=num_of_XP,
         num_of_OP=num_of_OP,
-        which_COM=config.which_COM,
         ax=ax_ndfp,
+        **kwargs,
     )
 
     logger.info(
@@ -188,9 +195,8 @@ def bifurcation_plot(profiles: list | deque, **kwargs):
             profiles=profiles,
             X_energies=X_energies,
             O_energies=O_energies,
-            which_COM=config.which_COM,
-            config=config,
-            ax=ax,
+            input_energy_units=config.energy_units,
+            **kwargs,
         )
 
         logger.info(
