@@ -9,7 +9,9 @@ from gcmotion.entities.profile import Profile
 from gcmotion.tokamak.efield import Nofield
 
 
-def calc_parabolas(profile: Profile, Pzetalim: list | tuple = [-1.5, 1], Pzeta_density: int = 1000):
+def _calc_parabolas(
+    profile: Profile, Pzetalim: list | tuple = [-1.5, 1], Pzeta_density: int = 1000
+):
     r"""
 
     In this script the values of the parabolas that correspond to the right and left
@@ -33,11 +35,12 @@ def calc_parabolas(profile: Profile, Pzetalim: list | tuple = [-1.5, 1], Pzeta_d
 
     Returns
     -------
-    x, x_LAR, y_R, y_L, y_MA, LAR_tpb_O, LAR_tpb_X : tuple
+    x, x_LAR, y_R, y_L, y_MA, LAR_tpb_O, LAR_tpb_X, v_R, v_L, v_MA : tuple
     Tuple that contains the the x values x and x_LAR that were used to calculate the parabolas
     values and the trapped passing LAR boundary values respectively, y_R,y_L,Y_MA the parabolas values
     for th right and left wall and magnetic axis parabolas, LAR_tpb_O, LAR_tpb_X the lower and upper
-    branch of the trapped passing LAR boundary curve respetively.
+    branch of the trapped passing LAR boundary curve respetively, v_R, v_L, v_MA the location (points)
+    of the minima (vertex) of each parabola.
 
     """
 
@@ -76,7 +79,7 @@ def calc_parabolas(profile: Profile, Pzetalim: list | tuple = [-1.5, 1], Pzeta_d
     _, _, g_psipwNU = bfield.bigNU(psip_wallNU, 0)
     _, _, g0NU = bfield.bigNU(0, 0)
 
-    logger.info(f"Upacked parabolas g values with g(psip_wall)={g_psipwNU},g(0)={g0NU}")
+    logger.info(f"Upacked parabolas g values with g(psip_wall)={g_psipwNU}, g(0)={g0NU}")
 
     # Calculate the quantity y=E/(mu*B0) to be plotted on the y axis
     # as a function of the quantity x=Pzeta/psi_pwall for x axis
@@ -88,10 +91,15 @@ def calc_parabolas(profile: Profile, Pzetalim: list | tuple = [-1.5, 1], Pzeta_d
 
     logger.info("Calculated parabolas y(x) values where y=E/muB0 and x=Pz/psip_wall")
 
+    # Calculate the vertex points of the three parabolas (will be useful)
+    v_R = [x[np.argmin(y_R)], y_R[np.argmin(y_R)]]
+    v_L = [x[np.argmin(y_L)], y_L[np.argmin(y_L)]]
+    v_MA = [x[np.argmin(y_MA)], y_MA[np.argmin(y_MA)]]
+
     # Calculate the LAR trapped-passing boundary
     LAR_tpb_O = np.array([])
     LAR_tpb_X = np.array([])
-    x_LAR = np.linspace(PzetasNU[np.argmin(y_L)], PzetasNU[np.argmin(y_MA)], Pzeta_density)
+    x_LAR = np.linspace(v_R[0], v_MA[0], Pzeta_density)
 
     if not bfield.plain_name == "LAR":
         print(
@@ -112,4 +120,4 @@ def calc_parabolas(profile: Profile, Pzetalim: list | tuple = [-1.5, 1], Pzeta_d
 
         logger.info(f"Calculated tpb LAR boundary with x axis limits: ({min(x_LAR)},{max(x_LAR)})")
 
-    return x, x_LAR, y_R, y_L, y_MA, LAR_tpb_O, LAR_tpb_X
+    return x, x_LAR, y_R, y_L, y_MA, LAR_tpb_O, LAR_tpb_X, v_R, v_L, v_MA

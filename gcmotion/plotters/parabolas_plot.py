@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 from gcmotion.configuration.plot_parameters import ParabolasPlotConfig
 from gcmotion.entities.profile import Profile
-from gcmotion.scripts.parabolas import calc_parabolas
+from gcmotion.plotters._parabolas_base._base_calc_parabolas import _calc_parabolas
 
 
 def parabolas_diagram(profile: Profile, ax=None, **kwargs):
@@ -41,6 +41,12 @@ def parabolas_diagram(profile: Profile, ax=None, **kwargs):
     LAR_TPB : bool, optional
         Boolean that determines weather the LAR trapped-passing boundary is to
         be plotted. Defaults to ``False``.
+
+    Notes
+    -----
+    For a full list of all available optional parameters, see the dataclass
+    ParabolasPlotConfig at gcmotion/config/plot_parameters. The defaults values
+    are set there, and are overwritten if passed as arguements.
     """
 
     # Unpack parameters
@@ -65,16 +71,49 @@ def parabolas_diagram(profile: Profile, ax=None, **kwargs):
         logger.info("Using Axes given to parabolas diagram")
 
     # Calculate parabolas values
-    x, x_LAR, y_R, y_L, y_MA, LAR_tpb_O, LAR_tpb_X = calc_parabolas(
+    x, x_LAR, y_R, y_L, y_MA, LAR_tpb_O, LAR_tpb_X, v_R, v_L, v_MA = _calc_parabolas(
         Pzetalim=config.Pzetalim, profile=profile, Pzeta_density=config.Pzeta_density
     )
 
-    logger.info(f"Successfully calculated {y_L.shape[0]} parabolas values ")
+    logger.info(
+        f"Successfully calculated {y_L.shape[0]} parabolas values with vertices RW: {v_R}, LW: {v_L}, MA: {v_MA}"
+    )
 
     # Plot right left boundar, magnetic axis
-    par_ax.plot(x, y_R, linestyle="dashed", color="orange", label="RW", linewidth=config.linewidth)
-    par_ax.plot(x, y_L, linestyle="dashdot", color="orange", label="LW", linewidth=config.linewidth)
-    par_ax.plot(x, y_MA, linestyle="dotted", color="orange", label="MA", linewidth=config.linewidth)
+    par_ax.plot(
+        x,
+        y_R,
+        linestyle="dashed",
+        color=config.parabolas_color,
+        label="RW",
+        linewidth=config.linewidth,
+    )
+    par_ax.plot(
+        x,
+        y_L,
+        linestyle="dashdot",
+        color=config.parabolas_color,
+        label="LW",
+        linewidth=config.linewidth,
+    )
+    par_ax.plot(
+        x,
+        y_MA,
+        linestyle="dotted",
+        color=config.parabolas_color,
+        label="MA",
+        linewidth=config.linewidth,
+    )
+
+    # Plot vertical dashed line to set tpb left limit
+    par_ax.plot(
+        [v_R[0], v_L[0]],
+        [v_R[1], v_L[1]],
+        color="black",
+        linestyle="dashed",
+        linewidth=1,
+        alpha=0.5,
+    )
 
     logger.info("Plotted RW, LW, MA parabolas.")
 
@@ -84,6 +123,7 @@ def parabolas_diagram(profile: Profile, ax=None, **kwargs):
             x_LAR,
             LAR_tpb_O,
             linestyle="solid",
+            color=config.TPB_X_color,
             label="TPB_LAR_O",
             linewidth=config.linewidth,
         )
@@ -91,12 +131,12 @@ def parabolas_diagram(profile: Profile, ax=None, **kwargs):
             x_LAR,
             LAR_tpb_X,
             linestyle="solid",
-            color="#E65100",
+            color=config.TPB_O_color,
             label="TPB_LAR_X",
             linewidth=config.linewidth,
         )
         # In case the Pzeta limits are very close to zero
-        par_ax.set_xlim([1.1 * config.Pzetalim[0], 1.1 * config.Pzetalim[1]])
+        par_ax.set_xlim([1.1 * config.Pzetalim[0], 1.1 * abs(config.Pzetalim[1])])
 
         logger.info("Plotted LAR trapped-passing boundary in parabolas diagram.")
 
@@ -104,8 +144,10 @@ def parabolas_diagram(profile: Profile, ax=None, **kwargs):
     par_ax.set_ylabel(
         r"$\dfrac{E}{\mu B_0}$", rotation=config.ylabel_rotation, fontsize=config.ylabel_fontsize
     )
+
     par_ax.set_title(config.title)
     par_ax.set_ylim(config.enlim)
+
     if config.legend:
         par_ax.legend()
 

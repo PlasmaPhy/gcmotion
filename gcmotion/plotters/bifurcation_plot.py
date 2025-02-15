@@ -7,10 +7,10 @@ import matplotlib.pyplot as plt
 from time import time
 from gcmotion.utils.logger_setup import logger
 
-from gcmotion.plotters._bif_base._thetas_bif_plot import _thetas_bif_plot
-from gcmotion.plotters._bif_base._P_thetas_bif_plot import _P_thetas_bif_plot
-from gcmotion.plotters._bif_base._ndfp_bif_plot import _ndfp_bif_plot
-from gcmotion.plotters._bif_base._tpb_plot import _plot_trapped_passing_boundary
+from gcmotion.plotters._bif_base._base_thetas_bif_plot import _thetas_bif_plot
+from gcmotion.plotters._bif_base._base_P_thetas_bif_plot import _P_thetas_bif_plot
+from gcmotion.plotters._bif_base._base_ndfp_bif_plot import _ndfp_bif_plot
+from gcmotion.plotters._bif_base._base_tpb_plot import _plot_trapped_passing_boundary
 from gcmotion.scripts.bifurcation import bifurcation
 
 from gcmotion.entities.profile import Profile
