@@ -150,7 +150,11 @@ def parabolas_diagram(profile: Profile, ax=None, **kwargs):
         r"$\dfrac{E}{\mu B_0}$", rotation=config.ylabel_rotation, fontsize=config.ylabel_fontsize
     )
 
-    par_ax.set_title(config.title, fontsize=config.title_fontsize)
+    par_ax.set_title(
+        f"Parabolas Diagram ({profile.bfield.plain_name})",
+        fontsize=config.title_fontsize,
+        color=config.title_color,
+    )
     par_ax.set_ylim(config.enlim)
 
     if config.legend:
