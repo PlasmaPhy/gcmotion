@@ -68,7 +68,7 @@ def _ptheta_energy_contour(
     CPtheta.ylim = (ptheta_grid.m[0][0], ptheta_grid.m[0][-1])
 
     if config.show_master_contour:
-        _plot_master_contour(ax)
+        _plot_master_contour(fig, ax)
     else:
         plt.close()
 
@@ -82,5 +82,6 @@ def _plot_master_contour(fig: Figure, ax: Axes):
     ax.set_title(r"$Master \theta-P_\theta Contour$")
     ax.set_xlabel(r"$\theta [radians]$")
     ax.set_ylabel(r"$P_\theta [NU]$")
+    ax.set_xlim([-np.pi, np.pi])
 
     plt.show()

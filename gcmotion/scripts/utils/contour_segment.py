@@ -24,24 +24,24 @@ class ContourSegment:
         The contour's y-axis limits. Needed to validate the segment.
     """
 
-    # __slots__ = [
-    #     "vertices",
-    #     "ylim",
-    #     "E",
-    #     "xmin",
-    #     "xmax",
-    #     "ymin",
-    #     "ymax",
-    #     "valid",
-    #     "passing",
-    #     "trapped",
-    #     "copassing",
-    #     "cupassing",
-    #     "left_to_right",
-    #     "J",
-    #     "omega_theta",
-    #     "color",
-    # ]
+    __slots__ = [
+        "vertices",
+        "ylim",
+        "E",
+        "xmin",
+        "xmax",
+        "ymin",
+        "ymax",
+        "valid",
+        "passing",
+        "trapped",
+        "copassing",
+        "cupassing",
+        "left_to_right",
+        "Jtheta",
+        "omega_theta",
+        "color",
+    ]
 
     def __init__(self, segment: Path, E: float, ylim: tuple):
         r"""Only keep Path's attributes needed for validating andcalculating
