@@ -53,7 +53,7 @@ class ContourSegment:
         self.E = E
 
         # Bounding box
-        [self.xmin, self.ymin], [self.xmax, self.ymax] = (
+        (self.xmin, self.ymin), (self.xmax, self.ymax) = (
             segment.get_extents().get_points()
         )
 
@@ -89,14 +89,12 @@ class ContourSegment:
             extra = [[-tau, 0], [tau, 0]] + closeoff_point
             self.vertices = np.append(self.vertices, extra, axis=0)
 
-    def calculate_J(self):
+    def calculate_Jtheta(self):
         r"""Calculates the action J."""
         area = shoelace(self.vertices)
         if self.passing:
             area /= 2  # because theta span = 4π
-        self.J = area / (2 * np.pi)
-        if config.del_vertices:
-            del self.vertices
+        self.Jtheta = area / (2 * np.pi)
 
     def bbox_distance(self, xy: tuple[float, float]):
         r"""Returns a distance-like quantity of the origin point from self's
@@ -106,7 +104,7 @@ class ContourSegment:
 
     def pick_color(self):
         r"""Sets the segment's color depending on its orbit type."""
-        # TODO: find a better way to do this, its a bit slow.
+        # TODO: find a better way to do this
         self.color = (
             config.trapped_color
             if self.trapped
@@ -222,7 +220,7 @@ def shoelace(array: np.ndarray) -> float:
         The area of the polygon.
 
     """
-    x, y = array.T[:]
+    x, y = (*array.T,)
     return float(
         0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
     )
