@@ -9,7 +9,7 @@ config = ContourFreqConfig()
 tau = 2 * np.pi
 
 
-class ContourPath(Path):
+class ContourOrbit(Path):
 
     def __init__(self, E: float, ylim: tuple = None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -88,7 +88,7 @@ class ContourPath(Path):
 # ================================ Validation ================================
 
 
-def _is_inbounds(path: ContourPath) -> bool:
+def _is_inbounds(path: ContourOrbit) -> bool:
     r"""Checks if the path's bounding box is in bounds of the whole contour,
     e.g the contour line doesn't get cutoff.
     """
@@ -100,7 +100,7 @@ def _is_inbounds(path: ContourPath) -> bool:
     )
 
 
-def _is_cutoff_trapped(path: ContourPath) -> bool:
+def _is_cutoff_trapped(path: ContourOrbit) -> bool:
     r"""Checks if the segment is cut off by left or the right walls.
 
     Checks that the bounding box doesn't touch the left *and* the right wall
@@ -116,7 +116,7 @@ def _is_cutoff_trapped(path: ContourPath) -> bool:
 # ===================== Trapped - Passing Classification =====================
 
 
-def _tp_classify(path: ContourPath) -> list[bool, bool]:
+def _tp_classify(path: ContourOrbit) -> list[bool, bool]:
     r"""Checks the left and right bbox edges to check if passing or trapped."""
 
     # NOTE: isclose() is needed here
@@ -126,7 +126,7 @@ def _tp_classify(path: ContourPath) -> list[bool, bool]:
         return False, True
 
 
-def _cocu_classify(path: ContourPath, profile: Profile) -> list[bool, bool]:
+def _cocu_classify(path: ContourOrbit, profile: Profile) -> list[bool, bool]:
     r"""Classifies the segment as co-passing or counter-passing depending on
     the sign of rho"""
     # OPTIM: After some testing, we can see that for passing particles, the rho
@@ -147,7 +147,7 @@ def _cocu_classify(path: ContourPath, profile: Profile) -> list[bool, bool]:
 # ======================= Left-to-Right Classification =======================
 
 
-def _is_left_to_right(path: ContourPath) -> bool:
+def _is_left_to_right(path: ContourOrbit) -> bool:
     r"""In the case that the path is passing, it returns True if the *first*
     point touches the left wall. It also checks that the *last* point touches
     the third wall, which might be reduntant."""
