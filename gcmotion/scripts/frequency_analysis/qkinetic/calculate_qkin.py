@@ -32,11 +32,11 @@ def calculate_qkin(profile: Profile, psilim: tuple = (0.05, 1), **kwargs):
     )
 
     if len(valid_orbits) == 0:
-        print("No valid orbits found.")
-        return
+        # print("No valid orbits found.")
+        return [0]
 
     profile.psilim = psilim
-    debug_plot_valid_orbits(profile, valid_orbits)
+    # debug_plot_valid_orbits(profile, valid_orbits)
 
     # Step 2: Create adjecent Pzeta profiles. Fastest way I could find.
     profile.psiwall_lim = psilim
@@ -55,26 +55,23 @@ def calculate_qkin(profile: Profile, psilim: tuple = (0.05, 1), **kwargs):
 
     # Step 3: Calculating qkinetics for every contour orbit.
     for orbit in profile.valid_orbits:
-        calculate_orbit_qkin(orbit=orbit, profiles=Profiles)
+        calculate_orbit_qkin(main_orbit=orbit, profiles=Profiles)
 
-    return [
-        orbit.qkinetic
-        for orbit in profile.valid_orbits
-        if hasattr(orbit, "qkinetic")
-    ]
+    return [orbit for orbit in valid_orbits if hasattr(orbit, "qkinetic")]
 
 
-def calculate_orbit_qkin(orbit: ContourOrbit, profiles: dict) -> float:
+def calculate_orbit_qkin(main_orbit: ContourOrbit, profiles: dict) -> float:
     r"""Step 2: For each contour orbit found, calculate qkinetic."""
 
     config = CalculateQkinConfig()
 
-    # Step 2a: Calculate orbits bounding box
-    orbit.calculate_bbox()
+    # Step 2a: Calculate orbits bounding box and t/p classification
+    main_orbit.calculate_bbox()
+    main_orbit.classify_as_tp()
 
     # Step 2b: Create 2 local contours, 1 from each adjacent profile.
-    LowerContour = local_contour(profile=profiles["Lower"], bbox=orbit.bbox)
-    UpperContour = local_contour(profile=profiles["Upper"], bbox=orbit.bbox)
+    LowerContour = local_contour(profile=profiles["Lower"], orbit=main_orbit)
+    UpperContour = local_contour(profile=profiles["Upper"], orbit=main_orbit)
     profiles["Lower"].psilim = LowerContour["psilim"]
     profiles["Upper"].psilim = UpperContour["psilim"]
 
@@ -86,18 +83,21 @@ def calculate_orbit_qkin(orbit: ContourOrbit, profiles: dict) -> float:
         Contour=UpperContour, level=profiles["Main"].ENU.m, config=config
     )
 
-    print(f"Lower orbits found: {len(lower_orbits)}")
-    print(f"Upper orbits found: {len(upper_orbits)}")
+    # print(f"Lower orbits found: {len(lower_orbits)}")
+    # print(f"Upper orbits found: {len(upper_orbits)}")
 
-    debug_plot_valid_orbits(profiles["Lower"], lower_orbits)
-    debug_plot_valid_orbits(profiles["Upper"], upper_orbits)
+    # debug_plot_valid_orbits(
+    #     profiles["Main"], (*lower_orbits, main_orbit, *upper_orbits)
+    # )
+    # debug_plot_valid_orbits(profiles["Lower"], lower_orbits)
+    # debug_plot_valid_orbits(profiles["Upper"], upper_orbits)
 
     # Step 2d: Return if orbit is about to disappear
     if len(lower_orbits) == 0 or len(upper_orbits) == 0:
-        orbit.edge_orbit = True
-        return [], []
+        main_orbit.edge_orbit = True
+        return
     else:
-        orbit.edge_orbit = False
+        main_orbit.edge_orbit = False
 
     # Step 2e: Validate orbits, and calculate
     for orbit in lower_orbits:
@@ -134,5 +134,9 @@ def calculate_orbit_qkin(orbit: ContourOrbit, profiles: dict) -> float:
     dJtheta = upper_orbit.Jtheta - lower_orbit.Jtheta
     dPzeta = profiles["Upper"].PzetaNU.m - profiles["Lower"].PzetaNU.m
 
-    orbit.qkinetic = dJtheta / dPzeta
-    print(orbit.qkinetic)
+    qkinetic = -dJtheta / dPzeta
+    if abs(qkinetic) > 8:
+        return
+    else:
+        main_orbit.Pzeta = profiles["Main"].PzetaNU.m
+        main_orbit.qkinetic = qkinetic
