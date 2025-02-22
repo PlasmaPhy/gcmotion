@@ -152,6 +152,18 @@ class NumericalMagneticField(MagneticField):
             dx=1,
             dy=0,
         )
+        self.d2b_dpsi2_spline = self.b_spline.partial_derivative(
+            dx=0,
+            dy=2,
+        )
+        self.d2b_dtheta2_spline = self.b_spline.partial_derivative(
+            dx=2,
+            dy=0,
+        )
+        self.d2b_dpsi_dtheta_spline = self.b_spline.partial_derivative(
+            dx=1,
+            dy=1,
+        )
         self.i_spline = UnivariateSpline(
             x=psi_values,
             y=i_values,
@@ -163,6 +175,9 @@ class NumericalMagneticField(MagneticField):
 
         self.ider_spline = self.i_spline.derivative(n=1)
         self.gder_spline = self.g_spline.derivative(n=1)
+
+        self.d2i_dpsi2_spline = self.i_spline.derivative(n=2)
+        self.d2g_dpsi2_spline = self.g_spline.derivative(n=2)
 
         # Useful attributes
         Q = pint.UnitRegistry.Quantity
@@ -220,14 +235,21 @@ class NumericalMagneticField(MagneticField):
         db_dpsi = self.db_dpsi_spline(x=theta, y=psi, grid=False)
         db_dtheta = self.db_dtheta_spline(x=theta, y=psi, grid=False)
 
+        d2b_dpsi2 = self.d2b_dpsi2_spline(x=theta, y=psi, grid=False)
+        d2b_dtheta2 = self.d2b_dtheta2_spline(x=theta, y=psi, grid=False)
+        d2b_dpsidtheta = self.d2b_dpsi_dtheta_spline(x=theta, y=psi, grid=False)
+
         # Current derivatives
         i_der = self.ider_spline(psi)
         g_der = self.gder_spline(psi)
 
+        d2i_dpsi2 = self.d2i_dpsi2_spline(psi)
+        d2g_dpsi2 = self.d2g_dpsi2_spline(psi)
+
         # Pack them up
         currents = (i, g)
-        b_der = (db_dpsi, db_dtheta)
-        currents_der = (i_der, g_der)
+        b_der = (db_dpsi, db_dtheta, d2b_dpsi2, d2b_dtheta2, d2b_dpsidtheta)
+        currents_der = (i_der, g_der, d2i_dpsi2, d2g_dpsi2)
 
         return b, b_der, currents, currents_der
 
@@ -314,14 +336,21 @@ class LAR(MagneticField):
         b_der_psi = -cos_theta / root
         b_der_theta = root * sin(theta)
 
+        d2b_dpsi2 = np.cos(theta) / (2 * np.sqrt(2)) * psi ** (-3 / 2)
+        d2b_dtheta2 = np.sqrt(2 * psi) * np.cos(theta)
+        d2b_dpsidtheta = np.sin(theta) / np.sqrt(2 * psi)
+
         # Current derivatives
         i_der = 0
         g_der = 0
 
+        d2i_dpsi2 = 0
+        d2g_dpsi2 = 0
+
         # Pack them up
         currents = (i, g)
-        b_der = (b_der_psi, b_der_theta)
-        currents_der = (i_der, g_der)
+        b_der = (b_der_psi, b_der_theta, d2b_dpsi2, d2b_dtheta2, d2b_dpsidtheta)
+        currents_der = (i_der, g_der, d2i_dpsi2, d2g_dpsi2)
 
         return b, b_der, currents, currents_der
 

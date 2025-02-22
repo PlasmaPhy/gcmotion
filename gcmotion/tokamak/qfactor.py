@@ -106,6 +106,9 @@ class NumericalQFactor(QFactor):
         # Create q spline
         self.qspline = UnivariateSpline(x=psi_values, y=q_values)
 
+        # qfactor derivative with respect to psi
+        self.qder_spline = self.qspline.derivative(n=1)
+
         # Create psip spline
         iota_values = 1 / q_values
         iota_spline = UnivariateSpline(x=psi_values, y=iota_values)
@@ -118,7 +121,7 @@ class NumericalQFactor(QFactor):
         self.is_numerical = True
 
     def solverqNU(self, psi: float) -> float:
-        return self.qspline(psi)
+        return self.qspline(psi), self.qder_spline(psi)
 
     def psipNU(self, psi: float | np.ndarray) -> float | np.ndarray:
         if isinstance(psi, float):
@@ -209,9 +212,7 @@ class Parabolic(QFactor):
         self.is_analytic = True
 
     def solverqNU(self, psi):
-        return (
-            self.q0 + (self.q_wall - self.q0) * (psi / self._psi_wallNU) ** 2
-        )
+        return self.q0 + (self.q_wall - self.q0) * (psi / self._psi_wallNU) ** 2
 
     def psipNU(self, psi):
         if isinstance(psi, float):
@@ -224,10 +225,7 @@ class Parabolic(QFactor):
             )
 
     def __repr__(self):
-        return (
-            colored("Parabolic", "light_blue")
-            + f": q0={self.q0:.4g}, q_wall={self.q_wall:.4g}."
-        )
+        return colored("Parabolic", "light_blue") + f": q0={self.q0:.4g}, q_wall={self.q_wall:.4g}."
 
 
 class Hypergeometric(QFactor):
@@ -293,19 +291,25 @@ class Hypergeometric(QFactor):
         self.is_analytic = True
 
     def solverqNU(self, psi):
-        return self.q0 * (
-            1
-            + ((self.q_wall / self.q0) ** self.n - 1)
-            * (psi / self._psi_wallNU) ** self.n
+        q = self.q0 * (
+            1 + ((self.q_wall / self.q0) ** self.n - 1) * (psi / self._psi_wallNU) ** self.n
         ) ** (1 / self.n)
+
+        q_der_psi = (
+            self.q0
+            * (psi ** (self.n - 1) / self._psi_wallNU ** (self.n))
+            * ((self.q_wall / self.q0) ** self.n - 1)
+            * ((psi / self._psi_wallNU) ** (self.n) * ((self.q_wall / self.q0) ** self.n - 1) + 1)
+            ** (1 / (self.n - 1))
+        )
+
+        return q, q_der_psi
 
     def psipNU(self, psi):
 
         a = b = 1 / self.n
         c = 1 + 1 / self.n
-        z = (1 - (self.q_wall / self.q0) ** self.n) * (
-            psi / self._psi_wallNU
-        ) ** self.n
+        z = (1 - (self.q_wall / self.q0) ** self.n) * (psi / self._psi_wallNU) ** self.n
         if isinstance(psi, (int, float)):
             return psi / self.q0 * float(hyp2f1(a, b, c, z))
         else:
@@ -444,25 +448,15 @@ class Chris(QFactor):
     def solverqNU(self, psi: float):
 
         return self.q0 * (
-            1
-            + (-1 + (self.q_wall / self.q0) ** 2) * (psi / self._psi_wall) ** 2
+            1 + (-1 + (self.q_wall / self.q0) ** 2) * (psi / self._psi_wall) ** 2
         ) ** (1 / 2)
 
     def psipNU(self, psi: float):
         if isinstance(psi, (int, float)):
-            sinh = asinh(
-                (psi * sqrt(-1 + (self.q_wall / self.q0) ** 2))
-                / self._psi_wall
-            )
+            sinh = asinh((psi * sqrt(-1 + (self.q_wall / self.q0) ** 2)) / self._psi_wall)
         else:
-            sinh = np.arcsinh(
-                (psi * sqrt(-1 + (self.q_wall / self.q0) ** 2))
-                / self._psi_wall
-            )
-        return (
-            self._psi_wall
-            / (self.q0 * sqrt(-1 + (self.q_wall / self.q0) ** 2))
-        ) * sinh
+            sinh = np.arcsinh((psi * sqrt(-1 + (self.q_wall / self.q0) ** 2)) / self._psi_wall)
+        return (self._psi_wall / (self.q0 * sqrt(-1 + (self.q_wall / self.q0) ** 2))) * sinh
 
     def __repr__(self):
         return (

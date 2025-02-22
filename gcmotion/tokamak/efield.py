@@ -52,9 +52,7 @@ class ElectricField(ABC):
         """
 
     @abstractmethod
-    def PhiNU(
-        self, psi: float | np.ndarray, theta: float | np.ndarray
-    ) -> np.ndarray:
+    def PhiNU(self, psi: float | np.ndarray, theta: float | np.ndarray) -> np.ndarray:
         r"""Calculates :math:`\Phi(\psi, theta)`.
         Input can be either a float or a np.ndarray, but output is always
         np.ndarray, in [NU].
@@ -108,11 +106,9 @@ class Nofield(ElectricField):
 
     def solverPhiderNU(self, psi: float, theta: float) -> tuple[float, float]:
         r"""Always returns `(0,0)`."""
-        return (0, 0)
+        return (0, 0, 0)
 
-    def PhiNU(
-        self, psi: float | np.ndarray, theta: float | np.ndarray
-    ) -> float | np.ndarray:
+    def PhiNU(self, psi: float | np.ndarray, theta: float | np.ndarray) -> float | np.ndarray:
         r"""Always returns a zero array in the same shape as `psi`."""
         return 0 * psi
 
@@ -201,24 +197,33 @@ class Radial(ElectricField):
         Phi_der_psi = (
             self._EaNU
             / (sqrt(2 * psi))
-            * exp(
-                -((sqrt(psi) - self._sr_psi_peakNU) ** 2) / self._psi_waistNU
-            )
+            * exp(-((sqrt(psi) - self._sr_psi_peakNU) ** 2) / self._psi_waistNU)
         )
         Phi_der_theta = 0
 
-        return (Phi_der_psi, Phi_der_theta)
+        exponent = (
+            -2 * np.sqrt(psi) * self._sr_psi_peakNU + self._psi_peakNU + psi
+        ) / self._psi_waistNU
+        exponent = np.clip(exponent, -700, 700)  # Prevent overflow
+        exp_term = np.exp(exponent)
 
-    def PhiNU(
-        self, psi: float | np.ndarray, theta: float | np.ndarray
-    ) -> float | np.ndarray:
+        psi_safe = np.maximum(psi, 1e-12)  # Avoid zero or negative values
+        denominator = 2 * np.sqrt(2) * psi_safe ** (3 / 2) * self._psi_waistNU
+
+        d2Phi_dpsi2 = (
+            self._EaNU
+            * exp_term
+            * (-2 * np.sqrt(psi_safe) * self._sr_psi_peakNU - self._psi_waistNU + 2 * psi_safe)
+        ) / denominator
+
+        return (Phi_der_psi, Phi_der_theta, d2Phi_dpsi2)
+
+    def PhiNU(self, psi: float | np.ndarray, theta: float | np.ndarray) -> float | np.ndarray:
         Phi = (
             self._EaNU
             * np.sqrt(np.pi * self._psi_waistNU / 2)
             * (
-                erf(
-                    (np.sqrt(psi) - self._sr_psi_peakNU) / self._sr_psi_waistNU
-                )
+                erf((np.sqrt(psi) - self._sr_psi_peakNU) / self._sr_psi_waistNU)
                 + erf(self._sr_psi_peakNU / self._sr_psi_waistNU)
             )
         )

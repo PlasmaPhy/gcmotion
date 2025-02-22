@@ -65,15 +65,15 @@ def system(
     )  # Should become small for Pzetas close to 0 because psi-->0
 
     # Object methods calls
-    q = solverqNU(psi)
+    q, _ = solverqNU(psi)
     psi_p = psipNU(psi)
     b, b_der, currents, currents_der = solverbNU(psi, theta)
-    phi_der_psi, phi_der_theta = solverPhiderNU(psi, theta)
+    phi_der_psi, phi_der_theta, _ = solverPhiderNU(psi, theta)
 
     # Unpack
-    b_der_psi, b_der_theta = b_der
+    b_der_psi, b_der_theta, _, _, _ = b_der
     i, g = currents
-    i_der, g_der = currents_der
+    i_der, g_der, _, _ = currents_der
     # Multiply current derivatives by q to get their derivatives with
     # respect to psi instead of psip
     i_der, g_der = q * i_der, q * g_der
