@@ -1,6 +1,8 @@
+import pandas as pd
 import numpy as np
 from collections import deque
 from gcmotion.utils.logger_setup import logger
+from alpha_shapes import Alpha_Shaper, plot_alpha_shape
 
 from gcmotion.entities.tokamak import Tokamak
 from gcmotion.entities.profile import Profile
@@ -118,6 +120,39 @@ def _plot_parabolas_tpb(
 
     # In case the Pzeta limits are very close to zero
     ax.set_xlim([1.1 * config.Pzetalim[0], 1.1 * abs(config.Pzetalim[1])])
+
+    df = pd.read_pickle(
+        r"C:\Users\georg\OneDrive\Desktop\My Files\NTUA\Diplomatic Thesis\2. Main Work\Resonances\freq_analysis_data\george_copassing_df"
+    )
+
+    points = np.column_stack((df.Pzeta / profile.psip_wallNU.m, df.Energy / profile.muNU.m))
+
+    shaper = Alpha_Shaper(points, normalize=True)
+    _, _ = shaper.optimize()
+    # print(f"\n\n{alpha_opt=}\n\n")
+
+    # # Plot shape of points alpha shape
+    # alpha_shape = shaper.get_shape(alpha=alpha_opt)
+    # plot_alpha_shape(ax, alpha_shape=alpha_shape)
+
+    # Plot tricontour
+    ax.tricontour(
+        shaper,
+        df.qkinetic,
+        levels=140,
+    )
+
+    # Plot points
+    # ax.scatter(
+    #     group.Pzeta / profile.psip_wallNU.m,
+    #     group.Energy / profile.muNU.m,
+    #     s=10,
+    #     color="green",
+    #     alpha=0.8,
+    # )
+
+    # Plot triangles of triplot
+    # ax.triplot(shaper)
 
 
 def _create_profiles_list(profile: Profile, x_TPB: list | tuple, TPB_density: int) -> list:

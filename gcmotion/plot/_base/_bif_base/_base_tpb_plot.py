@@ -1,6 +1,9 @@
+import pandas as pd
 from collections import deque
 from gcmotion.utils.logger_setup import logger
 import matplotlib.pyplot as plt
+import numpy as np
+from alpha_shapes import Alpha_Shaper, plot_alpha_shape
 
 from gcmotion.utils.fixed_points_bif.bif_values_setup import set_up_bif_plot_values
 from gcmotion.plot._base._bif_base._bif_config import _TPBPlotConfig
@@ -165,3 +168,65 @@ def _plot_trapped_passing_boundary(
 
     if config.tpb_legend:
         ax.legend()
+
+    profile = profiles[0]
+
+    df = pd.read_pickle(
+        r"C:\Users\georg\OneDrive\Desktop\My Files\NTUA\Diplomatic Thesis\2. Main Work\Resonances\freq_analysis_data\george_copassing_df"
+    )
+
+    # Tricontour
+    # for orbit_type, group in df.groupby("orbit_type"):
+    #     if orbit_type != "t/":
+    #         continue
+
+    # ax.tricontour(group.Energy - group.mu, group.mu, group.omega_zeta, levels=30)
+    points = np.column_stack((df.Pzeta, df.Energy))
+
+    shaper = Alpha_Shaper(points, normalize=True)
+    _, _ = shaper.optimize()
+    # print(f"\n\n{alpha_opt=}\n\n")
+
+    # Plot shape of points alpha shape
+    # alpha_shape = shaper.get_shape(alpha=alpha_opt)
+    # plot_alpha_shape(ax, alpha_shape=alpha_shape)
+
+    # Plot tricontour
+    ax.tricontour(
+        shaper,
+        df.qkinetic,
+        levels=140,
+    )
+
+    # Plot points
+    # ax.scatter(
+    #     group.Pzeta,
+    #     group.Energy,
+    #     s=10,
+    #     color="green",
+    #     alpha=0.8,
+    # )
+
+    # Plot triangles of triplot
+    # ax.triplot(group.Pzeta, group.Energy)
+
+    # Unpack magnitudes
+    bfield = profile.bfield
+    muNU = profile.muNU.m
+    psi_wallNU = profile.psi_wallNU.m
+
+    PzetasNU = np.linspace(profile.PzetaNU.m, profiles[-1].PzetaNU.m, len(profiles))
+    x = np.linspace(min(PzetasNU), 0, len(profiles))
+
+    psis = np.linspace(psi_wallNU, 0, len(profiles))
+
+    TPB_O, _, _ = bfield.bigNU(psis, 0)
+    TPB_X, _, _ = bfield.bigNU(psis, np.pi)
+
+    TPB_O = [muNU * x for x in TPB_O]
+    TPB_X = [muNU * x for x in TPB_X]
+
+    ax.scatter(x, TPB_O, marker="+", color="red", s=7, label="Analytical Approximaton O")
+    ax.scatter(x, TPB_X, marker="x", color="black", s=7, label="Analytical Approximaton X")
+
+    ax.legend()
