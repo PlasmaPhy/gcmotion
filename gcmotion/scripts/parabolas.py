@@ -14,7 +14,7 @@ from gcmotion.tokamak.efield import Nofield
 
 from gcmotion.configuration.scripts_configuration import ParabolasConfig
 
-from gcmotion.scripts.bifurcation import bifurcation
+from gcmotion.scripts.fixed_points_bif.bifurcation import bifurcation
 
 
 def calc_parabolas_tpb(
